@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Settings, User, Wind } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DashboardLayout = ({ children, isBackendConnected }) => {
   const location = useLocation();
@@ -51,9 +52,20 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,165,233,0.1),transparent)] pointer-events-none"></div>
 
-        {/* Scrollable View Area */}
+        {/* Scrollable View Area with Page Transitions */}
         <div className="flex-1 overflow-auto p-4 lg:p-6 relative z-10 custom-scrollbar">
-           {children}
+           <AnimatePresence mode="wait">
+             <motion.div
+               key={location.pathname}
+               initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+               exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+               className="h-full"
+             >
+               {children}
+             </motion.div>
+           </AnimatePresence>
         </div>
       </main>
     </div>
@@ -66,14 +78,25 @@ const TopNavItem = ({ to, label, currentPath }) => {
   return (
     <Link 
       to={to} 
-      className={`px-4 py-2 rounded-lg transition-all duration-300 font-medium text-[13px] tracking-widest uppercase
+      className={`relative px-5 py-2 rounded-xl transition-all duration-300 font-bold text-[13px] tracking-widest uppercase overflow-hidden
         ${isActive 
-          ? 'bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-neon)] border border-[var(--color-accent-blue)]/30 shadow-[inset_0_0_12px_rgba(14,165,233,0.1)]' 
-          : 'text-brand-300 hover:bg-white/5 hover:text-white border border-transparent'
+          ? 'text-[var(--color-accent-neon)]' 
+          : 'text-brand-300 hover:text-white'
         }` 
       }
     >
-      {label}
+      {/* Background glow when active */}
+      {isActive && (
+        <motion.div 
+          layoutId="activeNavIndicator"
+          className="absolute inset-0 bg-[var(--color-accent-blue)]/10 border border-[var(--color-accent-blue)]/30 rounded-xl"
+          initial={false}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(14,165,233,0.2),transparent_70%)]"></div>
+        </motion.div>
+      )}
+      <span className="relative z-10">{label}</span>
     </Link>
   );
 };

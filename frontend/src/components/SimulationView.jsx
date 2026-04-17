@@ -1002,7 +1002,7 @@ const SimulationView = ({
                       title="Deep search of over 140 NACA permutations"
                     >
                       <Sparkles size={13} className="text-amber-300 group-hover:scale-110 transition-transform" />
-                      DEEP SCAN
+                      DEEP TUNE
                     </button>
                   </>
                 )}

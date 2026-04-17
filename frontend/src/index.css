@@ -1,37 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #e2e8f0;
-  --color-brand-100: #cbd5e1;
-  --color-brand-200: #94a3b8;
-  --color-brand-300: #64748b;
-  --color-brand-400: #475569;
-  --color-brand-500: #334155;
-  --color-brand-600: #1e293b;
-  --color-brand-700: #1f2937;
-  --color-brand-800: #111827;
-  --color-brand-900: #030712;
+  --color-brand-50: #f8fafc;
+  --color-brand-100: #f1f5f9;
+  --color-brand-200: #e2e8f0;
+  --color-brand-300: #cbd5e1;
+  --color-brand-400: #94a3b8;
+  --color-brand-500: #64748b;
+  --color-brand-600: #475569;
+  --color-brand-700: #1e293b;
+  --color-brand-800: #0f172a;
+  --color-brand-900: #020617;
 
-  --color-accent-neon: #00f0ff;
-  --color-accent-blue: #0ea5e9;
-  --color-accent-pink: #ec4899;
+  --color-accent-neon: #00e5ff;
+  --color-accent-blue: #3b82f6;
+  --color-accent-pink: #f43f5e;
+  --color-accent-purple: #8b5cf6;
 }
 
 :root {
-  --color-brand-50: #e2e8f0;
-  --color-brand-100: #cbd5e1;
-  --color-brand-200: #94a3b8;
-  --color-brand-300: #64748b;
-  --color-brand-400: #475569;
-  --color-brand-500: #334155;
-  --color-brand-600: #1e293b;
-  --color-brand-700: #1f2937;
-  --color-brand-800: #111827;
-  --color-brand-900: #030712;
+  --color-brand-50: #f8fafc;
+  --color-brand-100: #f1f5f9;
+  --color-brand-200: #e2e8f0;
+  --color-brand-300: #cbd5e1;
+  --color-brand-400: #94a3b8;
+  --color-brand-500: #64748b;
+  --color-brand-600: #475569;
+  --color-brand-700: #1e293b;
+  --color-brand-800: #0f172a;
+  --color-brand-900: #020617;
 
-  --color-accent-neon: #00f0ff;
-  --color-accent-blue: #0ea5e9;
-  --color-accent-pink: #ec4899;
+  --color-accent-neon: #00e5ff;
+  --color-accent-blue: #3b82f6;
+  --color-accent-pink: #f43f5e;
+  --color-accent-purple: #8b5cf6;
 }
 
 @layer base {
@@ -47,19 +49,24 @@
 
 @layer components {
   .glass-panel {
-    @apply bg-brand-800/40 backdrop-blur-md border border-white/10 rounded-2xl;
+    @apply bg-brand-800/60 backdrop-blur-xl border border-white/10 rounded-2xl;
     box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.45),
-      0 0 1px rgba(255, 255, 255, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      0 10px 40px -10px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
     will-change: transform;
     transform: translateZ(0);
   }
+  .premium-glass {
+    @apply bg-brand-900/40 backdrop-blur-2xl border border-white/5 rounded-3xl;
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+  }
   .neon-text {
     text-shadow:
-      0 0 8px var(--color-accent-neon),
-      0 0 20px rgba(0, 240, 255, 0.4),
-      0 0 40px rgba(0, 240, 255, 0.15);
+      0 0 10px var(--color-accent-neon),
+      0 0 20px rgba(0, 229, 255, 0.5),
+      0 0 40px rgba(0, 229, 255, 0.2);
   }
   .atmosphere-grid {
     display: grid;
