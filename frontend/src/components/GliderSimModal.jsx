@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plane, RotateCcw } from 'lucide-react';
+import { X, Plane, RotateCcw, Play, Gauge, Mountain, Weight } from 'lucide-react';
 
 /**
  * Interactive 2D Flight Dynamics Mini-Simulator
@@ -12,11 +12,12 @@ import { X, Plane, RotateCcw } from 'lucide-react';
 const GRAVITY = 9.81;
 const AIR_DENSITY = 1.225;
 const WING_AREA = 0.5;    // m²
-const MASS = 2.5;         // kg
-const LAUNCH_ALT = 200;   // m
-const LAUNCH_SPEED = 25;  // m/s
 const DT = 1 / 60;
 const GROUND_Y = 0;
+
+const DEF_ALT = 200;
+const DEF_SPEED = 25;
+const DEF_MASS = 2.5;
 
 // Simple sky gradient colors
 const SKY_TOP    = '#0a0e1a';
@@ -28,29 +29,42 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
   const stateRef = useRef(null);
   const keysRef = useRef({ up: false, down: false });
   const animRef = useRef(null);
-  const [metrics, setMetrics] = useState({ dist: 0, alt: LAUNCH_ALT, speed: LAUNCH_SPEED, aoa: 0, status: 'flying' });
+  const [metrics, setMetrics] = useState({ dist: 0, alt: DEF_ALT, speed: DEF_SPEED, aoa: 0, status: 'flying' });
   const [bestDist, setBestDist] = useState(0);
+  const [phase, setPhase] = useState('config'); // 'config' | 'flying'
+  const [launchAlt, setLaunchAlt] = useState(DEF_ALT);
+  const [launchSpeed, setLaunchSpeed] = useState(DEF_SPEED);
+  const [launchMass, setLaunchMass] = useState(DEF_MASS);
+  const launchRef = useRef({ alt: DEF_ALT, speed: DEF_SPEED, mass: DEF_MASS });
 
   const baseCl = Math.max(0.1, cl || 0.8);
   const baseCd = Math.max(0.005, cd || 0.02);
 
   const resetSim = useCallback(() => {
+    const la = launchRef.current;
     stateRef.current = {
       x: 0,
-      y: LAUNCH_ALT,
-      vx: LAUNCH_SPEED,
+      y: la.alt,
+      vx: la.speed,
       vy: 0,
-      pitch: 2,     // degrees
+      pitch: 2,
       time: 0,
       trail: [],
       status: 'flying',
+      mass: la.mass,
     };
-    setMetrics({ dist: 0, alt: LAUNCH_ALT, speed: LAUNCH_SPEED, aoa: 2, status: 'flying' });
+    setMetrics({ dist: 0, alt: la.alt, speed: la.speed, aoa: 2, status: 'flying' });
   }, []);
 
-  useEffect(() => {
-    if (!show) return;
+  const handleLaunch = () => {
+    launchRef.current = { alt: launchAlt, speed: launchSpeed, mass: launchMass };
     resetSim();
+    setPhase('flying');
+  };
+
+  useEffect(() => {
+    if (!show) { setPhase('config'); return; }
+    if (phase !== 'flying') return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowUp')   keysRef.current.up = true;
@@ -68,10 +82,10 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
       window.removeEventListener('keyup', handleKeyUp);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [show, resetSim]);
+  }, [show, phase, resetSim]);
 
   useEffect(() => {
-    if (!show || !canvasRef.current) return;
+    if (!show || !canvasRef.current || phase !== 'flying') return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
@@ -99,6 +113,7 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
         if (keysRef.current.down) s.pitch = Math.max(s.pitch - 90 * DT, -20);
 
         const speed = Math.hypot(s.vx, s.vy);
+        const mass = s.mass || DEF_MASS;
         const q = 0.5 * AIR_DENSITY * speed * speed;
         const pitchRad = s.pitch * Math.PI / 180;
 
@@ -116,13 +131,12 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
         const drag = q * WING_AREA * Math.max(0.005, cdEff);
 
         // Forces in world coordinates
-        // Lift perpendicular to velocity, drag opposing velocity
         const vAngle = Math.atan2(s.vy, s.vx);
         const fx = -drag * Math.cos(vAngle) - lift * Math.sin(vAngle);
-        const fy = -drag * Math.sin(vAngle) + lift * Math.cos(vAngle) - MASS * GRAVITY;
+        const fy = -drag * Math.sin(vAngle) + lift * Math.cos(vAngle) - mass * GRAVITY;
 
-        s.vx += (fx / MASS) * DT;
-        s.vy += (fy / MASS) * DT;
+        s.vx += (fx / mass) * DT;
+        s.vy += (fy / mass) * DT;
 
         // Clamp speed
         const newSpeed = Math.hypot(s.vx, s.vy);
@@ -173,17 +187,28 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
       // Camera follows the glider
       const camX = s.x - w * 0.25;
       const camY = s.y - h * 0.5;
-      const scale = 1.8; // pixels per metre
+      const scale = 1.8;
 
       const toScreenX = (wx) => (wx - camX) * scale;
       const toScreenY = (wy) => h - (wy - camY) * scale;
 
-      // Stars (fixed)
+      // ── Parallax stars (very slow) ──
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       for (let i = 0; i < 60; i++) {
-        const sx = ((i * 137.5 + 50) % w);
-        const sy = ((i * 73.7 + 30) % (h * 0.6));
+        const sx = ((i * 137.5 + 50 - s.x * 0.02) % w + w) % w;
+        const sy = ((i * 73.7 + 30 + s.y * 0.01) % (h * 0.6));
         ctx.fillRect(sx, sy, 1.2, 1.2);
+      }
+
+      // ── Parallax clouds (medium speed) ──
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let i = 0; i < 8; i++) {
+        const cx = ((i * 310 + 80 - s.x * 0.15) % (w + 200) + w + 200) % (w + 200) - 100;
+        const cy = 30 + (i * 47 % 80) + s.y * 0.05;
+        const cw = 60 + (i * 31 % 80);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cw, 12 + (i % 3) * 4, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // Ground
@@ -196,6 +221,17 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
         ctx.fillStyle = gGrad;
         ctx.fillRect(0, groundScreenY, w, h - groundScreenY);
 
+        // ── Scrolling ground details (trees/bushes) ──
+        ctx.fillStyle = '#3a6a3a';
+        for (let i = 0; i < 30; i++) {
+          const tx = ((i * 97 + 20 - s.x * scale * 0.8) % (w + 100) + w + 100) % (w + 100) - 50;
+          const th = 6 + (i * 13 % 10);
+          ctx.fillRect(tx, groundScreenY - th, 3, th);
+          ctx.beginPath();
+          ctx.arc(tx + 1.5, groundScreenY - th, 5 + (i % 4), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
         // Ground line
         ctx.strokeStyle = '#4a8a4a';
         ctx.lineWidth = 2;
@@ -203,6 +239,17 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
         ctx.moveTo(0, groundScreenY);
         ctx.lineTo(w, groundScreenY);
         ctx.stroke();
+
+        // ── Distance markers on ground ──
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.font = '9px monospace';
+        for (let d = 100; d < s.x + 600; d += 100) {
+          const dx = toScreenX(d);
+          if (dx > 0 && dx < w) {
+            ctx.fillRect(dx, groundScreenY, 1, 8);
+            ctx.fillText(`${d}m`, dx + 3, groundScreenY + 14);
+          }
+        }
       }
 
       // Altitude markers
@@ -329,7 +376,7 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
 
     animRef.current = requestAnimationFrame(loop);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [show, baseCl, baseCd, bestDist]);
+  }, [show, phase, baseCl, baseCd, bestDist]);
 
   if (!show) return null;
 
@@ -351,48 +398,81 @@ const GliderSimModal = ({ show, onClose, cl, cd, airfoilName = 'AIRFOIL' }) => {
               <h2 className="text-base font-mono font-bold uppercase tracking-wider">Test Flight — {airfoilName}</h2>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => { e.stopPropagation(); resetSim(); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-wider border border-white/15 text-brand-300 hover:bg-white/5 hover:text-white transition-colors"
-              >
-                <RotateCcw size={12} /> Restart
-              </button>
+              {phase === 'flying' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPhase('config'); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-wider border border-white/15 text-brand-300 hover:bg-white/5 hover:text-white transition-colors"
+                >
+                  <RotateCcw size={12} /> Reconfigure
+                </button>
+              )}
               <button onClick={onClose} className="text-brand-400 hover:text-white transition-colors p-1">
                 <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Canvas */}
-          <div className="relative w-full" style={{ height: '380px' }}>
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-
-            {/* Controls hint */}
-            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-              <div className="text-[9px] font-mono text-brand-400 uppercase tracking-widest mb-1">Controls</div>
-              <div className="flex gap-3">
-                <span className="text-[10px] font-mono text-white">↑ Pitch Up</span>
-                <span className="text-[10px] font-mono text-white">↓ Pitch Down</span>
-              </div>
-            </div>
-
-            {/* Landed overlay */}
-            {metrics.status === 'landed' && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none"
-              >
-                <div className="text-center">
-                  <div className="text-2xl font-mono font-bold text-white mb-1">LANDED</div>
-                  <div className="text-lg font-mono text-[var(--color-accent-neon)]">{metrics.dist.toFixed(0)}m distance</div>
-                  {bestDist > 0 && (
-                    <div className="text-xs font-mono text-amber-300 mt-1">Best: {bestDist.toFixed(0)}m</div>
-                  )}
+          {/* Pre-launch config */}
+          {phase === 'config' && (
+            <div className="p-5 flex flex-col gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                {/* Altitude */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-mono text-brand-400 uppercase tracking-widest flex items-center gap-1"><Mountain size={10}/> Altitude</label>
+                  <input type="number" min={50} max={500} value={launchAlt} onChange={e => setLaunchAlt(Math.max(50, Math.min(500, +e.target.value || 50)))}
+                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-[var(--color-accent-neon)] font-mono focus:outline-none focus:border-[var(--color-accent-neon)] transition-colors" />
+                  <input type="range" min={50} max={500} step={10} value={launchAlt} onChange={e => setLaunchAlt(+e.target.value)}
+                    className="w-full h-1.5 bg-brand-900 rounded-lg appearance-none cursor-pointer accent-[var(--color-accent-neon)]" />
+                  <span className="text-[9px] text-brand-500 font-mono">metres</span>
                 </div>
-              </motion.div>
-            )}
-          </div>
+                {/* Speed */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-mono text-brand-400 uppercase tracking-widest flex items-center gap-1"><Gauge size={10}/> Launch Speed</label>
+                  <input type="number" min={5} max={80} value={launchSpeed} onChange={e => setLaunchSpeed(Math.max(5, Math.min(80, +e.target.value || 5)))}
+                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-[var(--color-accent-blue)] font-mono focus:outline-none focus:border-[var(--color-accent-blue)] transition-colors" />
+                  <input type="range" min={5} max={80} step={1} value={launchSpeed} onChange={e => setLaunchSpeed(+e.target.value)}
+                    className="w-full h-1.5 bg-brand-900 rounded-lg appearance-none cursor-pointer accent-[var(--color-accent-blue)]" />
+                  <span className="text-[9px] text-brand-500 font-mono">m/s</span>
+                </div>
+                {/* Mass */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-mono text-brand-400 uppercase tracking-widest flex items-center gap-1"><Weight size={10}/> Aircraft Mass</label>
+                  <input type="number" min={0.5} max={20} step={0.1} value={launchMass} onChange={e => setLaunchMass(Math.max(0.5, Math.min(20, +e.target.value || 0.5)))}
+                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-[#a78bfa] font-mono focus:outline-none focus:border-[#a78bfa] transition-colors" />
+                  <input type="range" min={0.5} max={20} step={0.1} value={launchMass} onChange={e => setLaunchMass(+e.target.value)}
+                    className="w-full h-1.5 bg-brand-900 rounded-lg appearance-none cursor-pointer accent-[#a78bfa]" />
+                  <span className="text-[9px] text-brand-500 font-mono">kg</span>
+                </div>
+              </div>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleLaunch}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-mono font-bold text-sm uppercase tracking-wider bg-gradient-to-r from-[var(--color-accent-blue)] to-[var(--color-accent-neon)] text-white shadow-[0_0_25px_rgba(0,240,255,0.25)] hover:shadow-[0_0_35px_rgba(0,240,255,0.4)] transition-shadow">
+                <Play size={16}/> LAUNCH
+              </motion.button>
+            </div>
+          )}
+
+          {/* Canvas (only visible when flying) */}
+          {phase === 'flying' && (
+            <div className="relative w-full" style={{ height: '380px' }}>
+              <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                <div className="text-[9px] font-mono text-brand-400 uppercase tracking-widest mb-1">Controls</div>
+                <div className="flex gap-3">
+                  <span className="text-[10px] font-mono text-white">↑ Pitch Up</span>
+                  <span className="text-[10px] font-mono text-white">↓ Pitch Down</span>
+                </div>
+              </div>
+              {metrics.status === 'landed' && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
+                  <div className="text-center">
+                    <div className="text-2xl font-mono font-bold text-white mb-1">LANDED</div>
+                    <div className="text-lg font-mono text-[var(--color-accent-neon)]">{metrics.dist.toFixed(0)}m distance</div>
+                    {bestDist > 0 && <div className="text-xs font-mono text-amber-300 mt-1">Best: {bestDist.toFixed(0)}m</div>}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
 
           {/* Telemetry */}
           <div className="grid grid-cols-5 gap-0 border-t border-white/5">
