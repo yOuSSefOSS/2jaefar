@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppContext, FLOW_VISUAL_OPTIONS } from '../context/AppContext';
 import SimulationView from '../components/SimulationView';
+import { motion } from 'framer-motion';
 
 const PREVIEW_AIRFOIL = {
   name: "Preview Profile",
@@ -101,17 +102,33 @@ const Settings = () => {
   const [flowActivePreview, setFlowActivePreview] = React.useState(true);
 
   return (
-    <div className="w-full h-full glass-panel flex overflow-hidden">
+    <div className="w-full h-full premium-glass flex overflow-hidden">
       
       {/* Left side: Settings Container */}
       <div className="flex-[0_0_100%] xl:flex-[0_0_55%] flex flex-col p-8 overflow-y-auto custom-scrollbar pb-16">
-         <h1 className="text-2xl font-bold text-white tracking-widest uppercase mb-8 border-b border-white/10 pb-4 shrink-0">System Preferences</h1>
+         <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-2xl font-bold text-white tracking-widest uppercase mb-8 border-b border-white/10 pb-4 shrink-0"
+         >
+            System Preferences
+         </motion.h1>
          
-         <div className="space-y-6 max-w-2xl">
+         <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={{
+               hidden: { opacity: 0 },
+               visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+            }}
+            className="space-y-6 max-w-2xl"
+         >
             
             {/* NeuralFoil Toggle */}
-            <div 
-               className="bg-brand-800/50 p-6 rounded-xl border border-white/5 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer"
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer backdrop-blur-md shadow-xl"
                onClick={() => setUseNeuralFoil(!useNeuralFoil)}
             >
                <div>
@@ -122,13 +139,18 @@ const Settings = () => {
                   <p className="text-sm text-brand-300">Utilize the PyTorch backend API for high-accuracy CFD predictions. If disabled, uses rudimentary math approximations.</p>
                </div>
                <div className={`w-12 h-6 flex-shrink-0 rounded-full relative shadow-[0_0_10px_var(--color-accent-blue)] transition-colors ${useNeuralFoil ? 'bg-[var(--color-accent-blue)]' : 'bg-gray-600 shadow-none'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-md transition-all ${useNeuralFoil ? 'right-1' : 'left-1'}`}></div>
+                  <motion.div 
+                     layout
+                     className="w-4 h-4 bg-white rounded-full absolute top-1 shadow-md"
+                     style={{ [useNeuralFoil ? 'right' : 'left']: '4px' }}
+                  />
                </div>
-            </div>
+            </motion.div>
 
             {/* Low Power Mode Toggle */}
-            <div 
-               className="bg-brand-800/50 p-6 rounded-xl border border-white/5 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer"
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer backdrop-blur-md shadow-xl"
                onClick={() => setLowPowerMode(!lowPowerMode)}
             >
                <div>
@@ -139,12 +161,19 @@ const Settings = () => {
                   <p className="text-sm text-brand-300">Reduces 3D flow particle count by half (and tightens streakline seeds) to save GPU and battery.</p>
                </div>
                <div className={`w-12 h-6 flex-shrink-0 rounded-full relative shadow-[0_0_10px_var(--color-accent-neon)] transition-colors ${lowPowerMode ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-600 shadow-none'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-md transition-all ${lowPowerMode ? 'right-1' : 'left-1'}`}></div>
+                  <motion.div 
+                     layout
+                     className="w-4 h-4 bg-white rounded-full absolute top-1 shadow-md"
+                     style={{ [lowPowerMode ? 'right' : 'left']: '4px' }}
+                  />
                </div>
-            </div>
+            </motion.div>
 
             {/* Flow / streamline look (3D viewport) */}
-            <div className="bg-brand-800/50 p-6 rounded-xl border border-white/5 flex flex-col gap-4">
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex flex-col gap-4 backdrop-blur-md shadow-xl"
+            >
                <div>
                   <h3 className="text-white font-semibold">Flow visualization</h3>
                   <p className="text-sm text-brand-300">How wind particles and streaklines appear in the dashboard 3D view (Start Flow).</p>
@@ -155,39 +184,54 @@ const Settings = () => {
                         key={opt.id}
                         type="button"
                         onClick={() => setFlowVisualMode(opt.id)}
-                        className={`text-left py-3 px-4 rounded-lg border transition-all ${
+                        className={`text-left py-3 px-4 rounded-xl border transition-all relative overflow-hidden ${
                           flowVisualMode === opt.id
-                            ? 'bg-[var(--color-accent-blue)]/15 border-[var(--color-accent-blue)] text-white shadow-[0_0_12px_rgba(14,165,233,0.25)]'
+                            ? 'bg-[var(--color-accent-blue)]/15 border-[var(--color-accent-blue)] text-white shadow-[0_0_15px_rgba(14,165,233,0.3)]'
                             : 'bg-black/20 border-white/10 text-brand-400 hover:border-white/25 hover:text-brand-200'
                         }`}
                      >
-                        <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-accent-blue)] mb-1">{opt.label}</div>
-                        <div className="text-[11px] leading-snug text-brand-300">{opt.description}</div>
+                        <div className="relative z-10">
+                           <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-accent-blue)] mb-1">{opt.label}</div>
+                           <div className="text-[11px] leading-snug text-brand-300">{opt.description}</div>
+                        </div>
                      </button>
                   ))}
                </div>
-            </div>
+            </motion.div>
 
             {/* Units Selector */}
-            <div className="bg-brand-800/50 p-6 rounded-xl border border-white/5 flex flex-col gap-4">
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex flex-col gap-4 backdrop-blur-md shadow-xl"
+            >
                <div>
                   <h3 className="text-white font-semibold">Measurement Units</h3>
                   <p className="text-sm text-brand-300">Select standard metric or imperial aviation units.</p>
                </div>
-               <div className="flex bg-black/40 rounded-lg p-1 w-full max-w-xs border border-white/10">
+               <div className="flex bg-black/40 rounded-xl p-1 w-full max-w-xs border border-white/10 relative">
+                  <motion.div
+                     layoutId="unitsIndicator"
+                     className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[var(--color-accent-blue)] rounded-lg shadow-md"
+                     initial={false}
+                     animate={{ x: units === 'metric' ? 0 : '100%' }}
+                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
                   <button 
                     onClick={() => setUnits('metric')} 
-                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${units === 'metric' ? 'bg-[var(--color-accent-blue)] text-white shadow-md' : 'text-brand-400 hover:text-white'}`}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors relative z-10 ${units === 'metric' ? 'text-white' : 'text-brand-400 hover:text-white'}`}
                   >Metric (m/s)</button>
                   <button 
                     onClick={() => setUnits('imperial')} 
-                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${units === 'imperial' ? 'bg-[var(--color-accent-blue)] text-white shadow-md' : 'text-brand-400 hover:text-white'}`}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors relative z-10 ${units === 'imperial' ? 'text-white' : 'text-brand-400 hover:text-white'}`}
                   >Imperial (mph)</button>
                </div>
-            </div>
+            </motion.div>
 
             {/* Alarm Audio Settings */}
-            <div className="bg-brand-800/50 p-6 rounded-xl border border-white/5 flex flex-col gap-6">
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex flex-col gap-6 backdrop-blur-md shadow-xl"
+            >
                <div>
                   <h3 className="text-white font-semibold">Alarm Audio</h3>
                   <p className="text-sm text-brand-300">Configure the stall warning audio profile and volume.</p>
@@ -207,9 +251,9 @@ const Settings = () => {
                             setSoundPreset(p.id);
                             playPreview(p.id);
                           }}
-                          className={`py-2 px-3 rounded-lg text-xs font-mono uppercase tracking-wider border transition-all ${soundPreset === p.id ? 'bg-[var(--color-accent-pink)]/20 border-[var(--color-accent-pink)] text-[var(--color-accent-pink)] shadow-[0_0_10px_rgba(236,72,153,0.3)]' : 'bg-black/20 border-white/10 text-brand-400 hover:border-white/30'}`}
+                          className={`py-2 px-3 rounded-xl text-xs font-mono uppercase tracking-wider border transition-all relative overflow-hidden ${soundPreset === p.id ? 'bg-[var(--color-accent-pink)]/20 border-[var(--color-accent-pink)] text-[var(--color-accent-pink)] shadow-[0_0_15px_rgba(244,63,94,0.3)]' : 'bg-black/20 border-white/10 text-brand-400 hover:border-white/30 hover:text-brand-200'}`}
                         >
-                          {p.label}
+                          <span className="relative z-10">{p.label}</span>
                         </button>
                      ))}
                   </div>
@@ -233,10 +277,13 @@ const Settings = () => {
                      className="w-full h-2 bg-brand-900 rounded-lg appearance-none cursor-pointer accent-[var(--color-accent-pink)]"
                   />
                </div>
-            </div>
+            </motion.div>
 
             {/* Graph Bounds Sliders */}
-            <div className="bg-brand-800/50 p-6 rounded-xl border border-white/5 flex flex-col gap-5 border-b-transparent">
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex flex-col gap-5 border-b-transparent backdrop-blur-md shadow-xl"
+            >
                <div>
                   <h3 className="text-white font-semibold">Graph Bounds (AoA Calculation Range)</h3>
                   <p className="text-sm text-brand-300">Limit the NeuralFoil sweep to specific Angles of Attack.</p>
@@ -260,8 +307,8 @@ const Settings = () => {
                  />
                  <span className="w-8 font-mono text-[var(--color-accent-blue)] font-bold">{graphBounds.max}°</span>
                </div>
-            </div>
-         </div>
+            </motion.div>
+         </motion.div>
       </div>
 
       {/* Right side: 3D Live View */}

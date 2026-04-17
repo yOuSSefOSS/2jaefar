@@ -4,83 +4,127 @@
 
 # 🌪️ Vortex-Gen: Interactive 3D Wind Tunnel
 
-**Vortex-Gen** is a professional, high-fidelity real-time aerodynamics simulation engine designed for education, engineering intuition, and the **Hackathon Competition**. 
-
-It combines advanced 3D rendering with neural-network-backed physics to allow users to interactively test airfoils in a virtual wind tunnel, instantly visualizing complex phenomena like pressure distribution, lift generation, and stall dynamics.
-
----
-
-## ✨ Key Features & "Wow Factor"
-
-- 🚀 **Real-Time 3D CFD Visualization:** Built on `React-Three-Fiber`, featuring dynamic surface pressure heatmaps (Cp) and an interactive particle flow engine.
-- 🧠 **Interactive "Aero-Facts" Learn Mode:** A contextual, physics-aware educational engine. It detects the current simulation state (Angle of Attack, Wind Speed, Stall regime) and dynamically surfaces responsive tooltips, physical equations, and real-time concept summaries (e.g., *Boundary Layer Separation*, *Bernoulli's Principle*).
-- ⚙️ **Machine Learning Physics Core:** Utilizes `NeuralFoil` (PyTorch) on the backend to predict real-world aerodynamic coefficients (Cl, Cd) in milliseconds, bypassing hours of traditional CFD meshing.
-- 💎 **Premium Glassmorphism UI:** A meticulously crafted interface featuring multi-layered blur shadows, spring-eased micro-animations, glowing gradient sliders, and a dynamic Drag Polar chart.
-- 🏎️ **Highly Optimized:** Constant-hoisting in the 3D render loops, React.memo caching, and GPU-composited overlay layers guarantee a buttery smooth 60fps experience even during rapid interactions.
+## 📖 Project Overview
+**Vortex-Gen** is a professional, high-fidelity real-time aerodynamics simulation engine designed for education, engineering intuition, and competitive hackathons. It seamlessly blends advanced 3D rendering with a neural-network-backed physics core. Users can interactively test airfoil shapes in a virtual wind tunnel, instantly visualizing complex aerodynamic phenomena like pressure distribution, lift generation, and stall dynamics without the agonizing wait times of traditional Computational Fluid Dynamics (CFD).
 
 ---
 
-## 🛠️ Installation & Setup (Start Here)
+## 💻 Tech Stack
+The project uses a modern, high-performance web architecture separated into a frontend UI and a dedicated physics backend:
 
-To maintain a lightweight and high-performance repository, all `node_modules` folders have been excluded. Ensure you have **Node.js** and **Python 3** installed.
+**Frontend (UI & 3D Rendering):**
+- **React 19 & Vite:** Lightning-fast UI framework and build tool.
+- **Three.js & React-Three-Fiber (Drei):** WebGL-accelerated 3D rendering for flow particles and geometries.
+- **Tailwind CSS v4:** Utility-first framework for crafting a premium Glassmorphism design system.
+- **Framer Motion:** Spring-physics-based micro-animations and smooth layout transitions.
+- **Recharts:** Dynamic SVG charts for real-time Drag Polar and Lift Coefficient data.
 
-### 1. Clone the Repository
-Open your terminal and run:
+**Backend (API & Machine Learning Physics Core):**
+- **Node.js & Express:** Lightweight, asynchronous REST API.
+- **Python 3 & Numpy:** Data processing and numerical calculations.
+- **NeuralFoil (PyTorch):** Deep-learning surrogate model that predicts airfoil aerodynamic properties (Cl, Cd) in milliseconds.
 
+---
+
+## 🏗️ Architecture
+Vortex-Gen relies on a **Daemon-based Architecture** to achieve real-time interactivity:
+
+1. **Frontend Client:** Captures user inputs (Angle of Attack, Velocity, Shape modifiers) and sends JSON payloads to the Express server.
+2. **Node.js Gateway (`server.js`):** Acts as a bridge. Instead of spinning up a new Python script per request, it maintains a permanent `child_process`.
+3. **Python Daemon (`run_nf.py`):** The NeuralFoil ML model is mathematically heavy, and initializing it takes time. By running Python in `--daemon` mode, the model is loaded into memory exactly once. It listens to `stdin` for JSON configurations, executes the aerodynamics prediction instantly, and writes the results to `stdout`.
+4. **Data Return:** Node parses the stream and returns standard HTTP responses to the frontend, which interpolates the data into 3D particle updates and Recharts graphs.
+
+---
+
+## ✨ Features
+- 🚀 **Real-Time 3D CFD Visualization:** Interactive 3D particle flow engine and dynamic surface pressure heatmaps.
+- 🧠 **"Aero-Facts" Learn Mode:** A contextual, physics-aware educational engine that surfaces real-time concept summaries (e.g., Boundary Layer Separation, Bernoulli's Principle) based on current Angle of Attack and wind speed.
+- ⚡ **Instantaneous Physics:** Predicts real-world aerodynamic coefficients (Cl, Cd) in milliseconds using an ML surrogate, replacing hours of traditional meshing.
+- 💎 **Premium Glassmorphism UI:** Features multi-layered blur shadows, smooth micro-animations, glowing sliders, and dynamic charts.
+- 🏎️ **Optimized Render Loop:** Uses Three.js constant-hoisting and React.memo caching to guarantee a smooth 60fps experience under heavy interaction.
+
+---
+
+## 🧪 Testing
+Currently, the codebase relies on static analysis and manual integration testing. 
+
+**Linting:**
+To check the frontend codebase for errors and enforce code style, use ESLint:
 ```bash
-git clone https://github.com/mahmoud31fathy/Hackathon_Comp.git
-cd Hackathon_Comp
+cd frontend
+npm run lint
 ```
 
-### 2. Root Directory Setup
-Install global project dependencies:
+**Manual Verification:**
+1. Start both servers.
+2. Ensure the backend console displays `[Python]: Loading Neuralfoil model into memory...` and does not crash.
+3. Open the frontend and manipulate the "Angle of Attack" slider. The Data Charts and 3D Canvas should update synchronously without stuttering. 
 
-```bash
-npm install
+---
+
+## 📁 Folder Structure
+```text
+├── backend/                  # Node.js and Python Physics Engine
+│   ├── run_nf.py             # Python daemon utilizing NeuralFoil
+│   ├── server.js             # Express.js REST API gateway
+│   └── package.json          # Backend dependencies
+├── frontend/                 # React SPA & 3D Engine
+│   ├── public/               # Static assets (Banner, Icons)
+│   ├── src/                  
+│   │   ├── components/       # Reusable UI & 3D Components (SimulationView, DataChart, etc.)
+│   │   ├── context/          # Global React Context for state management
+│   │   ├── layouts/          # Main application wrappers
+│   │   ├── pages/            # View routes (Home, Profile, Settings)
+│   │   ├── services/         # Axios API interceptors
+│   │   ├── App.jsx           # Root component
+│   │   └── index.css         # Tailwind v4 configuration and global styles
+│   ├── index.html            # Entry point
+│   ├── vite.config.js        # Vite build configuration
+│   └── package.json          # Frontend dependencies
+├── start_servers.bat         # Windows batch script to launch both environments
+├── oldREADME.md              # Previous documentation version
+└── README.md                 # Project Documentation
 ```
 
-### 3. Backend Environment Setup (Node & Python)
-Our aerodynamic predictions are powered by the NeuralFoil engine. Open a terminal window and navigate to the backend:
+---
 
+## 🚀 How to Run the Project
+
+### Prerequisites
+- **Node.js** (v18+)
+- **Python 3.9+** (with pip)
+
+### 1. Root Directory Setup
+Clone the repository, then initialize dependencies.
+
+### 2. Backend Setup
+The ML engine needs a Python environment and Node server.
 ```bash
 cd backend
 npm install
+
+# Install Python dependencies (using a virtual environment is recommended)
 python -m pip install neuralfoil numpy
+
+# Start the Node.js API and Python Daemon
 node server.js
 ```
-*Wait for the console to confirm the server is running (e.g., "Backend Running on port 5000").*
+*Wait until the console says "Firing up persistent Python Neuralfoil Daemon..."*
 
-### 4. Frontend Environment Setup
-Open a **second** terminal window (leave the backend running) and navigate to the frontend:
-
+### 3. Frontend Setup
+Open a **new** terminal window:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*The application will be accessible at http://localhost:5173 (or the URL shown in your Vite terminal).*
+*Navigate to `http://localhost:5173` in a hardware-accelerated browser (such as Chrome or Edge).*
 
 ---
 
-## 📂 Project Structure & Core Architecture
-
-- **`/backend`**: Node.js & Express server bridging the frontend to a Python-based machine learning physics engine.
-- **`/frontend`**: React UI, state management, 3D Canvas, and the "Learn Mode" educational overlays.
-  - `/src/components/SimulationView.jsx`: The core 3D simulation, flow particles, and perspective control.
-  - `/src/components/AeroFactsPanel.jsx`: The context-aware physics insights engine.
-  - `/src/index.css`: Tailwind 4 architecture and premium CSS-in-JS configurations.
-- **`nextStep.md`**: Detailed roadmap for future features and scaling.
-
----
-
-## 💡 Technical Stack
-
-- **Frontend UI/UX**: React 18, Vite, Tailwind CSS v4, Lucide Icons, Recharts.
-- **3D Engine**: Three.js, React-Three-Fiber, Drei.
-- **Backend / Server**: Node.js, Express.
-- **Machine Learning Physics Engine**: Python, Numpy, NeuralFoil, PyTorch.
-
----
-
-## ⚡ Important Note for Judges & Developers
-Experiencing lag? The simulation computes heavy physics math. We have highly optimized the real-time simulation loops, but hardware-accelerated browsers (like Chrome or Edge) will provide the best 60fps glass-morphed visual experience. Running `npm install` in each directory is strictly required to build the web framework dependencies!
+## 🔮 Future Improvements
+- **Custom Airfoil Importer:** Allow users to upload `.dat` coordinate files to test custom geometries and shapes.
+- **3D Volumetric Smoke:** Upgrade the particle system to simulate volumetric smoke trails and realistic turbulence wakes.
+- **Automated Test Suite:** Implement `Vitest` and `React Testing Library` for the frontend UI, and `pytest` for the Python physics core.
+- **Export & Reporting:** Generate downloadable PDF reports of the tested aerodynamic performance (Lift/Drag ratios over time).
+- **Multi-threaded Web Workers:** Offload the formatting of heavy ML data arrays to Web Workers to ensure the main UI thread never blocks during massive computations.

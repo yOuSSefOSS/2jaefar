@@ -6,7 +6,8 @@ import SimulationView from '../components/SimulationView';
 import DataChart from '../components/DataChart';
 import PolarChart from '../components/PolarChart';
 import AeroFactsPanel from '../components/AeroFactsPanel';
-import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings } from 'lucide-react';
+import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // ─── Generic NACA 4-digit coordinate generator ───────────────────────────────
 const computeNACA = (m, p, t, N = 60) => {
@@ -576,7 +577,8 @@ const Home = () => {
         for (const row of polar) {
           const aoa = row.aoa;
           const cl = Number(row.cl);
-          if (aoa >= graphBounds.min && aoa <= graphBounds.max && cl > bestCl) {
+          // Only consider positive angles of attack for best performance
+          if (aoa >= 0 && aoa <= graphBounds.max && cl > bestCl) {
             bestCl = cl;
             bestAoa = aoa;
             bestLabel = c.label;
@@ -584,7 +586,12 @@ const Home = () => {
           }
         }
 
-        const rowBest = polar.reduce((a, b) => (Number(b.cl) > Number(a.cl) ? b : a), polar[0]);
+        // Also restrict preview to positive AoA
+        const positivePolar = polar.filter(r => r.aoa >= 0);
+        const rowBest = positivePolar.length > 0
+          ? positivePolar.reduce((a, b) => (Number(b.cl) > Number(a.cl) ? b : a), positivePolar[0])
+          : polar[0];
+          
         setAutotunePreview({
           airfoilData: points,
           name: c.label,
@@ -731,13 +738,20 @@ const Home = () => {
 
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1800px] mx-auto w-full pb-8">
+    <motion.div 
+       initial="hidden" animate="visible"
+       variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
+       className="flex flex-col gap-6 max-w-[1800px] mx-auto w-full pb-8"
+    >
 
       {/* Top 4-col grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-[500px]">
 
         {/* ── Left: Library + Importer ── */}
-        <div className="col-span-1 glass-panel p-4 flex flex-col gap-4 max-h-[600px]">
+        <motion.div 
+           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+           className="col-span-1 premium-glass p-4 flex flex-col gap-4 max-h-[600px] shadow-2xl"
+        >
           <h2 className="text-sm font-mono tracking-widest text-[var(--color-accent-neon)] uppercase flex-shrink-0">Geometry Library</h2>
 
           <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
@@ -759,10 +773,13 @@ const Home = () => {
             {importError&&<div className="text-[10px] text-[var(--color-accent-pink)] font-mono">{importError}</div>}
             <div className="text-[9px] text-brand-400 font-mono leading-relaxed">Selig .dat format (X Y pairs). NACA coords supported.</div>
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Center: Viewport ── */}
-        <div className="col-span-1 lg:col-span-2 relative">
+        <motion.div 
+           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+           className="col-span-1 lg:col-span-2 relative shadow-2xl rounded-3xl overflow-hidden"
+        >
           <SimulationView
             isSimulating={isSimulating}
             activeShape={activeShape}
@@ -795,10 +812,13 @@ const Home = () => {
               onClose={() => setAeroFactsActive(false)}
             />
           )}
-        </div>
+        </motion.div>
 
         {/* ── Right: Controls ── */}
-        <div className="col-span-1 glass-panel p-6 flex flex-col max-h-[600px]">
+        <motion.div 
+           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+           className="col-span-1 premium-glass p-6 flex flex-col max-h-[600px] shadow-2xl"
+        >
           <div ref={densitySettingsRef} className="relative flex justify-between items-center mb-2 flex-shrink-0 w-full">
             <h2 className="text-sm font-mono tracking-widest text-[var(--color-accent-blue)] uppercase">Environment</h2>
             <button 
@@ -959,11 +979,14 @@ const Home = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Bottom Charts — 3-column grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[280px] flex-shrink-0 relative">
+      <motion.div 
+         variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+         className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[280px] flex-shrink-0 relative"
+      >
         {isSimulating && (
            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
              <div className="text-[var(--color-brand-100)] font-mono animate-pulse tracking-widest text-sm flex gap-3 items-center">
@@ -982,12 +1005,15 @@ const Home = () => {
           stallCl={stallPoint.cl}
           isStalling={isStalling}
         />
-      </div>
+      </motion.div>
 
       {/* Import Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="glass-panel p-6 w-full max-w-md flex flex-col gap-5 border border-[var(--color-accent-blue)]/30">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            className="premium-glass p-6 w-full max-w-md flex flex-col gap-5 border border-[var(--color-accent-blue)]/30 shadow-[0_0_40px_rgba(14,165,233,0.15)]"
+          >
             <div className="flex items-center gap-3 text-[var(--color-accent-neon)]">
               <Upload size={20} />
               <h2 className="text-lg font-mono font-bold uppercase tracking-wider">Save Imported Airfoil</h2>
@@ -1016,7 +1042,7 @@ const Home = () => {
                 Add to Library
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -1029,7 +1055,7 @@ const Home = () => {
         density={density}
         setDensity={setDensity}
       />
-    </div>
+    </motion.div>
   );
 };
 
