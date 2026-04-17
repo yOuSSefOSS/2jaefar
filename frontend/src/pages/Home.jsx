@@ -6,7 +6,9 @@ import SimulationView from '../components/SimulationView';
 import DataChart from '../components/DataChart';
 import PolarChart from '../components/PolarChart';
 import AeroFactsPanel from '../components/AeroFactsPanel';
-import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X } from 'lucide-react';
+import STLExportModal from '../components/STLExportModal';
+import GliderSimModal from '../components/GliderSimModal';
+import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X, Download, Plane } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // ─── Generic NACA 4-digit coordinate generator ───────────────────────────────
@@ -293,6 +295,8 @@ const Home = () => {
   const [densityError, setDensityError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [manualDensity, setManualDensity] = useState(false);
+  const [showSTLExport, setShowSTLExport] = useState(false);
+  const [showGliderSim, setShowGliderSim] = useState(false);
   const fileInputRef = useRef(null);
   const densitySettingsRef = useRef(null);
   
@@ -773,6 +777,26 @@ const Home = () => {
             {importError&&<div className="text-[10px] text-[var(--color-accent-pink)] font-mono">{importError}</div>}
             <div className="text-[9px] text-brand-400 font-mono leading-relaxed">Selig .dat format (X Y pairs). NACA coords supported.</div>
           </div>
+
+          {/* Export & Flight Actions */}
+          <div className="flex-shrink-0 border-t border-white/10 pt-3 flex flex-col gap-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setShowSTLExport(true)}
+              disabled={!hasTarget}
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-[var(--color-accent-neon)]/30 bg-[var(--color-accent-neon)]/5 hover:bg-[var(--color-accent-neon)]/10 text-[var(--color-accent-neon)] text-[11px] font-mono font-bold tracking-wider transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <Download size={13}/> EXPORT 3D (.STL)
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setShowGliderSim(true)}
+              disabled={!hasTarget || isSimulating}
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-[#a78bfa]/30 bg-[#a78bfa]/5 hover:bg-[#a78bfa]/10 text-[#a78bfa] text-[11px] font-mono font-bold tracking-wider transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <Plane size={13}/> TEST FLIGHT
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* ── Center: Viewport ── */}
@@ -1054,6 +1078,23 @@ const Home = () => {
         setManualDensity={setManualDensity}
         density={density}
         setDensity={setDensity}
+      />
+
+      {/* STL Export Modal */}
+      <STLExportModal
+        show={showSTLExport}
+        onClose={() => setShowSTLExport(false)}
+        airfoilPoints={activeShape?.airfoilData}
+        airfoilName={activeShape?.name || 'AIRFOIL'}
+      />
+
+      {/* Glider Flight Simulator */}
+      <GliderSimModal
+        show={showGliderSim}
+        onClose={() => setShowGliderSim(false)}
+        cl={currentAeroItem.cl}
+        cd={currentAeroItem.cd}
+        airfoilName={activeShape?.name || 'AIRFOIL'}
       />
     </motion.div>
   );
