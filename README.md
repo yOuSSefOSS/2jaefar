@@ -24,6 +24,10 @@ The project uses a modern, high-performance web architecture separated into a fr
 - **Python 3 & Numpy:** Data processing and numerical calculations.
 - **NeuralFoil (PyTorch):** Deep-learning surrogate model that predicts airfoil aerodynamic properties (Cl, Cd) in milliseconds.
 
+**Deployment:**
+- **Vercel:** Edge-hosted lightning-fast frontend delivery.
+- **Railway & Docker:** Containerized backend deployment ensuring the persistent Python NeuralFoil daemon runs reliably in production.
+
 ---
 
 ## 🏗️ Architecture
@@ -38,6 +42,7 @@ Vortex-Gen relies on a **Daemon-based Architecture** to achieve real-time intera
 
 ## ✨ Features
 - 🚀 **Real-Time 3D CFD Visualization:** Interactive 3D particle flow engine and dynamic surface pressure heatmaps.
+- 📥 **Custom Airfoil Import:** Upload standard `.dat` coordinate files to instantly test custom geometries in the wind tunnel.
 - 🧠 **"Aero-Facts" Learn Mode:** A contextual, physics-aware educational engine that surfaces real-time concept summaries (e.g., Boundary Layer Separation, Bernoulli's Principle) based on current Angle of Attack and wind speed.
 - ⚡ **Instantaneous Physics:** Predicts real-world aerodynamic coefficients (Cl, Cd) in milliseconds using an ML surrogate, replacing hours of traditional meshing.
 - 💎 **Premium Glassmorphism UI:** Features multi-layered blur shadows, smooth micro-animations, glowing sliders, and dynamic charts.
@@ -67,8 +72,11 @@ npm run lint
 ├── backend/                  # Node.js and Python Physics Engine
 │   ├── run_nf.py             # Python daemon utilizing NeuralFoil
 │   ├── server.js             # Express.js REST API gateway
-│   └── package.json          # Backend dependencies
+│   ├── Dockerfile            # Docker configuration for Railway deployment
+│   ├── requirements.txt      # Python dependencies
+│   └── package.json          # Backend Node dependencies
 ├── frontend/                 # React SPA & 3D Engine
+│   ├── .env.production       # Production environment variables
 │   ├── public/               # Static assets (Banner, Icons)
 │   ├── src/                  
 │   │   ├── components/       # Reusable UI & 3D Components (SimulationView, DataChart, etc.)
@@ -82,7 +90,8 @@ npm run lint
 │   ├── vite.config.js        # Vite build configuration
 │   └── package.json          # Frontend dependencies
 ├── start_servers.bat         # Windows batch script to launch both environments
-├── oldREADME.md              # Previous documentation version
+├── vercel.json               # Vercel deployment configuration
+├── vercel_deployment_guide.md# Step-by-step production deployment guide
 └── README.md                 # Project Documentation
 ```
 
@@ -122,8 +131,16 @@ npm run dev
 
 ---
 
+## 🌍 Deployment (Production)
+The project is built with a dual-deployment strategy:
+1. **Frontend (Vercel):** The React SPA is deployed directly on Vercel using the configuration inside `vercel.json`. It securely connects to the deployed backend via the `VITE_API_URL` environment variable.
+2. **Backend (Railway):** Due to the complex requirement of a persistent Python daemon (`run_nf.py`) running alongside a Node.js API, the backend is containerized using `backend/Dockerfile`. It is hosted on Railway to ensure the NeuralFoil ML model stays in memory for instantaneous frontend predictions.
+
+For detailed step-by-step instructions on setting this up, please see the [Vercel Deployment Guide](vercel_deployment_guide.md).
+
+---
+
 ## 🔮 Future Improvements
-- **Custom Airfoil Importer:** Allow users to upload `.dat` coordinate files to test custom geometries and shapes.
 - **3D Volumetric Smoke:** Upgrade the particle system to simulate volumetric smoke trails and realistic turbulence wakes.
 - **Automated Test Suite:** Implement `Vitest` and `React Testing Library` for the frontend UI, and `pytest` for the Python physics core.
 - **Export & Reporting:** Generate downloadable PDF reports of the tested aerodynamic performance (Lift/Drag ratios over time).
