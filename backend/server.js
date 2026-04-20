@@ -6,7 +6,13 @@ const readline = require('readline');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',                    // local dev
+    'https://your-project.vercel.app',          // Vercel production
+    /\.vercel\.app$/                            // all Vercel preview URLs
+  ]
+}));
 app.use(express.json());
 
 // ─── START PYTHON DAEMON ──────────────────────────────────────────────────

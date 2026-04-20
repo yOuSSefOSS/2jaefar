@@ -508,7 +508,7 @@ const Home = () => {
   }, [pitchAngle, activeShapeId, setGoldenLiftActive]);
 
   const fetchNeuralPolar = async (points, alphaList, re, signal, modelSize = 'large') => {
-    const res = await fetch('http://localhost:5000/api/analyze', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ alpha: alphaList, Re: re, mach: 0, points, modelSize }),
@@ -703,7 +703,7 @@ const Home = () => {
     // Approximate Reynolds number based on wind speed and standard chord of 1m
     const reynolds = (windSpeed * density) / 1.5e-5;
 
-    fetch('http://localhost:5000/api/analyze', {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

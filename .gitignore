@@ -40,3 +40,6 @@ __pycache__/
 # Temporary Files
 backend/test.json
 
+# Vercel/Python ignored files
+backend/venv/
+backend/tmp_airfoil_*.dat
