@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Settings, User, Wind } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logoUrl from '../assets/logo.png';
 
 const DashboardLayout = ({ children, isBackendConnected }) => {
   const location = useLocation();
@@ -15,7 +16,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
         {/* Logo & Main Nav Area */}
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3">
-            <img src="/vortex-gen-logo.png" alt="Vortex-Gen Logo" className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+            <img src={logoUrl} alt="Vortex-Gen Logo" className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
             <span className="font-bold text-lg tracking-widest text-white">Vortex-Gen</span>
           </div>
 
