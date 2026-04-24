@@ -16,7 +16,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
         {/* Logo & Main Nav Area */}
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3">
-            <img src={logoUrl} alt="Vortex-Gen Logo" className="h-12 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+            <img src={logoUrl} alt="Vortex-Gen Logo" className="h-30 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
             <span className="font-bold text-xl tracking-widest text-white">Vortex-Gen</span>
           </div>
 

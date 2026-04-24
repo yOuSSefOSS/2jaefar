@@ -6,9 +6,12 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import { AppProvider } from './context/AppContext';
+import LoadingScreen from './components/LoadingScreen';
 
 function App() {
   const [isConnected, setIsConnected] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -18,6 +21,11 @@ function App() {
         if (isMounted) setIsConnected(true);
       } catch (error) {
         if (isMounted) setIsConnected(false);
+      } finally {
+        // Guarantee the loading screen shows for at least 2.5s to see the cool animation
+        setTimeout(() => {
+          if (isMounted) setIsInitializing(false);
+        }, 2500);
       }
     };
 
@@ -33,6 +41,12 @@ function App() {
 
   return (
     <AppProvider>
+      {showLoadingScreen && (
+        <LoadingScreen 
+          isInitializing={isInitializing} 
+          onLoadingComplete={() => setShowLoadingScreen(false)} 
+        />
+      )}
       <BrowserRouter>
         <DashboardLayout isBackendConnected={isConnected}>
           <Routes>

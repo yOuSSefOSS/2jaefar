@@ -7,6 +7,7 @@ import DataChart from '../components/DataChart';
 import PolarChart from '../components/PolarChart';
 import AeroFactsPanel from '../components/AeroFactsPanel';
 import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X } from 'lucide-react';
+import Export3DModal from '../components/Export3DModal';
 import { motion } from 'framer-motion';
 
 // ─── Generic NACA 4-digit coordinate generator ───────────────────────────────
@@ -284,6 +285,7 @@ const Home = () => {
   } = useAppContext();
 
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showExport3D, setShowExport3D] = useState(false);
   const [pendingAirfoil, setPendingAirfoil] = useState(null);
   const [pendingAirfoilName, setPendingAirfoilName] = useState('');
 
@@ -771,6 +773,22 @@ const Home = () => {
             </button>
             <input ref={fileInputRef} type="file" accept=".dat,.txt,.csv" className="hidden" onChange={handleFileUpload}/>
             {importError&&<div className="text-[10px] text-[var(--color-accent-pink)] font-mono">{importError}</div>}
+
+            {/* ── Extract as 3D ── */}
+            <button
+              onClick={() => setShowExport3D(true)}
+              disabled={!activeShape}
+              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all text-xs font-mono tracking-wider"
+              style={{
+                borderColor: activeShape ? 'rgba(139,92,246,0.45)' : 'rgba(255,255,255,0.08)',
+                background: activeShape ? 'rgba(139,92,246,0.07)' : 'transparent',
+                color: activeShape ? '#8b5cf6' : 'rgba(100,116,139,0.5)',
+                cursor: activeShape ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Box size={13}/> EXTRACT AS 3D
+            </button>
+
             <div className="text-[9px] text-brand-400 font-mono leading-relaxed">Selig .dat format (X Y pairs). NACA coords supported.</div>
           </div>
         </motion.div>
@@ -1054,6 +1072,13 @@ const Home = () => {
         setManualDensity={setManualDensity}
         density={density}
         setDensity={setDensity}
+      />
+
+      {/* Extract as 3D — Full-screen modal */}
+      <Export3DModal
+        isOpen={showExport3D}
+        onClose={() => setShowExport3D(false)}
+        activeShape={activeShape}
       />
     </motion.div>
   );
