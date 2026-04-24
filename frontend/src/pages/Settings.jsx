@@ -323,7 +323,7 @@ const Settings = () => {
            pitchAngle={10}
            windSpeed={50}
            flowActive={flowActivePreview}
-           onFlowToggle={() => setFlowActivePreview(p => !p)}
+            onFlowToggle={() => setFlowActivePreview(p => !p)}
            isPreview={true}
          />
       </div>
