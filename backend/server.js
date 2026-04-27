@@ -4,7 +4,16 @@ const cors = require('cors');
 const { spawn } = require('child_process');
 const readline = require('readline');
 const { createClient } = require('@supabase/supabase-js');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+let stripe;
+try {
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here') {
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  } else {
+    console.warn("WARNING: Stripe Secret Key is missing or invalid. Stripe features will not work.");
+  }
+} catch (e) {
+  console.error("Stripe initialization failed:", e.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
