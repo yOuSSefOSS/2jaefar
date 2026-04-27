@@ -273,7 +273,11 @@ const Home = () => {
   
   // Global Application State & Persistent View Models
   const {
-    useNeuralFoil,
+    useNeuralFoil, setUseNeuralFoil,
+    lowPowerMode, setLowPowerMode,
+    subscriptionTier,
+    importsCount,
+    setImportsCount,
     units,
     audioVolume,
     soundPreset,
@@ -319,6 +323,18 @@ const Home = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDensitySettings]);
 
+  // Enforce tier restrictions
+  useEffect(() => {
+    if (subscriptionTier === 'free') {
+      if (useNeuralFoil) setUseNeuralFoil(false);
+      if (!lowPowerMode) setLowPowerMode(true);
+    } else if (subscriptionTier === 'pro') {
+      if (!lowPowerMode) setLowPowerMode(true);
+    } else if (subscriptionTier === 'pro_max') {
+      if (lowPowerMode) setLowPowerMode(false);
+    }
+  }, [subscriptionTier, useNeuralFoil, lowPowerMode, setUseNeuralFoil, setLowPowerMode]);
+
   const [autotunePhase, setAutotunePhase] = useState('idle');
   const [autotuneProgress, setAutotuneProgress] = useState(null);
   const [autotunePreview, setAutotunePreview] = useState(null);
@@ -338,8 +354,8 @@ const Home = () => {
     let maxCl = -Infinity, minCl = Infinity;
     let posAoA = null, negAoA = null;
     for (const d of chartData) {
-      if (d.cl > maxCl) { maxCl = d.cl; posAoA = d.aoa; }
-      if (d.cl < minCl) { minCl = d.cl; negAoA = d.aoa; }
+      if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; posAoA = d.aoa; }
+      if (d.cl !== null && d.cl < minCl) { minCl = d.cl; negAoA = d.aoa; }
     }
     // Only report a negative stall if the Cl actually goes negative (real negative stall)
     return {
@@ -429,6 +445,15 @@ const Home = () => {
   };
 
   const handleFileUpload = (e) => {
+    if (subscriptionTier === 'free' && importsCount >= 1) {
+      alert('Free tier is limited to 1 import. Please upgrade to Pro.');
+      return;
+    }
+    if (subscriptionTier === 'pro' && importsCount >= 10) {
+      alert('Pro tier is limited to 10 imports. Please upgrade to Pro Max.');
+      return;
+    }
+
     const file=e.target.files[0]; if (!file) return;
     setImportError('');
     const reader=new FileReader();
@@ -452,6 +477,14 @@ const Home = () => {
       airfoilData: pendingAirfoil
     };
     setCustomAirfoils(prev => [...prev, newShape]);
+    setImportsCount(prev => prev + 1); // Optimistic UI update
+    
+    // In a real app, you would sync this increment to the backend
+    fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/increment-import`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}` } // Approximate
+    }).catch(console.error);
+
     setActiveShapeId(newShape.id);
     setShowImportModal(false);
     setPendingAirfoil(null);
@@ -489,6 +522,15 @@ const Home = () => {
   };
 
   const runAutotune = useCallback(async (mode = 'light') => {
+    if (subscriptionTier === 'free') {
+      alert('Fast Tune is not available on the Free tier. Please upgrade to Pro.');
+      return;
+    }
+    if (mode === 'heavy' && subscriptionTier !== 'pro_max') {
+      alert('Deep Tune is only available on the Pro Max tier.');
+      return;
+    }
+
     if (autotuneLockRef.current || !hasTarget) return;
     autotuneLockRef.current = true;
     setFlowActive(false);
@@ -665,8 +707,8 @@ const Home = () => {
           let localStallNeg = null;
           
           for (const d of rawData) {
-            if (d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
-            if (d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
+            if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+            if (d.cl !== null && d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
           }
 
           const newData = rawData.map(d => {
@@ -721,8 +763,8 @@ const Home = () => {
           let localStallPos = null;
           let localStallNeg = null;
           data.forEach(d => {
-            if (d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
-            if (d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
+            if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+            if (d.cl !== null && d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
           });
 
           // 2. High-precision post-processing + Truncation
