@@ -652,13 +652,24 @@ const Home = () => {
       setTimeout(() => {
         if (isMounted) {
           const newData = [];
+          const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 3 : 999;
+          const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 3 : -999;
+
           for (let a = graphBounds.min; a <= graphBounds.max; a++) {
             const { cl, cd } = calculateAerodynamics(activeShapeId, isCustomAirfoil, a);
-            const clFinal = (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number(cl.toFixed(3));
+            
+            let clFinal = (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number(cl.toFixed(3));
+            let cdFinal = Number(cd.toFixed(3));
+
+            if (a > stallLimitPos || a < stallLimitNeg) {
+              clFinal = null;
+              cdFinal = null;
+            }
+
             newData.push({
               aoa: a,
               cl: clFinal,
-              cd: Number(cd.toFixed(3))
+              cd: cdFinal
             });
           }
           setChartData(newData);
@@ -690,8 +701,22 @@ const Home = () => {
         if (!data.error && Array.isArray(data)) {
           // High-precision post-processing for symmetric shapes
           const processed = data.map(d => {
-            if (isSymmetric && Math.abs(d.aoa) < 0.01) return { ...d, cl: 0 };
-            return d;
+            let cl = d.cl;
+            let cd = d.cd;
+
+            // 1. Zero-clamping for symmetric shapes
+            if (isSymmetric && Math.abs(d.aoa) < 0.01) cl = 0;
+
+            // 2. "The Cut" - Hard truncation after stall
+            // We allow about 2 degrees of "stall drop" then stop showing the line
+            const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 3 : 999;
+            const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 3 : -999;
+
+            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
+              return { ...d, cl: null, cd: null }; // Null values make Recharts stop the line
+            }
+
+            return { ...d, cl, cd };
           });
           setChartData(processed);
           setLastSimulationData(processed);
