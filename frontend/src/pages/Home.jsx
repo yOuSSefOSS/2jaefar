@@ -659,17 +659,23 @@ const Home = () => {
           }
 
           let maxCl = -Infinity;
+          let minCl = Infinity;
           let localStallPos = null;
+          let localStallNeg = null;
+          
           for (const d of rawData) {
             if (d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+            if (d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
           }
 
           const newData = rawData.map(d => {
             let clFinal = (isSymmetric && Math.abs(d.aoa) < 0.01) ? 0 : Number(d.cl.toFixed(3));
             let cdFinal = Number(d.cd.toFixed(3));
 
-            const stallLimitPos = localStallPos !== null ? localStallPos + 4 : 999;
-            if (d.aoa > stallLimitPos) {
+            const stallLimitPos = localStallPos !== null ? localStallPos + 5 : 999;
+            const stallLimitNeg = localStallNeg !== null ? localStallNeg - 5 : -999;
+            
+            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
               clFinal = null;
               cdFinal = null;
             }
@@ -708,11 +714,14 @@ const Home = () => {
     .then(data => {
       if (isMounted) {
         if (!data.error && Array.isArray(data)) {
-          // 1. Find local peak in raw data first
+          // 1. Find local peaks in raw data
           let maxCl = -Infinity;
+          let minCl = Infinity;
           let localStallPos = null;
+          let localStallNeg = null;
           data.forEach(d => {
             if (d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+            if (d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
           });
 
           // 2. High-precision post-processing + Truncation
@@ -723,9 +732,11 @@ const Home = () => {
             // Zero-clamping for symmetric shapes
             if (isSymmetric && Math.abs(d.aoa) < 0.01) cl = 0;
 
-            // Hard Stop: terminate line 4 degrees after peak
-            const stallLimitPos = localStallPos !== null ? localStallPos + 4 : 999;
-            if (d.aoa > stallLimitPos) {
+            // Hard Stop: terminate line 5 degrees after peak
+            const stallLimitPos = localStallPos !== null ? localStallPos + 5 : 999;
+            const stallLimitNeg = (localStallNeg !== null && minCl < -0.1) ? localStallNeg - 5 : -999;
+
+            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
               return { ...d, cl: null, cd: null }; 
             }
 
