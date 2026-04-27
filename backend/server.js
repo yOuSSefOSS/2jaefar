@@ -41,11 +41,7 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
 });
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://your-project.vercel.app',
-    /\.vercel\.app$/
-  ]
+  origin: '*'
 }));
 app.use(express.json());
 
