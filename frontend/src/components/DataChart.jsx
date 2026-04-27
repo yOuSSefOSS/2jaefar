@@ -1,7 +1,7 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Legend } from 'recharts';
 
-const DataChart = ({ data, title, dataKey, xKey = "time", activeX = null, stallAngleX = null, negativeStallAngleX = null, isStalling = false, strokeColor }) => {
+const DataChart = ({ data, compareData = [], primaryName = "Primary", compareName = "Comparison", title, dataKey, xKey = "time", activeX = null, stallAngleX = null, negativeStallAngleX = null, isStalling = false, strokeColor }) => {
   // Compute chart domain for reference areas
   const xMin = data && data.length > 0 ? data[0][xKey] : -20;
   const xMax = data && data.length > 0 ? data[data.length - 1][xKey] : 30;
@@ -75,7 +75,13 @@ const DataChart = ({ data, title, dataKey, xKey = "time", activeX = null, stallA
                 />
               )}
 
-              <Line type="monotone" dataKey={dataKey} stroke={strokeColor} strokeWidth={2} dot={false} activeDot={{ r: 6, fill: strokeColor }} />
+              {compareData && compareData.length > 0 && (
+                <Legend verticalAlign="top" height={36} iconType="plainline" wrapperStyle={{ fontSize: '11px', color: 'var(--color-brand-300)', fontFamily: 'monospace' }} />
+              )}
+              {compareData && compareData.length > 0 && (
+                <Line name={compareName} type="monotone" data={compareData} dataKey={dataKey} stroke="var(--color-brand-500)" strokeWidth={2} strokeDasharray="5 5" dot={false} activeDot={false} />
+              )}
+              <Line name={primaryName} type="monotone" dataKey={dataKey} stroke={strokeColor} strokeWidth={2} dot={false} activeDot={{ r: 6, fill: strokeColor }} />
             </LineChart>
           </ResponsiveContainer>
        </div>

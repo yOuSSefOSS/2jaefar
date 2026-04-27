@@ -8,7 +8,10 @@ import PolarChart from '../components/PolarChart';
 import AeroFactsPanel from '../components/AeroFactsPanel';
 import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X } from 'lucide-react';
 import Export3DModal from '../components/Export3DModal';
+import PdfReportTemplate from '../components/PdfReportTemplate';
 import { motion } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // ─── Generic NACA 4-digit coordinate generator ───────────────────────────────
 const computeNACA = (m, p, t, N = 60) => {
@@ -270,6 +273,7 @@ const SettingsModal = ({ show, onClose, manualDensity, setManualDensity, density
 const Home = () => {
   const [isSimulating,  setIsSimulating]  = useState(false);
   const [chartData,     setChartData]     = useState([]);
+  const [compareChartData, setCompareChartData] = useState([]);
   
   // Global Application State & Persistent View Models
   const {
@@ -290,6 +294,8 @@ const Home = () => {
     setGoldenLiftActive,
     
     activeShapeId,       setActiveShapeId,
+    compareShapeId,      setCompareShapeId,
+    isCompareMode,       setIsCompareMode,
     activePreset,        setActivePreset,
     density,             setDensity,
     windSpeed,           setWindSpeed,
@@ -299,6 +305,9 @@ const Home = () => {
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [showExport3D, setShowExport3D] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const pdfReportRef = useRef(null);
+  
   const [pendingAirfoil, setPendingAirfoil] = useState(null);
   const [pendingAirfoilName, setPendingAirfoilName] = useState('');
 
@@ -346,6 +355,7 @@ const Home = () => {
 
   const ALL_SHAPES = [...SHAPES, ...customAirfoils];
   const activeShape = ALL_SHAPES.find(s=>s.id===activeShapeId);
+  const compareShape = ALL_SHAPES.find(s=>s.id===compareShapeId);
   const hasTarget = !!activeShape;
 
   // Compute both positive and negative stall angles from chart data
@@ -397,6 +407,41 @@ const Home = () => {
     
     return closest;
   }, [activeShape, chartData, pitchAngle]);
+
+  // Compare shape calculations
+  const { comparePositiveStallAngle, compareNegativeStallAngle } = React.useMemo(() => {
+    if (!compareChartData || compareChartData.length === 0) return { comparePositiveStallAngle: null, compareNegativeStallAngle: null };
+    let maxCl = -Infinity, minCl = Infinity;
+    let posAoA = null, negAoA = null;
+    for (const d of compareChartData) {
+      if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; posAoA = d.aoa; }
+      if (d.cl !== null && d.cl < minCl) { minCl = d.cl; negAoA = d.aoa; }
+    }
+    return {
+      comparePositiveStallAngle: posAoA,
+      compareNegativeStallAngle: minCl < -0.1 ? negAoA : null
+    };
+  }, [compareChartData]);
+
+  const compareStallPoint = React.useMemo(() => {
+    if (comparePositiveStallAngle === null || !compareChartData.length) return { cd: null, cl: null };
+    const pt = compareChartData.find(d => d.aoa === comparePositiveStallAngle);
+    return pt ? { cd: pt.cd, cl: pt.cl } : { cd: null, cl: null };
+  }, [comparePositiveStallAngle, compareChartData]);
+
+  const compareCurrentAeroItem = React.useMemo(() => {
+    if (!compareChartData || compareChartData.length === 0) return { cl: 0, cd: 0 };
+    const closest = compareChartData.reduce((prev, curr) => 
+      Math.abs(curr.aoa - pitchAngle) < Math.abs(prev.aoa - pitchAngle) ? curr : prev
+    );
+    
+    const isSymmetric = compareShape?.type.toLowerCase().includes('symmetric') || compareShape?.name.includes('00');
+    if (isSymmetric && Math.abs(pitchAngle) < 0.01) {
+      return { ...closest, cl: 0 };
+    }
+    
+    return closest;
+  }, [compareShape, compareChartData, pitchAngle]);
 
   // Audio Alarm Effect on stall threshold crossover
   useEffect(() => {
@@ -498,8 +543,13 @@ const Home = () => {
   };
 
   const handleShapeClick = (id) => {
-    setActiveShapeId(id);
-    setActiveShapeIdGlobal(id);
+    if (isCompareMode) {
+      setCompareShapeId(id);
+      setCompareShapeIdGlobal(id);
+    } else {
+      setActiveShapeId(id);
+      setActiveShapeIdGlobal(id);
+    }
     setFlowActive(false);
   };
 
@@ -690,6 +740,10 @@ const Home = () => {
 
     const isCustomAirfoil = !['naca4412', 'naca0012'].includes(activeShapeId);
     const isSymmetric = activeShape.type.toLowerCase().includes('symmetric') || activeShape.name.includes('00');
+    
+    const compareActive = isCompareMode && compareShape;
+    const isCompareCustom = compareActive ? !['naca4412', 'naca0012'].includes(compareShapeId) : false;
+    const isCompareSymmetric = compareActive ? (compareShape.type.toLowerCase().includes('symmetric') || compareShape.name.includes('00')) : false;
 
     if (!useNeuralFoil) {
       setTimeout(() => {
@@ -732,6 +786,23 @@ const Home = () => {
 
           setChartData(newData);
           setLastSimulationData(newData);
+          
+          if (compareActive) {
+            let compareRawData = [];
+            for (let a = graphBounds.min; a <= graphBounds.max; a++) {
+              const { cl, cd } = calculateAerodynamics(compareShapeId, isCompareCustom, a);
+              compareRawData.push({ aoa: a, cl, cd });
+            }
+            const compNewData = compareRawData.map(d => {
+              let clFinal = (isCompareSymmetric && Math.abs(d.aoa) < 0.01) ? 0 : Number((d.cl || 0).toFixed(3));
+              let cdFinal = Number((d.cd || 0).toFixed(3));
+              return { aoa: d.aoa, cl: clFinal, cd: cdFinal }; // Simplified stall handling for compare
+            });
+            setCompareChartData(compNewData);
+          } else {
+            setCompareChartData([]);
+          }
+
           setIsSimulating(false);
         }
       }, 300); // Small artificial delay to imply calculation
@@ -741,54 +812,58 @@ const Home = () => {
     // Approximate Reynolds number based on wind speed and standard chord of 1m
     const reynolds = (windSpeed * density) / 1.5e-5;
 
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: activeShape.name,
-        alpha: Array.from({length: graphBounds.max - graphBounds.min + 1}, (_, i) => i + graphBounds.min),
-        Re: reynolds,
-        mach: 0,
-        points: activeShape.airfoilData,
-        modelSize: 'xlarge'
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
+    const fetchShapeData = (shape, isSym) => {
+      return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: shape.name,
+          alpha: Array.from({length: graphBounds.max - graphBounds.min + 1}, (_, i) => i + graphBounds.min),
+          Re: reynolds,
+          mach: 0,
+          points: shape.airfoilData,
+          modelSize: 'xlarge'
+        })
+      }).then(res => res.json()).then(data => {
+         if (data.error || !Array.isArray(data)) throw new Error(data.error || 'Invalid array');
+         
+         let maxCl = -Infinity;
+         let minCl = Infinity;
+         let localStallPos = null;
+         let localStallNeg = null;
+         data.forEach(d => {
+           if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+           if (d.cl !== null && d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
+         });
+
+         return data.map(d => {
+           let cl = d.cl;
+           let cd = d.cd;
+           if (isSym && Math.abs(d.aoa) < 0.01) cl = 0;
+           const stallLimitPos = localStallPos !== null ? localStallPos + 5 : 999;
+           const stallLimitNeg = (localStallNeg !== null && minCl < -0.1) ? localStallNeg - 5 : -999;
+           if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
+             return { ...d, cl: null, cd: null }; 
+           }
+           return { ...d, cl, cd };
+         });
+      });
+    };
+
+    const promises = [fetchShapeData(activeShape, isSymmetric)];
+    if (compareActive) {
+       promises.push(fetchShapeData(compareShape, isCompareSymmetric));
+    }
+
+    Promise.all(promises)
+    .then(results => {
       if (isMounted) {
-        if (!data.error && Array.isArray(data)) {
-          // 1. Find local peaks in raw data
-          let maxCl = -Infinity;
-          let minCl = Infinity;
-          let localStallPos = null;
-          let localStallNeg = null;
-          data.forEach(d => {
-            if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
-            if (d.cl !== null && d.cl < minCl) { minCl = d.cl; localStallNeg = d.aoa; }
-          });
-
-          // 2. High-precision post-processing + Truncation
-          const processed = data.map(d => {
-            let cl = d.cl;
-            let cd = d.cd;
-
-            // Zero-clamping for symmetric shapes
-            if (isSymmetric && Math.abs(d.aoa) < 0.01) cl = 0;
-
-            // Hard Stop: terminate line 5 degrees after peak
-            const stallLimitPos = localStallPos !== null ? localStallPos + 5 : 999;
-            const stallLimitNeg = (localStallNeg !== null && minCl < -0.1) ? localStallNeg - 5 : -999;
-
-            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
-              return { ...d, cl: null, cd: null }; 
-            }
-
-            return { ...d, cl, cd };
-          });
-          setChartData(processed);
-          setLastSimulationData(processed);
+        setChartData(results[0]);
+        setLastSimulationData(results[0]);
+        if (results.length > 1) {
+          setCompareChartData(results[1]);
         } else {
-           console.error("NeuralFoil Error:", data.error);
+          setCompareChartData([]);
         }
         setIsSimulating(false);
       }
@@ -801,8 +876,43 @@ const Home = () => {
     });
 
     return ()=> { isMounted = false; };
-  }, [activeShapeId, windSpeed, density, useNeuralFoil, graphBounds, hasTarget]); // Trigger dynamically
+  }, [activeShapeId, compareShapeId, isCompareMode, windSpeed, density, useNeuralFoil, graphBounds, hasTarget]); // Trigger dynamically
 
+  const handleExportPdf = async () => {
+    if (!activeShape) return;
+    setIsExportingPdf(true);
+    // Allow React to render the hidden template
+    setTimeout(async () => {
+      try {
+        if (!pdfReportRef.current) return;
+        
+        const pages = pdfReportRef.current.querySelectorAll('.pdf-page');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        
+        if (pages.length > 0) {
+          for (let i = 0; i < pages.length; i++) {
+            if (i > 0) pdf.addPage();
+            const canvas = await html2canvas(pages[i], { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+          }
+        } else {
+          const canvas = await html2canvas(pdfReportRef.current, { scale: 2 });
+          const imgData = canvas.toDataURL('image/png');
+          const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+        }
+
+        pdf.save(`VortexGen_Report_${activeShape.name.replace(/\s+/g, '_')}.pdf`);
+      } catch (err) {
+        console.error("PDF Export failed:", err);
+      } finally {
+        setIsExportingPdf(false);
+      }
+    }, 500); // give time for Recharts animation to finish if any
+  };
 
   return (
     <motion.div 
@@ -854,6 +964,36 @@ const Home = () => {
               <Box size={13}/> EXTRACT AS 3D
             </button>
 
+            {/* ── Export PDF ── */}
+            <button
+              onClick={handleExportPdf}
+              disabled={!activeShape || isExportingPdf}
+              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all text-xs font-mono tracking-wider"
+              style={{
+                borderColor: activeShape ? 'rgba(56,189,248,0.45)' : 'rgba(255,255,255,0.08)',
+                background: activeShape ? 'rgba(56,189,248,0.07)' : 'transparent',
+                color: activeShape ? '#38bdf8' : 'rgba(100,116,139,0.5)',
+                cursor: activeShape ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Upload size={13}/> {isExportingPdf ? 'GENERATING...' : 'EXPORT PDF REPORT'}
+            </button>
+
+            {/* ── Compare Mode Toggle ── */}
+            <button
+              onClick={() => setIsCompareMode(p => !p)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all"
+              style={{
+                borderColor: isCompareMode ? 'rgba(167,139,250,0.6)' : 'rgba(255,255,255,0.1)',
+                background: isCompareMode ? 'rgba(167,139,250,0.1)' : 'transparent',
+              }}
+            >
+              <span className="text-xs font-mono text-white tracking-wider">COMPARE MODE</span>
+              <div className={`w-8 h-4 rounded-full relative transition-all ${isCompareMode ? 'bg-purple-500' : 'bg-brand-600'}`}>
+                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isCompareMode ? 'left-4.5' : 'left-0.5'}`} />
+              </div>
+            </button>
+
             <div className="text-[9px] text-brand-400 font-mono leading-relaxed">Selig .dat format (X Y pairs). NACA coords supported.</div>
           </div>
         </motion.div>
@@ -861,30 +1001,73 @@ const Home = () => {
         {/* ── Center: Viewport ── */}
         <motion.div 
            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-           className="col-span-1 lg:col-span-2 relative shadow-2xl rounded-3xl overflow-hidden"
+           className="col-span-1 lg:col-span-2 relative shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row"
         >
-          <SimulationView
-            isSimulating={isSimulating}
-            activeShape={activeShape}
-            pitchAngle={pitchAngle}
-            windSpeed={windSpeed}
-            flowActive={flowActive}
-            onFlowToggle={()=>setFlowActive(p=>!p)}
-            autotunePhase={autotunePhase}
-            autotuneProgress={autotuneProgress}
-            onAutotune={runAutotune}
-            onAutotuneCancel={handleAutotuneCancel}
-            autotunePreview={autotunePreview}
-            autotuneResult={autotuneResult}
-            goldenLiftActive={goldenLiftActive}
-            aeroFactsActive={aeroFactsActive}
-            onAeroFactsToggle={() => setAeroFactsActive(p => !p)}
-            liftForce={currentForce.lift}
-            dragForce={currentForce.drag}
-            isStalling={isStalling}
-            positiveStallAngle={positiveStallAngle}
-            negativeStallAngle={negativeStallAngle}
-          />
+          <div className={`flex-1 relative ${isCompareMode ? 'border-r border-white/10' : ''}`}>
+            <SimulationView
+              isSimulating={isSimulating}
+              activeShape={activeShape}
+              pitchAngle={pitchAngle}
+              windSpeed={windSpeed}
+              flowActive={flowActive}
+              onFlowToggle={()=>setFlowActive(p=>!p)}
+              autotunePhase={autotunePhase}
+              autotuneProgress={autotuneProgress}
+              onAutotune={runAutotune}
+              onAutotuneCancel={handleAutotuneCancel}
+              autotunePreview={autotunePreview}
+              autotuneResult={autotuneResult}
+              goldenLiftActive={goldenLiftActive}
+              aeroFactsActive={aeroFactsActive}
+              onAeroFactsToggle={() => setAeroFactsActive(p => !p)}
+              liftForce={currentForce.lift}
+              dragForce={currentForce.drag}
+              isStalling={isStalling}
+              positiveStallAngle={positiveStallAngle}
+              negativeStallAngle={negativeStallAngle}
+            />
+            {isCompareMode && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded-full border border-white/10 text-[10px] font-mono text-white/70 backdrop-blur-md z-10 pointer-events-none">
+                PRIMARY
+              </div>
+            )}
+          </div>
+
+          {isCompareMode && (
+            <div className="flex-1 relative bg-brand-900/50">
+              {compareShape ? (
+                <SimulationView
+                  isSimulating={isSimulating}
+                  activeShape={compareShape}
+                  pitchAngle={pitchAngle}
+                  windSpeed={windSpeed}
+                  flowActive={flowActive}
+                  onFlowToggle={()=>setFlowActive(p=>!p)}
+                  autotunePhase={'idle'}
+                  autotuneProgress={null}
+                  onAutotune={()=>{}}
+                  onAutotuneCancel={()=>{}}
+                  autotunePreview={null}
+                  autotuneResult={null}
+                  goldenLiftActive={false}
+                  aeroFactsActive={false}
+                  onAeroFactsToggle={()=>{}}
+                  liftForce={0.5 * density * Math.pow(windSpeed, 2) * (compareChartData.find(d=>d.aoa===pitchAngle)?.cl||0)}
+                  dragForce={0.5 * density * Math.pow(windSpeed, 2) * (compareChartData.find(d=>d.aoa===pitchAngle)?.cd||0)}
+                  isStalling={false} // Simplify for comparison view to avoid double alarms
+                  positiveStallAngle={null}
+                  negativeStallAngle={null}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/30 font-mono text-sm">
+                  Select an airfoil from library to compare
+                </div>
+              )}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded-full border border-purple-500/30 text-[10px] font-mono text-purple-400 backdrop-blur-md z-10 pointer-events-none">
+                COMPARISON
+              </div>
+            </div>
+          )}
 
           {/* Aero-Facts Learn Mode Panel */}
           {aeroFactsActive && (
@@ -1065,30 +1248,72 @@ const Home = () => {
         </motion.div>
       </div>
 
-      {/* Bottom Charts — 3-column grid */}
-      <motion.div 
-         variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-         className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[280px] flex-shrink-0 relative"
-      >
-        {isSimulating && (
-           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
-             <div className="text-[var(--color-brand-100)] font-mono animate-pulse tracking-widest text-sm flex gap-3 items-center">
-               <div className="w-4 h-4 border-2 border-[var(--color-accent-neon)] border-t-transparent rounded-full animate-spin"></div>
-               COMPUTING NEURALFOIL CFD...
+      {/* Bottom Charts */}
+      {!isCompareMode ? (
+        <motion.div 
+           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+           className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[280px] flex-shrink-0 relative"
+        >
+          {isSimulating && (
+             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
+               <div className="text-[var(--color-brand-100)] font-mono animate-pulse tracking-widest text-sm flex gap-3 items-center">
+                 <div className="w-4 h-4 border-2 border-[var(--color-accent-neon)] border-t-transparent rounded-full animate-spin"></div>
+                 COMPUTING NEURALFOIL CFD...
+               </div>
              </div>
-           </div>
-        )}
-        <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" />
-        <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" />
-        <PolarChart
-          data={chartData}
-          currentCd={currentAeroItem.cd}
-          currentCl={currentAeroItem.cl}
-          stallCd={stallPoint.cd}
-          stallCl={stallPoint.cl}
-          isStalling={isStalling}
-        />
-      </motion.div>
+          )}
+          <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" />
+          <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" />
+          <PolarChart
+            data={chartData}
+            currentCd={currentAeroItem.cd}
+            currentCl={currentAeroItem.cl}
+            stallCd={stallPoint.cd}
+            stallCl={stallPoint.cl}
+            isStalling={isStalling}
+          />
+        </motion.div>
+      ) : (
+        <motion.div 
+           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+           className="flex flex-col gap-8 flex-shrink-0 relative"
+        >
+          {isSimulating && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
+              <div className="text-[var(--color-brand-100)] font-mono animate-pulse tracking-widest text-sm flex gap-3 items-center">
+                <div className="w-4 h-4 border-2 border-[var(--color-accent-neon)] border-t-transparent rounded-full animate-spin"></div>
+                COMPUTING NEURALFOIL CFD...
+              </div>
+            </div>
+          )}
+          
+          <div className="flex flex-col gap-3">
+             <h3 className="text-xs font-mono font-bold text-[var(--color-accent-neon)] uppercase tracking-widest">{activeShape?.name} - Primary</h3>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[250px]">
+               <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" />
+               <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" />
+               <PolarChart data={chartData} currentCd={currentAeroItem.cd} currentCl={currentAeroItem.cl} stallCd={stallPoint.cd} stallCl={stallPoint.cl} isStalling={isStalling} />
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+             <h3 className="text-xs font-mono font-bold text-[var(--color-accent-blue)] uppercase tracking-widest">{compareShape?.name} - Compare</h3>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[250px]">
+               <DataChart data={compareChartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={comparePositiveStallAngle} negativeStallAngleX={compareNegativeStallAngle} strokeColor="var(--color-accent-pink)" />
+               <DataChart data={compareChartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={comparePositiveStallAngle} negativeStallAngleX={compareNegativeStallAngle} strokeColor="var(--color-accent-neon)" />
+               <PolarChart data={compareChartData} currentCd={compareCurrentAeroItem.cd} currentCl={compareCurrentAeroItem.cl} stallCd={compareStallPoint.cd} stallCl={compareStallPoint.cl} />
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+             <h3 className="text-xs font-mono font-bold text-white uppercase tracking-widest">Comparison Overview: {activeShape?.name} vs {compareShape?.name}</h3>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[250px]">
+               <DataChart data={chartData} compareData={compareChartData} primaryName={activeShape?.name} compareName={compareShape?.name} title="Drag Coefficient Comparison" dataKey="cd" xKey="aoa" activeX={pitchAngle} strokeColor="var(--color-accent-pink)" />
+               <DataChart data={chartData} compareData={compareChartData} primaryName={activeShape?.name} compareName={compareShape?.name} title="Lift Coefficient Comparison" dataKey="cl" xKey="aoa" activeX={pitchAngle} strokeColor="var(--color-accent-neon)" />
+             </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Import Modal */}
       {showImportModal && (
@@ -1145,6 +1370,26 @@ const Home = () => {
         onClose={() => setShowExport3D(false)}
         activeShape={activeShape}
       />
+      {isExportingPdf && (
+        <div style={{ position: 'fixed', top: '-10000px', left: '-10000px', zIndex: -1 }}>
+          <PdfReportTemplate 
+            ref={pdfReportRef}
+            activeShape={activeShape}
+            chartData={chartData}
+            windSpeed={windSpeed}
+            density={density}
+            pitchAngle={pitchAngle}
+            liftForce={currentForce.lift}
+            dragForce={currentForce.drag}
+            positiveStallAngle={positiveStallAngle}
+            isCompareMode={isCompareMode}
+            compareShape={compareShape}
+            compareChartData={compareChartData}
+            comparePositiveStallAngle={comparePositiveStallAngle}
+          />
+        </div>
+      )}
+
     </motion.div>
   );
 };

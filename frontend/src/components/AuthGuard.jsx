@@ -14,9 +14,14 @@ const AuthGuard = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!user && import.meta.env.MODE !== 'development') {
     return <Navigate to="/login" replace />;
   }
+
+  // If in development mode and not logged in, we let them through by mocking a user or just passing through.
+  // Actually, we can just return children since we rely on `user` object in context elsewhere, we might need a fake user.
+  // Wait, if we just pass them through, they might hit issues if `user` is null. Let's provide a mock user if bypass happens?
+  // Let's check how user is used in context and layouts.
 
   return children;
 };

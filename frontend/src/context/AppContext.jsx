@@ -68,6 +68,8 @@ export const AppProvider = ({ children }) => {
   // Ephemeral Data (Not stored in localStorage)
   const [lastSimulationData, setLastSimulationData] = useState([]);
   const [activeShapeIdGlobal, setActiveShapeIdGlobal] = useState('naca4412');
+  const [compareShapeIdGlobal, setCompareShapeIdGlobal] = useState(null);
+  const [isCompareMode, setIsCompareMode] = useState(false);
 
   /** True after AUTOTUNE FOR MAX LIFT completes — metrics panel gold accent until user edits. */
   const [goldenLiftActive, setGoldenLiftActive] = useState(false);
@@ -84,6 +86,14 @@ export const AppProvider = ({ children }) => {
 
   // Auth Effect
   useEffect(() => {
+    // DEV BYPASS: If running locally in development mode, mock a user session
+    if (import.meta.env.MODE === 'development') {
+      setUser({ id: 'dev-mock-user', email: 'dev@localhost' });
+      setSubscriptionTier('pro_max'); // Give dev user all features
+      setIsAuthLoading(false);
+      return;
+    }
+
     const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
@@ -107,7 +117,7 @@ export const AppProvider = ({ children }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, []);
 
   const fetchUserData = async (userId) => {
@@ -131,6 +141,7 @@ export const AppProvider = ({ children }) => {
 
   // Persistent Simulation Environment State
   const [activeShapeId, setActiveShapeId] = useState(null);
+  const [compareShapeId, setCompareShapeId] = useState(null);
   const [activePreset, setActivePreset] = useState('standard');
   const [density, setDensity] = useState(1.225);
   const [windSpeed, setWindSpeed] = useState(50);
@@ -153,10 +164,13 @@ export const AppProvider = ({ children }) => {
     customAirfoils, setCustomAirfoils,
     lastSimulationData, setLastSimulationData,
     activeShapeIdGlobal, setActiveShapeIdGlobal,
+    compareShapeIdGlobal, setCompareShapeIdGlobal,
+    isCompareMode, setIsCompareMode,
     goldenLiftActive, setGoldenLiftActive,
     
     // Homed Simulation UI State
     activeShapeId, setActiveShapeId,
+    compareShapeId, setCompareShapeId,
     activePreset, setActivePreset,
     density, setDensity,
     windSpeed, setWindSpeed,

@@ -39,7 +39,7 @@ const PolarTooltip = ({ active, payload }) => {
   return null;
 };
 
-const PolarChart = ({ data, currentCd, currentCl, stallCd, stallCl, isStalling }) => {
+const PolarChart = ({ data, compareData = [], currentCd, currentCl, stallCd, stallCl, isStalling }) => {
   // Build polar data: {cd, cl, aoa} for each point
   const polarData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -47,6 +47,13 @@ const PolarChart = ({ data, currentCd, currentCl, stallCd, stallCl, isStalling }
       .filter(d => typeof d.cd === 'number' && typeof d.cl === 'number')
       .map(d => ({ cd: d.cd, cl: d.cl, aoa: d.aoa }));
   }, [data]);
+
+  const comparePolarData = useMemo(() => {
+    if (!compareData || compareData.length === 0) return [];
+    return compareData
+      .filter(d => typeof d.cd === 'number' && typeof d.cl === 'number')
+      .map(d => ({ cd: d.cd, cl: d.cl, aoa: d.aoa }));
+  }, [compareData]);
 
   // Compute best L/D point (tangent from origin to polar)
   const bestLD = useMemo(() => {
@@ -153,6 +160,17 @@ const PolarChart = ({ data, currentCd, currentCl, stallCd, stallCl, isStalling }
                   strokeDasharray="5 3"
                   dot={false}
                   legendType="none"
+                />
+              )}
+
+              {/* Comparison drag polar curve */}
+              {comparePolarData.length > 0 && (
+                <Scatter
+                  data={comparePolarData}
+                  fill="var(--color-brand-500)"
+                  line={{ stroke: 'var(--color-brand-500)', strokeWidth: 2, strokeDasharray: "5 5" }}
+                  lineType="joint"
+                  shape={<circle r={0} />}
                 />
               )}
 
