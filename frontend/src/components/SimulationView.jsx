@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls, Edges, Text, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Lock } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 // ─── Viewport Gizmo ───────────────────────────────────────────────────────────
@@ -872,11 +872,16 @@ const CameraTracker = ({ setCameraStr, cameraMode, setCameraMode, snapRef, turnt
 };
 
 // ─── Viewport Button ──────────────────────────────────────────────────────────
-const VBtn = React.memo(({label,active,disabled,onClick,color='#00f0ff'})=>(
-  <button onClick={onClick} disabled={disabled} style={{fontFamily:'monospace',fontSize:'10px',fontWeight:'bold',letterSpacing:'0.1em',padding:'5px 11px',borderRadius:6,cursor:disabled?'not-allowed':'pointer',border:`1px solid ${active?color:'rgba(255,255,255,0.12)'}`,background:active?`${color}18`:'rgba(0,0,0,0.55)',color:active?color:'rgba(255,255,255,0.45)',boxShadow:active?`0 0 14px ${color}33, inset 0 0 8px ${color}0a`:'none',transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.3s',backdropFilter:'blur(6px)',opacity:disabled?0.35:1,willChange:'transform',transform:'translateZ(0)'}} onMouseEnter={e=>{if(!disabled)e.currentTarget.style.transform='translateY(-1px)'}} onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)'}} onMouseDown={e=>{if(!disabled)e.currentTarget.style.transform='scale(0.97)'}} onMouseUp={e=>{if(!disabled)e.currentTarget.style.transform='translateY(-1px)'}}>
-    {label}
+const VBtn = React.memo(({label,active,disabled,locked,onClick,color='#00f0ff'})=>{
+  const isBlocked = disabled || locked;
+  return (
+  <button onClick={onClick} disabled={isBlocked} style={{fontFamily:'monospace',fontSize:'10px',fontWeight:'bold',letterSpacing:'0.1em',padding:'5px 11px',borderRadius:6,cursor:isBlocked?'not-allowed':'pointer',border:`1px solid ${active?color:'rgba(255,255,255,0.12)'}`,background:active?`${color}18`:'rgba(0,0,0,0.55)',color:active?color:'rgba(255,255,255,0.45)',boxShadow:active?`0 0 14px ${color}33, inset 0 0 8px ${color}0a`:'none',transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.3s',backdropFilter:'blur(6px)',opacity:isBlocked?0.35:1,willChange:'transform',transform:'translateZ(0)'}} onMouseEnter={e=>{if(!isBlocked)e.currentTarget.style.transform='translateY(-1px)'}} onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)'}} onMouseDown={e=>{if(!isBlocked)e.currentTarget.style.transform='scale(0.97)'}} onMouseUp={e=>{if(!isBlocked)e.currentTarget.style.transform='translateY(-1px)'}}>
+    <div style={{display:'flex', alignItems:'center', gap:'4px', justifyContent:'center'}}>
+      {label}
+      {locked && <Lock size={10} style={{opacity:0.8}} />}
+    </div>
   </button>
-));
+)});
 
 
 
@@ -907,6 +912,7 @@ const SimulationView = ({
   const [showHeatmap, setShowHeatmap]     = useState(false);
   const [turntableActive, setTurntable]   = useState(false);
   const [showMenu, setShowMenu]           = useState(false);
+  const { subscriptionTier } = useAppContext();
   const snapRef = useRef(null);
   const handleSnap = useCallback((v)=>{ if(snapRef.current) snapRef.current(v); },[]);
 
@@ -997,29 +1003,31 @@ const SimulationView = ({
           <div className="relative">
             {showMenu && (
               <div className="absolute bottom-full mb-3 left-0 flex flex-col gap-2 p-3 bg-brand-900/90 border border-white/10 rounded-xl backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.5)] min-w-[140px]">
-                <VBtn label="⬡ HEATMAP" active={showHeatmap} disabled={!hasShape} onClick={()=>setShowHeatmap(p=>!p)} color="#ff6600"/>
+                <VBtn label="⬡ HEATMAP" active={showHeatmap} disabled={!hasShape} locked={subscriptionTier !== 'pro_max'} onClick={() => { if (subscriptionTier === 'pro_max') setShowHeatmap(p=>!p); }} color="#ff6600"/>
                 <VBtn label="⟳ TURNTABLE" active={turntableActive} disabled={!hasShape} onClick={()=>setTurntable(p=>!p)} color="#a78bfa"/>
                 {onAutotune && (
                   <>
                     <button
                       type="button"
-                      onClick={() => { onAutotune('light'); setShowMenu(false); }}
-                      disabled={!hasShape || autotuneBusy}
+                      onClick={() => { if (subscriptionTier !== 'free') { onAutotune('light'); setShowMenu(false); } }}
+                      disabled={!hasShape || autotuneBusy || subscriptionTier === 'free'}
                       className="pointer-events-auto group relative flex items-center justify-center gap-1.5 px-3 py-2 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition-all disabled:opacity-35 disabled:cursor-not-allowed border border-amber-400/50 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 hover:border-amber-300/80 shadow-[0_0_12px_rgba(234,179,8,0.15)] backdrop-blur-sm w-full"
-                      title="Quickly test ~30 basic airfoils"
+                      title={subscriptionTier === 'free' ? 'Requires Pro' : 'Quickly test ~30 basic airfoils'}
                     >
                       <Sparkles size={13} className="text-amber-300 group-hover:scale-110 transition-transform" />
                       FAST TUNE
+                      {subscriptionTier === 'free' && <Lock size={12} className="text-amber-400 opacity-80" />}
                     </button>
                     <button
                       type="button"
-                      onClick={() => { onAutotune('heavy'); setShowMenu(false); }}
-                      disabled={!hasShape || autotuneBusy}
+                      onClick={() => { if (subscriptionTier === 'pro_max') { onAutotune('heavy'); setShowMenu(false); } }}
+                      disabled={!hasShape || autotuneBusy || subscriptionTier !== 'pro_max'}
                       className="pointer-events-auto group relative flex items-center justify-center gap-1.5 px-3 py-2 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition-all disabled:opacity-35 disabled:cursor-not-allowed border border-amber-400/50 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 hover:border-amber-300/80 shadow-[0_0_12px_rgba(234,179,8,0.15)] backdrop-blur-sm w-full"
-                      title="Deep search of over 140 NACA permutations"
+                      title={subscriptionTier !== 'pro_max' ? 'Requires Ultra' : 'Deep search of over 140 NACA permutations'}
                     >
                       <Sparkles size={13} className="text-amber-300 group-hover:scale-110 transition-transform" />
                       DEEP TUNE
+                      {subscriptionTier !== 'pro_max' && <Lock size={12} className="text-amber-400 opacity-80" />}
                     </button>
                   </>
                 )}

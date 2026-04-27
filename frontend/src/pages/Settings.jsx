@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppContext, FLOW_VISUAL_OPTIONS } from '../context/AppContext';
+import { Lock } from 'lucide-react';
 import SimulationView from '../components/SimulationView';
 import { motion } from 'framer-motion';
 
@@ -20,7 +21,8 @@ const Settings = () => {
     flowVisualMode, setFlowVisualMode,
     audioVolume, setAudioVolume,
     soundPreset, setSoundPreset,
-    graphBounds, setGraphBounds
+    graphBounds, setGraphBounds,
+    subscriptionTier
   } = useAppContext();
   const previewTimeoutRef = React.useRef(null);
   const audioCtxRef = React.useRef(null);
@@ -128,13 +130,14 @@ const Settings = () => {
             {/* NeuralFoil Toggle */}
             <motion.div 
                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer backdrop-blur-md shadow-xl"
-               onClick={() => setUseNeuralFoil(!useNeuralFoil)}
+               className={`bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center transition-colors backdrop-blur-md shadow-xl ${subscriptionTier === 'free' ? 'opacity-60 cursor-not-allowed' : 'hover:bg-white/5 cursor-pointer'}`}
+               onClick={() => { if (subscriptionTier !== 'free') setUseNeuralFoil(!useNeuralFoil); }}
             >
                <div>
                   <h3 className="text-white font-semibold flex items-center gap-2">
                     NeuralFoil Machine Learning
-                    {!useNeuralFoil && <span className="text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-500/50">DISABLED</span>}
+                    {subscriptionTier === 'free' && <Lock size={14} className="text-[var(--color-accent-pink)] ml-1" />}
+                    {!useNeuralFoil && subscriptionTier !== 'free' && <span className="text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-500/50">DISABLED</span>}
                   </h3>
                   <p className="text-sm text-brand-300">Utilize the PyTorch backend API for high-accuracy CFD predictions. If disabled, uses rudimentary math approximations.</p>
                </div>
@@ -150,13 +153,14 @@ const Settings = () => {
             {/* Low Power Mode Toggle */}
             <motion.div 
                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer backdrop-blur-md shadow-xl"
-               onClick={() => setLowPowerMode(!lowPowerMode)}
+               className={`bg-brand-800/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center transition-colors backdrop-blur-md shadow-xl ${subscriptionTier !== 'pro_max' ? 'opacity-60 cursor-not-allowed' : 'hover:bg-white/5 cursor-pointer'}`}
+               onClick={() => { if (subscriptionTier === 'pro_max') setLowPowerMode(!lowPowerMode); }}
             >
                <div>
                   <h3 className="text-white font-semibold flex items-center gap-2">
                     Low Power Mode (Eco)
-                    {lowPowerMode && <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/50">ACTIVE</span>}
+                    {subscriptionTier !== 'pro_max' && <Lock size={14} className="text-[var(--color-accent-pink)] ml-1" />}
+                    {lowPowerMode && subscriptionTier === 'pro_max' && <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/50">ACTIVE</span>}
                   </h3>
                   <p className="text-sm text-brand-300">Reduces 3D flow particle count by half (and tightens streakline seeds) to save GPU and battery.</p>
                </div>
