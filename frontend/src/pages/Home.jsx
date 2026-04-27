@@ -651,28 +651,36 @@ const Home = () => {
     if (!useNeuralFoil) {
       setTimeout(() => {
         if (isMounted) {
-          const newData = [];
+          // 1. Calculate local stall peaks first
+          let rawData = [];
           for (let a = graphBounds.min; a <= graphBounds.max; a++) {
             const { cl, cd } = calculateAerodynamics(activeShapeId, isCustomAirfoil, a);
-            
-            let clFinal = (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number(cl.toFixed(3));
-            let cdFinal = Number(cd.toFixed(3));
+            rawData.push({ aoa: a, cl, cd });
+          }
 
-            // Hard Stop Logic: terminate line 4 degrees after peak
-            const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 4 : 999;
-            const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 4 : -999;
+          let maxCl = -Infinity;
+          let localStallPos = null;
+          for (const d of rawData) {
+            if (d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+          }
 
-            if (a > stallLimitPos || a < stallLimitNeg) {
+          const newData = rawData.map(d => {
+            let clFinal = (isSymmetric && Math.abs(d.aoa) < 0.01) ? 0 : Number(d.cl.toFixed(3));
+            let cdFinal = Number(d.cd.toFixed(3));
+
+            const stallLimitPos = localStallPos !== null ? localStallPos + 4 : 999;
+            if (d.aoa > stallLimitPos) {
               clFinal = null;
               cdFinal = null;
             }
 
-            newData.push({
-              aoa: a,
+            return {
+              aoa: d.aoa,
               cl: clFinal,
               cd: cdFinal
-            });
-          }
+            };
+          });
+
           setChartData(newData);
           setLastSimulationData(newData);
           setIsSimulating(false);
@@ -700,19 +708,24 @@ const Home = () => {
     .then(data => {
       if (isMounted) {
         if (!data.error && Array.isArray(data)) {
-          // High-precision post-processing for symmetric shapes
+          // 1. Find local peak in raw data first
+          let maxCl = -Infinity;
+          let localStallPos = null;
+          data.forEach(d => {
+            if (d.cl > maxCl) { maxCl = d.cl; localStallPos = d.aoa; }
+          });
+
+          // 2. High-precision post-processing + Truncation
           const processed = data.map(d => {
             let cl = d.cl;
             let cd = d.cd;
 
-            // 1. Zero-clamping for symmetric shapes
+            // Zero-clamping for symmetric shapes
             if (isSymmetric && Math.abs(d.aoa) < 0.01) cl = 0;
 
-            // 2. Hard Stop Logic: terminate line 4 degrees after peak
-            const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 4 : 999;
-            const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 4 : -999;
-
-            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
+            // Hard Stop: terminate line 4 degrees after peak
+            const stallLimitPos = localStallPos !== null ? localStallPos + 4 : 999;
+            if (d.aoa > stallLimitPos) {
               return { ...d, cl: null, cd: null }; 
             }
 
