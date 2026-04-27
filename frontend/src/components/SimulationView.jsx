@@ -238,7 +238,24 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
     colors.current = col;
     trailRef.current = trail;
     return pos;
-  }, [particleCount]);
+  }, [particleCount, airfoilPts]); // Reset positions when airfoil changes
+
+  // ─── Force Reset on Airfoil Change ───
+  useEffect(() => {
+    if (!meshRef.current || !trailRef.current) return;
+    const pos = meshRef.current.geometry.attributes.position.array;
+    const trail = trailRef.current;
+    for (let i = 0; i < particleCount; i++) {
+      const x = -3 + Math.random() * 6;
+      const y = -1.5 + Math.random() * 3.0;
+      const z = (Math.random() - 0.5) * 0.05;
+      pos[i * 3] = x;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = z;
+      resetParticleTrail(i, trail, x, y, z);
+    }
+    meshRef.current.geometry.attributes.position.needsUpdate = true;
+  }, [airfoilPts, particleCount]);
 
   const lineVertexCount = particleCount * (FLOW_TRAIL_LEN - 1) * 2;
   const linePositions = useMemo(() => new Float32Array(lineVertexCount * 3), [lineVertexCount]);
