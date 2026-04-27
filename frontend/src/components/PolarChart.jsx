@@ -19,7 +19,7 @@ const ActiveDot = ({ cx, cy, isStalling }) => (
 const PolarTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const d = payload[0].payload;
-    const ld = d.cd > 0 ? (d.cl / d.cd).toFixed(1) : '—';
+    const ld = (d.cd > 0 && d.cl != null) ? (d.cl / d.cd).toFixed(1) : '—';
     return (
       <div style={{
         background: 'var(--color-brand-800)',
@@ -30,8 +30,8 @@ const PolarTooltip = ({ active, payload }) => {
         fontSize: 11,
       }}>
         <div style={{ color: 'var(--color-brand-300)', marginBottom: 4 }}>α = {d.aoa}°</div>
-        <div style={{ color: 'var(--color-accent-neon)' }}>Cl = {d.cl?.toFixed(4)}</div>
-        <div style={{ color: 'var(--color-accent-pink)' }}>Cd = {d.cd?.toFixed(4)}</div>
+        <div style={{ color: 'var(--color-accent-neon)' }}>Cl = {d.cl != null ? d.cl.toFixed(4) : '--'}</div>
+        <div style={{ color: 'var(--color-accent-pink)' }}>Cd = {d.cd != null ? d.cd.toFixed(4) : '--'}</div>
         <div style={{ color: '#f59e0b', marginTop: 4 }}>L/D = {ld}</div>
       </div>
     );

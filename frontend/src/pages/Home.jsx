@@ -670,8 +670,8 @@ const Home = () => {
           }
 
           const newData = rawData.map(d => {
-            let clFinal = (isSymmetric && Math.abs(d.aoa) < 0.01) ? 0 : Number(d.cl.toFixed(3));
-            let cdFinal = Number(d.cd.toFixed(3));
+            let clFinal = (isSymmetric && Math.abs(d.aoa) < 0.01) ? 0 : Number((d.cl || 0).toFixed(3));
+            let cdFinal = Number((d.cd || 0).toFixed(3));
 
             const stallLimitPos = localStallPos !== null ? localStallPos + 5 : 999;
             const stallLimitNeg = localStallNeg !== null ? localStallNeg - 5 : -999;
@@ -989,16 +989,16 @@ const Home = () => {
               <div className="bg-brand-900/50 p-2 rounded-lg border border-white/5 flex flex-col justify-center">
                 <div className="flex justify-between items-end mb-0.5">
                   <div className="text-[11px] text-brand-400 font-bold">DRAG <span className="font-normal opacity-70">(Cd)</span></div>
-                  <div className="text-[10px] text-brand-500">{hasTarget ? currentForce.drag.toFixed(0) : '--'} N</div>
+                  <div className="text-[10px] text-brand-500">{hasTarget ? (currentForce.drag || 0).toFixed(0) : '--'} N</div>
                 </div>
-                <div className="text-lg font-bold font-mono text-[var(--color-accent-pink)]">{isSimulating || !hasTarget ? '--' : currentAeroItem.cd.toFixed(3)}</div>
+                <div className="text-lg font-bold font-mono text-[var(--color-accent-pink)]">{isSimulating || !hasTarget ? '--' : (currentAeroItem.cd || 0).toFixed(3)}</div>
               </div>
               <div className="bg-brand-900/50 p-2 rounded-lg border border-white/5 flex flex-col justify-center">
                 <div className="flex justify-between items-end mb-0.5">
                   <div className="text-[11px] text-[var(--color-accent-neon)] font-bold">LIFT <span className="font-normal opacity-70">(Cl)</span></div>
-                  <div className="text-[10px] text-brand-500">{hasTarget ? currentForce.lift.toFixed(0) : '--'} N</div>
+                  <div className="text-[10px] text-brand-500">{hasTarget ? (currentForce.lift || 0).toFixed(0) : '--'} N</div>
                 </div>
-                <div className="text-lg font-bold font-mono text-[var(--color-accent-neon)] neon-text">{isSimulating || !hasTarget ? '--' : currentAeroItem.cl.toFixed(3)}</div>
+                <div className="text-lg font-bold font-mono text-[var(--color-accent-neon)] neon-text">{isSimulating || !hasTarget ? '--' : (currentAeroItem.cl || 0).toFixed(3)}</div>
               </div>
               <div className="bg-brand-900/50 p-2 rounded-lg border border-white/5 col-span-2">
                 <div className="flex items-center justify-between">
