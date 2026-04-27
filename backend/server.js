@@ -80,40 +80,58 @@ const authMiddleware = async (req, res, next) => {
 const fs = require('fs');
 const path = require('path');
 
-const venvPython = process.platform === 'win32' 
-  ? path.join(__dirname, 'venv', 'Scripts', 'python.exe')
-  : path.join(__dirname, 'venv', 'bin', 'python');
+let pythonProcess = null;
+let requestQueue = [];
 
-const pythonCmd = fs.existsSync(venvPython) ? venvPython : (process.platform === 'win32' ? 'python' : 'python3');
+try {
+  const venvPython = process.platform === 'win32' 
+    ? path.join(__dirname, 'venv', 'Scripts', 'python.exe')
+    : path.join(__dirname, 'venv', 'bin', 'python');
 
-const pythonProcess = spawn(pythonCmd, ['run_nf.py', '--daemon']);
+  const pythonCmd = fs.existsSync(venvPython) ? venvPython : (process.platform === 'win32' ? 'python' : 'python3');
 
-const requestQueue = [];
+  console.log(`[Daemon] Starting Python with: ${pythonCmd}`);
+  pythonProcess = spawn(pythonCmd, ['run_nf.py', '--daemon']);
 
-const rl = readline.createInterface({
-  input: pythonProcess.stdout,
-  terminal: false
-});
+  const rl = readline.createInterface({
+    input: pythonProcess.stdout,
+    terminal: false
+  });
 
-rl.on('line', (line) => {
-  const reqDesc = requestQueue.shift();
-  if (!reqDesc) return;
-  
-  try {
-    const parsed = JSON.parse(line);
-    if (parsed.error) return reqDesc.res.status(400).json(parsed);
-    reqDesc.res.json(parsed);
-  } catch (e) {
-    console.error('Failed to parse Python JSON:', line);
-    reqDesc.res.status(500).json({ error: 'Invalid JSON from Python' });
-  }
-});
+  rl.on('line', (line) => {
+    const reqDesc = requestQueue.shift();
+    if (!reqDesc) return;
+    try {
+      const parsed = JSON.parse(line);
+      if (parsed.error) return reqDesc.res.status(400).json(parsed);
+      reqDesc.res.json(parsed);
+    } catch (e) {
+      console.error('Failed to parse Python JSON:', line);
+      reqDesc.res.status(500).json({ error: 'Invalid JSON from Python' });
+    }
+  });
 
-pythonProcess.stderr.on('data', (data) => {
-  console.log(`[Python]: ${data.toString().trim()}`);
-});
+  pythonProcess.stderr.on('data', (data) => {
+    console.log(`[Python]: ${data.toString().trim()}`);
+  });
 
-pythonProcess.on('close', (code) => {
+  pythonProcess.on('close', (code) => {
+    console.error(`Python daemon closed with code ${code}`);
+    pythonProcess = null;
+  });
+
+  pythonProcess.on('error', (err) => {
+    console.error(`[Daemon] Failed to start Python process: ${err.message}`);
+    pythonProcess = null;
+  });
+
+} catch (e) {
+  console.error('[Daemon] Could not start Python daemon:', e.message);
+  pythonProcess = null;
+}
+
+// Dummy close handler to avoid reference error below
+pythonProcess?.on && pythonProcess.on('close', (code) => {
   console.error(`Python daemon unexpectedly closed with code ${code}`);
 });
 
@@ -137,8 +155,8 @@ app.post('/api/analyze', authMiddleware, (req, res) => {
     return res.status(403).json({ error: 'NeuralFoil ML requires Pro or Pro Max tier.' });
   }
 
-  if (pythonProcess.killed) {
-    return res.status(500).json({ error: "Python daemon has died." });
+  if (!pythonProcess || pythonProcess.killed) {
+    return res.status(500).json({ error: "Python daemon is not running." });
   }
 
   requestQueue.push({ res });
