@@ -654,11 +654,23 @@ const Home = () => {
           const newData = [];
           for (let a = graphBounds.min; a <= graphBounds.max; a++) {
             const { cl, cd } = calculateAerodynamics(activeShapeId, isCustomAirfoil, a);
+            
             let clFinal = (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number(cl.toFixed(3));
+            let cdFinal = Number(cd.toFixed(3));
+
+            // Hard Stop Logic: terminate line 4 degrees after peak
+            const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 4 : 999;
+            const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 4 : -999;
+
+            if (a > stallLimitPos || a < stallLimitNeg) {
+              clFinal = null;
+              cdFinal = null;
+            }
+
             newData.push({
               aoa: a,
               cl: clFinal,
-              cd: Number(cd.toFixed(3))
+              cd: cdFinal
             });
           }
           setChartData(newData);
@@ -691,9 +703,20 @@ const Home = () => {
           // High-precision post-processing for symmetric shapes
           const processed = data.map(d => {
             let cl = d.cl;
+            let cd = d.cd;
+
             // 1. Zero-clamping for symmetric shapes
             if (isSymmetric && Math.abs(d.aoa) < 0.01) cl = 0;
-            return { ...d, cl };
+
+            // 2. Hard Stop Logic: terminate line 4 degrees after peak
+            const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 4 : 999;
+            const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 4 : -999;
+
+            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
+              return { ...d, cl: null, cd: null }; 
+            }
+
+            return { ...d, cl, cd };
           });
           setChartData(processed);
           setLastSimulationData(processed);
