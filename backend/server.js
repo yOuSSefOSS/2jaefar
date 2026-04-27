@@ -1,4 +1,5 @@
-require('dotenv').config();
+// dotenv only needed locally; Railway injects env vars natively
+if (process.env.NODE_ENV !== 'production') { try { require('dotenv').config(); } catch(e) {} }
 const express = require('express');
 const cors = require('cors');
 const { spawn } = require('child_process');
