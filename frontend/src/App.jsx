@@ -5,6 +5,10 @@ import { checkBackendStatus } from './services/apiService';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Pricing from './pages/Pricing';
+import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -48,14 +52,29 @@ function App() {
         />
       )}
       <BrowserRouter>
-        <DashboardLayout isBackendConnected={isConnected}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Home />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </DashboardLayout>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/*"
+            element={
+              <AuthGuard>
+                <DashboardLayout isBackendConnected={isConnected}>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Home />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                  </Routes>
+                </DashboardLayout>
+              </AuthGuard>
+            }
+          />
+        </Routes>
       </BrowserRouter>
     </AppProvider>
   );

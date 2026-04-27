@@ -1,10 +1,18 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Trash2, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '../services/supabaseClient';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const { customAirfoils, setCustomAirfoils, lastSimulationData, activeShapeIdGlobal } = useAppContext();
+  const { customAirfoils, setCustomAirfoils, lastSimulationData, activeShapeIdGlobal, user, subscriptionTier } = useAppContext();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
   const handleDownloadCSV = () => {
      if (!lastSimulationData || lastSimulationData.length === 0) return;
@@ -37,9 +45,15 @@ const Profile = () => {
              <div className="w-full h-full bg-[radial-gradient(circle_at_30%_30%,var(--color-accent-neon),var(--color-accent-blue))] opacity-80 animate-pulse"></div>
           </div>
           <div>
-             <h1 className="text-3xl font-bold text-white tracking-widest uppercase mb-1" contentEditable suppressContentEditableWarning>Lead Engineer</h1>
-             <p className="text-[var(--color-accent-neon)] font-mono text-sm" contentEditable suppressContentEditableWarning>ID: VX-9942A</p>
+             <h1 className="text-3xl font-bold text-white tracking-widest uppercase mb-1">{user?.email || 'Guest User'}</h1>
+             <p className="text-[var(--color-accent-neon)] font-mono text-sm uppercase">Tier: {subscriptionTier}</p>
           </div>
+          <button 
+             onClick={handleLogout}
+             className="ml-auto p-3 text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/20 hover:border-red-500 rounded-lg transition-all flex items-center gap-2"
+          >
+             <LogOut size={18} /> <span className="text-sm font-bold tracking-widest uppercase hidden sm:inline">Logout</span>
+          </button>
        </motion.div>
        
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl">

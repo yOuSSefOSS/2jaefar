@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
 
 /** Persisted IDs for `flowVisualMode` — keep in sync with Settings + SimulationView. */
 export const FLOW_VISUAL_OPTIONS = [
@@ -13,6 +14,12 @@ const AppContext = createContext();
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
+  // Auth & Subscription State
+  const [user, setUser] = useState(null);
+  const [subscriptionTier, setSubscriptionTier] = useState('free'); // 'free', 'pro', 'pro_max'
+  const [importsCount, setImportsCount] = useState(0);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
   // Application Settings State
   const [useNeuralFoil, setUseNeuralFoil] = useState(
     localStorage.getItem('useNeuralFoil') !== 'false'
@@ -75,6 +82,53 @@ export const AppProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('graphBounds', JSON.stringify(graphBounds)); }, [graphBounds]);
   useEffect(() => { localStorage.setItem('customAirfoils', JSON.stringify(customAirfoils)); }, [customAirfoils]);
 
+  // Auth Effect
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      if (session?.user) {
+        fetchUserData(session.user.id);
+      } else {
+        setIsAuthLoading(false);
+      }
+    };
+
+    fetchSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        fetchUserData(session.user.id);
+      } else {
+        setSubscriptionTier('free');
+        setImportsCount(0);
+        setIsAuthLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserData = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('subscription_tier, imports_count')
+        .eq('user_id', userId)
+        .single();
+        
+      if (!error && data) {
+        setSubscriptionTier(data.subscription_tier || 'free');
+        setImportsCount(data.imports_count || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
   // Persistent Simulation Environment State
   const [activeShapeId, setActiveShapeId] = useState(null);
   const [activePreset, setActivePreset] = useState('standard');
@@ -84,6 +138,11 @@ export const AppProvider = ({ children }) => {
   const [flowActive, setFlowActive] = useState(false);
 
   const value = {
+    user, setUser,
+    subscriptionTier, setSubscriptionTier,
+    importsCount, setImportsCount,
+    isAuthLoading,
+
     useNeuralFoil, setUseNeuralFoil,
     units, setUnits,
     lowPowerMode, setLowPowerMode,

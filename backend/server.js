@@ -1,24 +1,77 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { spawn } = require('child_process');
 const readline = require('readline');
+const { createClient } = require('@supabase/supabase-js');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const supabase = createClient(
+  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
+);
+
+// Stripe webhook requires raw body
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.client_reference_id;
+    const tier = session.metadata.tier;
+
+    if (userId && tier) {
+      await supabase
+        .from('users')
+        .upsert({ user_id: userId, subscription_tier: tier });
+    }
+  }
+
+  res.json({ received: true });
+});
+
 app.use(cors({
   origin: [
-    'http://localhost:5173',                    // local dev
-    'https://your-project.vercel.app',          // Vercel production
-    /\.vercel\.app$/                            // all Vercel preview URLs
+    'http://localhost:5173',
+    'https://your-project.vercel.app',
+    /\.vercel\.app$/
   ]
 }));
 app.use(express.json());
 
+// ─── AUTH MIDDLEWARE ──────────────────────────────────────────────────────
+const authMiddleware = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.status(401).json({ error: 'Invalid token' });
+
+  req.user = user;
+  
+  const { data: userData } = await supabase
+    .from('users')
+    .select('subscription_tier, imports_count')
+    .eq('user_id', user.id)
+    .single();
+    
+  req.userTier = userData?.subscription_tier || 'free';
+  req.importsCount = userData?.imports_count || 0;
+
+  next();
+};
+
 // ─── START PYTHON DAEMON ──────────────────────────────────────────────────
-// We start Python ONCE. It loads Neuralfoil into memory and stays awake.
-// This is 100x faster than spawning Python for every single click.
-// Priority: Check for local virtual environment first (fixes Arch/Garuda setup)
 const fs = require('fs');
 const path = require('path');
 
@@ -30,10 +83,8 @@ const pythonCmd = fs.existsSync(venvPython) ? venvPython : (process.platform ===
 
 const pythonProcess = spawn(pythonCmd, ['run_nf.py', '--daemon']);
 
-// We queue requests because they are processed sequentially by the Python pipe.
 const requestQueue = [];
 
-// We use readline to perfectly parse each JSON output line from Python
 const rl = readline.createInterface({
   input: pythonProcess.stdout,
   terminal: false
@@ -54,7 +105,6 @@ rl.on('line', (line) => {
 });
 
 pythonProcess.stderr.on('data', (data) => {
-  // StdErr is used for Python's print statements so we can see startup logs
   console.log(`[Python]: ${data.toString().trim()}`);
 });
 
@@ -77,17 +127,67 @@ app.post('/api/log', (req, res) => {
   res.sendStatus(200);
 });
 
-app.post('/api/analyze', (req, res) => {
+app.post('/api/analyze', authMiddleware, (req, res) => {
+  if (req.userTier === 'free') {
+    return res.status(403).json({ error: 'NeuralFoil ML requires Pro or Pro Max tier.' });
+  }
+
   if (pythonProcess.killed) {
     return res.status(500).json({ error: "Python daemon has died." });
   }
 
-  // Enqueue the response object so the `rl.on('line')` event can resolve it
   requestQueue.push({ res });
-
-  // Send request data to python STDIN as a single line
   const payload = JSON.stringify(req.body);
   pythonProcess.stdin.write(payload + '\n');
+});
+
+app.post('/api/increment-import', authMiddleware, async (req, res) => {
+  if (req.userTier === 'free' && req.importsCount >= 1) {
+    return res.status(403).json({ error: 'Limit reached for Free tier' });
+  }
+  if (req.userTier === 'pro' && req.importsCount >= 10) {
+    return res.status(403).json({ error: 'Limit reached for Pro tier' });
+  }
+
+  await supabase
+    .from('users')
+    .upsert({ user_id: req.user.id, imports_count: req.importsCount + 1 });
+
+  res.json({ success: true, newCount: req.importsCount + 1 });
+});
+
+app.post('/api/create-checkout-session', authMiddleware, async (req, res) => {
+  const { tier } = req.body;
+  if (!['pro', 'pro_max'].includes(tier)) {
+    return res.status(400).json({ error: 'Invalid tier' });
+  }
+
+  // Define price IDs based on your Stripe dashboard
+  const priceIds = {
+    pro: 'price_1TQvapRPksX3wh8xLQJKQZL3',
+    pro_max: 'price_1TQvdERPksX3wh8x4lgHKTxC'
+  };
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceIds[tier],
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${req.headers.origin}/dashboard?success=true`,
+      cancel_url: `${req.headers.origin}/pricing?canceled=true`,
+      client_reference_id: req.user.id,
+      metadata: { tier }
+    });
+
+    res.json({ url: session.url });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.listen(PORT, () => {
