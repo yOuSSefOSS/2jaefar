@@ -1,151 +1,249 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Loader2, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Mail, Lock, Loader2, AlertCircle, Wind, CheckCircle } from 'lucide-react';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(true);
-    }
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) setError(error.message);
+    else setSuccess(true);
     setLoading(false);
   };
 
   const handleGoogleSignup = async () => {
+    setGoogleLoading(true);
+    setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` }
     });
-    if (error) setError(error.message);
+    if (error) { setError(error.message); setGoogleLoading(false); }
+  };
+
+  const bgStyle = {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #020817 0%, #0a0f1e 50%, #020817 100%)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '1rem', fontFamily: "'Inter', 'Segoe UI', sans-serif",
+    position: 'relative', overflow: 'hidden'
   };
 
   if (success) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950 text-white p-4">
-        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-2xl text-center">
-          <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-8 h-8" />
+      <div style={bgStyle}>
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.15,
+          backgroundImage: 'linear-gradient(rgba(56,189,248,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.3) 1px, transparent 1px)',
+          backgroundSize: '50px 50px'
+        }} />
+        <div style={{
+          position: 'relative', width: '100%', maxWidth: '420px', textAlign: 'center',
+          background: 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(8,15,32,0.98))',
+          border: '1px solid rgba(56,189,248,0.2)', borderRadius: '20px', padding: '3rem 2.5rem',
+          boxShadow: '0 25px 80px rgba(0,0,0,0.6)'
+        }}>
+          <div style={{
+            width: '72px', height: '72px', borderRadius: '50%', margin: '0 auto 1.5rem',
+            background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 30px rgba(34,197,94,0.2)'
+          }}>
+            <CheckCircle size={36} color="#4ade80" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Check your email</h2>
-          <p className="text-zinc-400 mb-6">
-            We've sent a verification link to <span className="text-white font-medium">{email}</span>.
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e2e8f0', margin: '0 0 0.75rem' }}>Check your email</h2>
+          <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: 1.6 }}>
+            We've sent a verification link to{' '}
+            <span style={{ color: '#38bdf8', fontWeight: 600 }}>{email}</span>
           </p>
-          <Link to="/login" className="text-sky-400 hover:text-sky-300">
-            Return to Login
-          </Link>
+          <Link to="/login" style={{
+            display: 'inline-block', padding: '0.7rem 2rem',
+            background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+            borderRadius: '10px', color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '0.9rem'
+          }}>Return to Login</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-zinc-950 text-white p-4">
-      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center">
-              <span className="text-2xl font-bold">V</span>
-            </div>
+    <div style={bgStyle}>
+      {/* Background grid */}
+      <div style={{
+        position: 'absolute', inset: 0, opacity: 0.15,
+        backgroundImage: 'linear-gradient(rgba(56,189,248,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.3) 1px, transparent 1px)',
+        backgroundSize: '50px 50px'
+      }} />
+
+      {/* Glow orbs */}
+      <div style={{
+        position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)',
+        top: '-200px', right: '-200px', pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'absolute', width: '500px', height: '500px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%)',
+        bottom: '-150px', left: '-150px', pointerEvents: 'none'
+      }} />
+
+      {/* Card */}
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: '420px',
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(8,15,32,0.98))',
+        border: '1px solid rgba(99,102,241,0.2)', borderRadius: '20px', padding: '2.5rem',
+        boxShadow: '0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.05), inset 0 1px 0 rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)'
+      }}>
+        {/* Top accent */}
+        <div style={{
+          position: 'absolute', top: 0, left: '20%', right: '20%', height: '2px',
+          background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.8), rgba(56,189,248,0.8), transparent)',
+          borderRadius: '0 0 4px 4px'
+        }} />
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 1.25rem',
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(56,189,248,0.2))',
+            border: '1px solid rgba(99,102,241,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 30px rgba(99,102,241,0.2)'
+          }}>
+            <Wind size={32} color="#818cf8" />
           </div>
-          <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">Create Account</h2>
-          <p className="text-zinc-400 mt-2">Join Vortex-Gen today</p>
+          <h1 style={{
+            fontSize: '1.75rem', fontWeight: 800, margin: 0,
+            background: 'linear-gradient(135deg, #e0f2fe, #818cf8, #7dd3fc)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+          }}>Create Account</h1>
+          <p style={{ color: '#475569', margin: '0.4rem 0 0', fontSize: '0.875rem', letterSpacing: '0.05em' }}>
+            JOIN VORTEX-GEN TODAY
+          </p>
         </div>
 
+        {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg mb-6 flex items-center text-sm">
-            <Info className="w-4 h-4 mr-2 flex-shrink-0" />
-            {error}
+          <div style={{
+            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: '10px', padding: '0.75rem 1rem', marginBottom: '1.25rem',
+            display: 'flex', alignItems: 'flex-start', gap: '0.5rem', color: '#f87171', fontSize: '0.85rem'
+          }}>
+            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSignup} className="space-y-4">
+        {/* Form */}
+        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-zinc-500" />
-              </div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '0.4rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Email</label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#334155', pointerEvents: 'none' }} />
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 text-white transition-colors"
-                placeholder="you@example.com"
-                required
+                type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com" required
+                style={{
+                  width: '100%', boxSizing: 'border-box', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.7rem', paddingBottom: '0.7rem',
+                  background: 'rgba(2,8,23,0.8)', border: '1px solid rgba(51,65,85,0.8)',
+                  borderRadius: '10px', color: '#e2e8f0', fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.2s'
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(51,65,85,0.8)'}
               />
             </div>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">Password</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-zinc-500" />
-              </div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '0.4rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#334155', pointerEvents: 'none' }} />
               <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 text-white transition-colors"
-                placeholder="••••••••"
-                required
-                minLength={6}
+                type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" required minLength={6}
+                style={{
+                  width: '100%', boxSizing: 'border-box', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.7rem', paddingBottom: '0.7rem',
+                  background: 'rgba(2,8,23,0.8)', border: '1px solid rgba(51,65,85,0.8)',
+                  borderRadius: '10px', color: '#e2e8f0', fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.2s'
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(51,65,85,0.8)'}
               />
             </div>
+            <p style={{ color: '#334155', fontSize: '0.75rem', marginTop: '0.3rem' }}>Minimum 6 characters</p>
           </div>
 
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-medium rounded-lg shadow-lg hover:shadow-sky-500/25 transition-all disabled:opacity-50 flex items-center justify-center"
+            type="submit" disabled={loading}
+            style={{
+              width: '100%', padding: '0.8rem', marginTop: '0.25rem',
+              background: loading ? 'rgba(99,102,241,0.3)' : 'linear-gradient(135deg, #6366f1, #0ea5e9)',
+              border: 'none', borderRadius: '10px', color: 'white', fontSize: '0.9rem', fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              transition: 'all 0.2s', letterSpacing: '0.05em',
+              boxShadow: loading ? 'none' : '0 4px 20px rgba(99,102,241,0.35)'
+            }}
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign Up'}
+            {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : 'Create Account'}
           </button>
         </form>
 
-        <div className="mt-6 flex items-center justify-between">
-          <hr className="w-full border-zinc-800" />
-          <span className="p-2 text-xs text-zinc-500 uppercase tracking-wider">Or</span>
-          <hr className="w-full border-zinc-800" />
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
+          <hr style={{ flex: 1, border: 'none', borderTop: '1px solid rgba(51,65,85,0.6)' }} />
+          <span style={{ color: '#334155', fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>or</span>
+          <hr style={{ flex: 1, border: 'none', borderTop: '1px solid rgba(51,65,85,0.6)' }} />
         </div>
 
+        {/* Google */}
         <button
-          onClick={handleGoogleSignup}
-          className="mt-6 w-full py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+          onClick={handleGoogleSignup} disabled={googleLoading}
+          style={{
+            width: '100%', padding: '0.75rem',
+            background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(51,65,85,0.8)',
+            borderRadius: '10px', color: '#e2e8f0', fontSize: '0.9rem', fontWeight: 600,
+            cursor: googleLoading ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={e => { if (!googleLoading) e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'; }}
+          onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(51,65,85,0.8)'; }}
         >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
+          {googleLoading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : (
+            <>
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Continue with Google
+            </>
+          )}
         </button>
 
-        <p className="mt-8 text-center text-sm text-zinc-400">
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', color: '#475569', fontSize: '0.875rem' }}>
           Already have an account?{' '}
-          <Link to="/login" className="text-sky-400 hover:text-sky-300 transition-colors">
-            Log in
-          </Link>
+          <Link to="/login" style={{ color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Log in</Link>
         </p>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        input::placeholder { color: #334155; }
+        input:-webkit-autofill { -webkit-box-shadow: 0 0 0 100px #020817 inset !important; -webkit-text-fill-color: #e2e8f0 !important; }
+      `}</style>
     </div>
   );
 };
