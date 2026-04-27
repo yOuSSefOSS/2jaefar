@@ -122,12 +122,12 @@ const calculateAerodynamicsWithParams = (params, alpha) => {
   if (alpha > stallPos) {
     const excess = alpha - stallPos;
     const clAtStall = clAlpha * (stallPos - alpha0);
-    cl = Math.max(0.1, clAtStall - excess * 0.22);
+    cl = clAtStall - excess * 0.22;
     cd = cdMin + k * clAtStall * clAtStall + 0.025 * Math.pow(excess, 1.6);
   } else if (alpha < stallNeg) {
     const excess = Math.abs(alpha - stallNeg);
     const clAtStall = clAlpha * (stallNeg - alpha0);
-    cl = Math.min(-0.1, clAtStall + excess * 0.22);
+    cl = clAtStall + excess * 0.22;
     cd = cdMin + k * clAtStall * clAtStall + 0.025 * Math.pow(excess, 1.6);
   }
   
@@ -652,24 +652,13 @@ const Home = () => {
       setTimeout(() => {
         if (isMounted) {
           const newData = [];
-          const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 3 : 999;
-          const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 3 : -999;
-
           for (let a = graphBounds.min; a <= graphBounds.max; a++) {
             const { cl, cd } = calculateAerodynamics(activeShapeId, isCustomAirfoil, a);
-            
             let clFinal = (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number(cl.toFixed(3));
-            let cdFinal = Number(cd.toFixed(3));
-
-            if (a > stallLimitPos || a < stallLimitNeg) {
-              clFinal = null;
-              cdFinal = null;
-            }
-
             newData.push({
               aoa: a,
               cl: clFinal,
-              cd: cdFinal
+              cd: Number(cd.toFixed(3))
             });
           }
           setChartData(newData);
@@ -702,21 +691,9 @@ const Home = () => {
           // High-precision post-processing for symmetric shapes
           const processed = data.map(d => {
             let cl = d.cl;
-            let cd = d.cd;
-
             // 1. Zero-clamping for symmetric shapes
             if (isSymmetric && Math.abs(d.aoa) < 0.01) cl = 0;
-
-            // 2. "The Cut" - Hard truncation after stall
-            // We allow about 2 degrees of "stall drop" then stop showing the line
-            const stallLimitPos = positiveStallAngle !== null ? positiveStallAngle + 3 : 999;
-            const stallLimitNeg = negativeStallAngle !== null ? negativeStallAngle - 3 : -999;
-
-            if (d.aoa > stallLimitPos || d.aoa < stallLimitNeg) {
-              return { ...d, cl: null, cd: null }; // Null values make Recharts stop the line
-            }
-
-            return { ...d, cl, cd };
+            return { ...d, cl };
           });
           setChartData(processed);
           setLastSimulationData(processed);

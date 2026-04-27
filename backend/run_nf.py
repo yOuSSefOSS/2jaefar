@@ -64,15 +64,14 @@ def compute_aerodynamics(data):
             # Sharpen positive stall
             for i in range(max_idx + 1, len(cl_data)):
                 dist = i - max_idx
-                # Apply an accelerating drop-off factor
-                drop_factor = 1.0 - (dist * 0.12) # Sharp 12% drop per degree after peak
-                cl_data[i] = max(0.1, cl_data[i] * drop_factor)
+                drop_factor = 1.0 - (dist * 0.12)
+                cl_data[i] = cl_data[i] * drop_factor # No floor clamping
                 
             # Sharpen negative stall
             for i in range(min_idx - 1, -1, -1):
                 dist = min_idx - i
                 drop_factor = 1.0 - (dist * 0.12)
-                cl_data[i] = min(-0.1, cl_data[i] * drop_factor)
+                cl_data[i] = cl_data[i] * drop_factor # No floor clamping
 
         results = []
         for i, a in enumerate(alpha_list):
