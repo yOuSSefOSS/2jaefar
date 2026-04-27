@@ -74,23 +74,28 @@ const calculateAerodynamics = (shapeId, isAirfoil, alpha) => {
     // ── Positive stall ──
     if (alpha > stallPos) {
       const excess = alpha - stallPos;
-      // Cl drops roughly linearly past stall, then levels toward ~0.6
+      // Cl drops sharply past stall (Abrupt stall model)
       const clAtStall = clAlpha * (stallPos - alpha0);
-      cl = Math.max(0.15, clAtStall - excess * 0.08);
+      cl = Math.max(0.1, clAtStall - excess * 0.22); // Increased from 0.08 for "The Cut"
       // Cd rises sharply (separated flow)
-      cd = cdMin + k * clAtStall * clAtStall + 0.015 * Math.pow(excess, 1.6);
+      cd = cdMin + k * clAtStall * clAtStall + 0.025 * Math.pow(excess, 1.6);
     }
     // ── Negative stall ──
     else if (alpha < stallNeg) {
       const excess = Math.abs(alpha - stallNeg);
       const clAtStall = clAlpha * (stallNeg - alpha0);
-      cl = Math.min(-0.15, clAtStall + excess * 0.08);
-      cd = cdMin + k * clAtStall * clAtStall + 0.015 * Math.pow(excess, 1.6);
+      cl = Math.min(-0.1, clAtStall + excess * 0.22); // Increased from 0.08
+      cd = cdMin + k * clAtStall * clAtStall + 0.025 * Math.pow(excess, 1.6);
+    }
+
+    // High-precision clamping for symmetric airfoils
+    if (alpha0 === 0 && Math.abs(alpha) < 0.01) {
+      cl = 0;
     }
 
     // Deep stall / very high AoA → flat-plate drag dominates
     if (Math.abs(alpha) > 35) {
-      cd = Math.max(cd, 1.2 * Math.pow(Math.sin((alpha * Math.PI) / 180), 2));
+      cd = Math.max(cd, 1.25 * Math.pow(Math.sin((alpha * Math.PI) / 180), 2));
     }
 
     return { cl: Number(cl.toFixed(4)), cd: Number(cd.toFixed(4)) };
@@ -117,16 +122,19 @@ const calculateAerodynamicsWithParams = (params, alpha) => {
   if (alpha > stallPos) {
     const excess = alpha - stallPos;
     const clAtStall = clAlpha * (stallPos - alpha0);
-    cl = Math.max(0.15, clAtStall - excess * 0.08);
-    cd = cdMin + k * clAtStall * clAtStall + 0.015 * Math.pow(excess, 1.6);
+    cl = Math.max(0.1, clAtStall - excess * 0.22);
+    cd = cdMin + k * clAtStall * clAtStall + 0.025 * Math.pow(excess, 1.6);
   } else if (alpha < stallNeg) {
     const excess = Math.abs(alpha - stallNeg);
     const clAtStall = clAlpha * (stallNeg - alpha0);
-    cl = Math.min(-0.15, clAtStall + excess * 0.08);
-    cd = cdMin + k * clAtStall * clAtStall + 0.015 * Math.pow(excess, 1.6);
+    cl = Math.min(-0.1, clAtStall + excess * 0.22);
+    cd = cdMin + k * clAtStall * clAtStall + 0.025 * Math.pow(excess, 1.6);
   }
+  
+  if (alpha0 === 0 && Math.abs(alpha) < 0.01) cl = 0;
+  
   if (Math.abs(alpha) > 35) {
-    cd = Math.max(cd, 1.2 * Math.pow(Math.sin((alpha * Math.PI) / 180), 2));
+    cd = Math.max(cd, 1.25 * Math.pow(Math.sin((alpha * Math.PI) / 180), 2));
   }
   return { cl: Number(cl.toFixed(4)), cd: Number(cd.toFixed(4)) };
 };
