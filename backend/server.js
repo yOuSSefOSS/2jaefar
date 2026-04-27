@@ -16,6 +16,55 @@ try {
   console.error("Stripe initialization failed:", e.message);
 }
 
+// ─── RESEND EMAIL ──────────────────────────────────────────────────────────
+async function sendSubscriptionEmail(toEmail, tier) {
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) { console.warn('[Email] RESEND_API_KEY not set, skipping welcome email.'); return; }
+
+  const tierName = tier === 'pro_max' ? 'Ultra' : 'Pro';
+  const tierColor = tier === 'pro_max' ? '#818cf8' : '#38bdf8';
+  const features = tier === 'pro_max'
+    ? ['Unlimited Imports', 'Disable Low Power Mode', 'Advanced Flow Analytics', 'NeuralFoil ML', 'Fast Tune', 'Deep Tune', 'Heatmap']
+    : ['10 Imports Quota', 'NeuralFoil ML', 'Fast Tune unlocked', 'Standard Flow Analytics'];
+
+  const featureList = features.map(f => `<li style="margin:6px 0;color:#94a3b8;">✦ ${f}</li>`).join('');
+
+  const html = `
+<div style="background:#020817;padding:40px 20px;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;background:linear-gradient(145deg,#0d1829,#0a1020);border:1px solid rgba(56,189,248,0.2);border-radius:20px;overflow:hidden;">
+    <div style="height:3px;background:linear-gradient(90deg,#0ea5e9,${tierColor},#0ea5e9);"></div>
+    <div style="padding:40px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:16px;">🌀</div>
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#e2e8f0;">Welcome to <span style="color:${tierColor};">${tierName}</span>!</h1>
+      <p style="color:#64748b;margin:0 0 32px;font-size:15px;">Your Vortex-Gen subscription is now active.</p>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;text-align:left;margin-bottom:32px;">
+        <p style="color:#64748b;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 12px;">Your ${tierName} features</p>
+        <ul style="list-style:none;padding:0;margin:0;">${featureList}</ul>
+      </div>
+      <a href="https://2jaefar.vercel.app/dashboard" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#0ea5e9,${tierColor});color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:15px;">Open Dashboard →</a>
+    </div>
+    <div style="padding:24px;text-align:center;border-top:1px solid rgba(51,65,85,0.3);"><p style="margin:0;color:#334155;font-size:12px;">© 2025 Vortex-Gen · Aerodynamic Simulation Platform</p></div>
+    <div style="height:2px;background:linear-gradient(90deg,transparent,${tierColor},transparent);"></div>
+  </div>
+</div>`;
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Vortex-Gen <onboarding@resend.dev>',
+        to: [toEmail],
+        subject: `🌀 You're now on Vortex-Gen ${tierName}!`,
+        html
+      })
+    });
+    console.log(`[Email] Welcome email sent to ${toEmail}`);
+  } catch (e) {
+    console.error('[Email] Failed to send welcome email:', e.message);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -44,6 +93,10 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
       await supabase
         .from('users')
         .upsert({ user_id: userId, subscription_tier: tier });
+
+      // Send welcome email via Resend
+      const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+      if (user?.email) await sendSubscriptionEmail(user.email, tier);
     }
   }
 
