@@ -39,7 +39,7 @@ const tiers = [
     popular: true,
   },
   {
-    name: 'Pro Max',
+    name: 'Ultra',
     price: '$49',
     period: '/mo',
     description: 'For professional aerospace engineers.',
@@ -52,7 +52,7 @@ const tiers = [
       { name: 'Deep Tune unlocked', included: true },
       { name: 'Heatmap unlocked', included: true },
     ],
-    buttonText: 'Upgrade to Pro Max',
+    buttonText: 'Upgrade to Ultra',
     tierId: 'pro_max',
   },
 ];
