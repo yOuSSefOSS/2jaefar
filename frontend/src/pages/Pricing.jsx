@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, Zap, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { supabase } from '../services/supabaseClient';
 
 const tiers = [
   {
