@@ -183,7 +183,8 @@ const parseAirfoilDat = (text) => {
   if (points.length<3) return null;
   const minX=Math.min(...points.map(p=>p[0])), maxX=Math.max(...points.map(p=>p[0]));
   const chord=(maxX-minX)||1;
-  return points.map(([x,y])=>[(x-minX)/chord-0.5, y/chord]);
+  // Centered for UI Drawing (-0.5 to 0.5)
+  return points.map(([x,y])=>[(x-minX)/chord - 0.5, y/chord]);
 };
 
 // ─── Preset Button ────────────────────────────────────────────────────────────

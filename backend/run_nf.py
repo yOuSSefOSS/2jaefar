@@ -23,17 +23,27 @@ def compute_aerodynamics(data):
     if not points:
         return {"error": "No points provided"}
 
-    avg_y = get_camber_bias(points)
-    # Aggressive symmetry detection: 
-    # 1. Check if name suggests symmetry (NACA 00xx)
-    # 2. Check if geometric average Y is near zero
+    # ─── GEOMETRIC NORMALIZATION ───
+    # Ensure airfoil is at [0,1] and Leading Edge at (0,0) for AI consistency
+    pts = np.array(points)
+    min_x, max_x = np.min(pts[:, 0]), np.max(pts[:, 0])
+    chord = (max_x - min_x) if max_x != min_x else 1.0
+    pts[:, 0] = (pts[:, 0] - min_x) / chord
+    
+    # Re-center Y (Leading Edge at 0,0)
+    le_idx = np.argmin(pts[:, 0])
+    y_le = pts[le_idx, 1]
+    pts[:, 1] = (pts[:, 1] - y_le) / chord
+
+    # Calculate symmetry hint on the normalized geometry
+    avg_y = np.mean(pts[:, 1])
     is_symmetric_hint = "00" in airfoil_name or abs(avg_y) < 0.005
     
     tmp_path = f"tmp_airfoil_{os.getpid()}.dat"
     try:
         with open(tmp_path, "w") as f:
             f.write("Airfoil\n")
-            for p in points:
+            for p in pts:
                 f.write(f"{p[0]} {p[1]}\n")
                 
         aero = nf.get_aero_from_dat_file(tmp_path, alpha=np.array(alpha_list), Re=Re, model_size=model_size)
