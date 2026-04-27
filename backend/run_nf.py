@@ -8,30 +8,27 @@ import numpy as np
 print("Loading Neuralfoil model into memory and starting daemon...", file=sys.stderr)
 
 
-def is_symmetric(points, tol=1e-5):
-    """Checks if the airfoil coordinates are symmetric."""
-    if not points: return False
-    # Split points into upper and lower (Selig format usually goes from TE-upper to LE to TE-lower)
-    n = len(points)
-    half = n // 2
-    # Check if Y-coordinates are mirrored around y=0 (assuming normalized coordinates)
-    # We compare points from the first half and second half
-    for i in range(half):
-        j = n - 1 - i
-        if abs(points[i][1] + points[j][1]) > tol:
-            return False
-    return True
+def get_camber_bias(points):
+    """Calculates the average Y-offset (camber bias) of the airfoil."""
+    if not points: return 0
+    return sum(p[1] for p in points) / len(points)
 
 def compute_aerodynamics(data):
     alpha_list = data.get("alpha", list(range(-20, 31)))
     Re = data.get("Re", 1e6)
     points = data.get("points", [])
     model_size = data.get("modelSize", "large")
+    airfoil_name = data.get("name", "").lower()
     
     if not points:
         return {"error": "No points provided"}
 
-    symmetric = is_symmetric(points)
+    avg_y = get_camber_bias(points)
+    # Aggressive symmetry detection: 
+    # 1. Check if name suggests symmetry (NACA 00xx)
+    # 2. Check if geometric average Y is near zero
+    is_symmetric_hint = "00" in airfoil_name or abs(avg_y) < 0.005
+    
     tmp_path = f"tmp_airfoil_{os.getpid()}.dat"
     try:
         with open(tmp_path, "w") as f:
@@ -44,23 +41,17 @@ def compute_aerodynamics(data):
         cl_raw = aero.get('CL', np.zeros(len(alpha_list)))
         cd_raw = aero.get('CD', np.zeros(len(alpha_list)))
 
-        if hasattr(cl_raw, 'tolist'):
-            cl_data = cl_raw.tolist()
-            cd_data = cd_raw.tolist()
-        else:
-            cl_data = [float(cl_raw)] * len(alpha_list)
-            cd_data = [float(cd_raw)] * len(alpha_list)
+        cl_data = cl_raw.tolist() if hasattr(cl_raw, 'tolist') else [float(cl_raw)] * len(alpha_list)
+        cd_data = cd_raw.tolist() if hasattr(cd_raw, 'tolist') else [float(cd_raw)] * len(alpha_list)
             
         # ─── HIGH PRECISION CALIBRATION ───
-        # 1. Zero-Bias Correction for Symmetric Airfoils
-        zero_index = None
-        if 0 in alpha_list:
-            zero_index = alpha_list.index(0)
-            
-        if symmetric and zero_index is not None:
-            bias = cl_data[zero_index]
-            cl_data = [c - bias for c in cl_data]
-            cl_data[zero_index] = 0.0 # Hard clamp
+        # Zero-Bias Correction: Align AI model with physical reality
+        if is_symmetric_hint and 0 in alpha_list:
+            zero_idx = alpha_list.index(0)
+            bias = cl_data[zero_idx]
+            # Shift the entire lift curve to eliminate phantom lift
+            cl_data = [round(c - bias, 5) for c in cl_data]
+            cl_data[zero_idx] = 0.0 # Force absolute zero
             
         # ─── SHARP STALL INJECTION ("THE CUT") ───
         # We identify the peak CL and sharpen the drop-off after it

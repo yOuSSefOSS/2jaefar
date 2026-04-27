@@ -360,10 +360,26 @@ const Home = () => {
 
   // Stall point coordinates on the polar (Cd, Cl at stall AoA)
   const stallPoint = React.useMemo(() => {
-    if (!positiveStallAngle || !chartData.length) return { cd: null, cl: null };
+    if (positiveStallAngle === null || !chartData.length) return { cd: null, cl: null };
     const pt = chartData.find(d => d.aoa === positiveStallAngle);
     return pt ? { cd: pt.cd, cl: pt.cl } : { cd: null, cl: null };
   }, [positiveStallAngle, chartData]);
+
+  // Live aerodynamic values from NeuralFoil Chart Data
+  const currentAeroItem = React.useMemo(() => {
+    if (!chartData || chartData.length === 0) return { cl: 0, cd: 0 };
+    const closest = chartData.reduce((prev, curr) => 
+      Math.abs(curr.aoa - pitchAngle) < Math.abs(prev.aoa - pitchAngle) ? curr : prev
+    );
+    
+    // Safety clamp for Live Metrics (Symmetric detection)
+    const isSymmetric = activeShape?.type.toLowerCase().includes('symmetric') || activeShape?.name.includes('00');
+    if (isSymmetric && Math.abs(pitchAngle) < 0.01) {
+      return { ...closest, cl: 0 };
+    }
+    
+    return closest;
+  }, [activeShape, chartData, pitchAngle]);
 
   // Audio Alarm Effect on stall threshold crossover
   useEffect(() => {
@@ -371,19 +387,11 @@ const Home = () => {
     let isActive = true;
     let step = 0;
     
-    // Rhythm pattern: [duration_on_ms, duration_off_ms]
-    // Standard aviation stall warning pattern: Intense repetitive bursts
-    const rhythm = [
-      [200, 100], 
-      [200, 100], 
-      [500, 200]
-    ];
+    const rhythm = [[200, 100], [200, 100], [500, 200]];
 
     const playAlarm = () => {
        if (!isActive || !isStalling) return;
-       
        const [onTime, offTime] = rhythm[step % rhythm.length];
-       
        try {
           const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           const masterGain = audioCtx.createGain();
@@ -392,72 +400,21 @@ const Home = () => {
           masterGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (onTime / 1000));
           masterGain.connect(audioCtx.destination);
 
-          if (soundPreset === 'siren') {
-            // --- Aviation Siren (High Pitch) ---
-            const osc1 = audioCtx.createOscillator();
-            osc1.type = 'sawtooth';
-            osc1.frequency.setValueAtTime(880, audioCtx.currentTime);
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'square';
-            osc2.frequency.setValueAtTime(885, audioCtx.currentTime);
-            osc1.connect(masterGain);
-            osc2.connect(masterGain);
-            osc1.start(); osc2.start();
-            osc1.stop(audioCtx.currentTime + (onTime / 1000));
-            osc2.stop(audioCtx.currentTime + (onTime / 1000));
-
-          } else if (soundPreset === 'sonar') {
-            // --- Sonar Pulse (Sine) ---
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            osc.connect(masterGain);
-            osc.start();
-            osc.stop(audioCtx.currentTime + (onTime / 1000));
-
-          } else {
-            // --- Industrial Horn (Default) ---
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            
-            const osc1 = audioCtx.createOscillator();
-            osc1.type = 'triangle';
-            osc1.frequency.setValueAtTime(400, audioCtx.currentTime);
-            
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'sawtooth';
-            osc2.frequency.setValueAtTime(202, audioCtx.currentTime);
-            
-            osc1.connect(filter);
-            osc2.connect(filter);
-            filter.connect(masterGain);
-            
-            osc1.start(); osc2.start();
-            osc1.stop(audioCtx.currentTime + (onTime / 1000));
-            osc2.stop(audioCtx.currentTime + (onTime / 1000));
-          }
-
-       } catch(e) { 
-         console.warn("Audio Context failed:", e);
-       }
-       
+          const osc1 = audioCtx.createOscillator();
+          osc1.type = soundPreset === 'siren' ? 'sawtooth' : 'triangle';
+          osc1.frequency.setValueAtTime(soundPreset === 'siren' ? 880 : 400, audioCtx.currentTime);
+          osc1.connect(masterGain);
+          osc1.start();
+          osc1.stop(audioCtx.currentTime + (onTime / 1000));
+       } catch(e) { console.warn("Audio Context failed:", e); }
        step++;
        timeoutId = setTimeout(playAlarm, onTime + offTime);
     };
 
-    if (isStalling) {
-       playAlarm();
-    }
-    
-    return () => {
-      isActive = false;
-      clearTimeout(timeoutId);
-    };
+    if (isStalling) playAlarm();
+    return () => { isActive = false; clearTimeout(timeoutId); };
   }, [pitchAngle, isStalling, audioVolume, soundPreset]);
 
-  // Live aerodynamic values from NeuralFoil Chart Data
-  const currentAeroItem = chartData.find(d => d.aoa === pitchAngle) || { cl: 0, cd: 0 };
   const currentForce = {
     lift: 0.5 * density * Math.pow(windSpeed, 2) * currentAeroItem.cl * 1,
     drag: 0.5 * density * Math.pow(windSpeed, 2) * currentAeroItem.cd * 1
@@ -689,6 +646,7 @@ const Home = () => {
     setIsSimulating(true);
 
     const isCustomAirfoil = !['naca4412', 'naca0012'].includes(activeShapeId);
+    const isSymmetric = activeShape.type.toLowerCase().includes('symmetric') || activeShape.name.includes('00');
 
     if (!useNeuralFoil) {
       setTimeout(() => {
@@ -696,9 +654,10 @@ const Home = () => {
           const newData = [];
           for (let a = graphBounds.min; a <= graphBounds.max; a++) {
             const { cl, cd } = calculateAerodynamics(activeShapeId, isCustomAirfoil, a);
+            const clFinal = (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number(cl.toFixed(3));
             newData.push({
               aoa: a,
-              cl: Number(cl.toFixed(3)),
+              cl: clFinal,
               cd: Number(cd.toFixed(3))
             });
           }
@@ -717,6 +676,7 @@ const Home = () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        name: activeShape.name,
         alpha: Array.from({length: graphBounds.max - graphBounds.min + 1}, (_, i) => i + graphBounds.min),
         Re: reynolds,
         mach: 0,
@@ -728,8 +688,13 @@ const Home = () => {
     .then(data => {
       if (isMounted) {
         if (!data.error && Array.isArray(data)) {
-           setChartData(data);
-           setLastSimulationData(data);
+          // High-precision post-processing for symmetric shapes
+          const processed = data.map(d => {
+            if (isSymmetric && Math.abs(d.aoa) < 0.01) return { ...d, cl: 0 };
+            return d;
+          });
+          setChartData(processed);
+          setLastSimulationData(processed);
         } else {
            console.error("NeuralFoil Error:", data.error);
         }
