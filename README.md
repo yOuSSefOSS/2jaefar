@@ -2,146 +2,303 @@
   <img src="frontend/public/banner.png" alt="Vortex-Gen Banner" width="100%">
 </p>
 
-# 🌪️ Vortex-Gen: Interactive 3D Wind Tunnel
+# 🌀 Vortex-Gen — Aerodynamic Simulation Platform
 
-## 📖 Project Overview
-**Vortex-Gen** is a professional, high-fidelity real-time aerodynamics simulation engine designed for education, engineering intuition, and competitive hackathons. It seamlessly blends advanced 3D rendering with a neural-network-backed physics core. Users can interactively test airfoil shapes in a virtual wind tunnel, instantly visualizing complex aerodynamic phenomena like pressure distribution, lift generation, and stall dynamics without the agonizing wait times of traditional Computational Fluid Dynamics (CFD).
+> **Live:** [2jaefar.vercel.app](https://2jaefar.vercel.app) · **API:** [2jaefar-production.up.railway.app](https://2jaefar-production.up.railway.app/api/status)
+
+**Vortex-Gen** is a full-stack, production-grade aerodynamic simulation platform for engineering students, researchers, and aerospace enthusiasts. Users can select or import airfoil geometries, run fluid-dynamics simulations powered by a Python NeuralFoil AI engine, visualize interactive charts, compare airfoils side-by-side, export 3D STL files, and generate multi-page PDF analysis reports — all from a premium glassmorphism dashboard.
+
+---
+
+## 🏗️ Infrastructure Overview
+
+| Service | URL | Role |
+|---|---|---|
+| **GitHub** | `github.com/yOuSSefOSS/2jaefar` | Source of truth & CI/CD trigger |
+| **Vercel** | `2jaefar.vercel.app` | Frontend hosting (React SPA) |
+| **Railway** | `2jaefar-production.up.railway.app` | Backend (Node.js + Python daemon) |
+| **Supabase** | `dashboard.supabase.com` | Authentication + PostgreSQL database |
+| **Stripe** | `dashboard.stripe.com` | Payments & subscription webhooks |
+| **Resend** | `resend.com` | Transactional email on upgrade |
+
+Every push to `main` auto-deploys to both Vercel and Railway. No manual deploy steps required.
 
 ---
 
 ## 💻 Tech Stack
-The project uses a modern, high-performance web architecture separated into a frontend UI and a dedicated physics backend:
 
-**Frontend (UI & 3D Rendering):**
-- **React 19 & Vite:** Lightning-fast UI framework and build tool.
-- **Three.js & React-Three-Fiber (Drei):** WebGL-accelerated 3D rendering for flow particles and geometries.
-- **Tailwind CSS v4:** Utility-first framework for crafting a premium Glassmorphism design system.
-- **Framer Motion:** Spring-physics-based micro-animations and smooth layout transitions.
-- **Recharts:** Dynamic SVG charts for real-time Drag Polar and Lift Coefficient data.
+### Frontend (`frontend/`)
+- **React 19 + Vite** — UI framework and build tool
+- **Tailwind CSS v4** — Utility-first glassmorphism design system
+- **Framer Motion** — Spring-physics micro-animations and page transitions
+- **Recharts** — SVG charts for Cl vs AoA, Cd vs AoA, and drag polar
+- **Three.js / React-Three-Fiber** — WebGL particle flow engine and airfoil simulation view
+- **jsPDF + html2canvas** — Client-side multi-page PDF report generation
+- **Supabase JS SDK** — Client-side authentication
 
-**Backend (API & Machine Learning Physics Core):**
-- **Node.js & Express:** Lightweight, asynchronous REST API.
-- **Python 3 & Numpy:** Data processing and numerical calculations.
-- **NeuralFoil (PyTorch):** Deep-learning surrogate model that predicts airfoil aerodynamic properties (Cl, Cd) in milliseconds.
-
-**Deployment:**
-- **Vercel:** Edge-hosted lightning-fast frontend delivery.
-- **Railway & Docker:** Containerized backend deployment ensuring the persistent Python NeuralFoil daemon runs reliably in production.
-
----
-
-## 🏗️ Architecture
-Vortex-Gen relies on a **Daemon-based Architecture** to achieve real-time interactivity:
-
-1. **Frontend Client:** Captures user inputs (Angle of Attack, Velocity, Shape modifiers) and sends JSON payloads to the Express server.
-2. **Node.js Gateway (`server.js`):** Acts as a bridge. Instead of spinning up a new Python script per request, it maintains a permanent `child_process`.
-3. **Python Daemon (`run_nf.py`):** The NeuralFoil ML model is mathematically heavy, and initializing it takes time. By running Python in `--daemon` mode, the model is loaded into memory exactly once. It listens to `stdin` for JSON configurations, executes the aerodynamics prediction instantly, and writes the results to `stdout`.
-4. **Data Return:** Node parses the stream and returns standard HTTP responses to the frontend, which interpolates the data into 3D particle updates and Recharts graphs.
+### Backend (`backend/`)
+- **Node.js + Express** — REST API gateway and auth middleware
+- **Python 3 + NeuralFoil (PyTorch)** — Deep-learning surrogate model for aerodynamic coefficient prediction
+- **Supabase Admin SDK** — Server-side user & subscription management
+- **Stripe SDK** — Checkout session creation and webhook verification
+- **Resend API** — Welcome email delivery
 
 ---
 
 ## ✨ Features
-- 🚀 **Real-Time 3D CFD Visualization:** Interactive 3D particle flow engine and dynamic surface pressure heatmaps.
-- 📥 **Custom Airfoil Import:** Upload standard `.dat` coordinate files to instantly test custom geometries in the wind tunnel.
-- 🧠 **"Aero-Facts" Learn Mode:** A contextual, physics-aware educational engine that surfaces real-time concept summaries (e.g., Boundary Layer Separation, Bernoulli's Principle) based on current Angle of Attack and wind speed.
-- ⚡ **Instantaneous Physics:** Predicts real-world aerodynamic coefficients (Cl, Cd) in milliseconds using an ML surrogate, replacing hours of traditional meshing.
-- 💎 **Premium Glassmorphism UI:** Features multi-layered blur shadows, smooth micro-animations, glowing sliders, and dynamic charts.
-- 🏎️ **Optimized Render Loop:** Uses Three.js constant-hoisting and React.memo caching to guarantee a smooth 60fps experience under heavy interaction.
+
+### Simulation Engine
+- 🚀 **Real-Time 3D CFD Visualization** — Interactive WebGL particle flow engine with dynamic pressure heatmaps
+- 🧠 **NeuralFoil AI Backend** — Predicts Cl/Cd coefficients in milliseconds using a trained ML surrogate
+- 📊 **Interactive Charts** — Live Lift Coefficient (Cl vs AoA), Drag Coefficient (Cd vs AoA), and Drag Polar with stall zone markers
+- ⚡ **Local Fallback Model** — Accurate NACA 4-digit analytical model for free-tier users
+
+### Airfoil Tools
+- 📥 **Custom Airfoil Import** — Upload standard Selig `.dat` coordinate files
+- 📦 **3D STL Export** — Export any airfoil as a 3D-printable STL with configurable span/chord presets (Drone, Plane Section, Custom)
+- 📄 **Multi-Page PDF Reports** — Branded analytical PDF including airfoil geometry, environment parameters, and Cl/Cd charts
+
+### Compare Mode
+- ⚖️ **Side-by-Side Comparison** — Toggle compare mode to select a second airfoil
+- 📊 **Dual Chart Sets** — Each airfoil gets its own dedicated Cl, Cd, and polar chart section
+- 🔀 **Overlay Comparison Charts** — Superimposed dual-line charts with labeled legends
+- 📄 **Comparison PDF Export** — In compare mode the PDF expands to 3 pages: Primary, Compare, and Comparison Overview
+
+### Autotune
+- ⚡ **Fast Tune** — Sweeps NACA 4-digit candidates to find the highest-Cl airfoil for a target AoA range (Pro)
+- 🔬 **Deep Tune** — Exhaustive large-model sweep for maximum precision (Pro Max)
+- 🏆 **Golden Lift Mode** — Highlights the optimal lift angle with a visual golden glow
+
+### Subscription & Auth
+- 🔐 **Supabase Authentication** — Email/password login with JWT-based sessions
+- 💳 **Stripe Subscriptions** — Tiered billing (Free / Pro / Pro Max) with hosted Stripe checkout
+- 📧 **Welcome Emails** — Branded HTML emails sent automatically on upgrade via Resend
+- 🛡️ **Backend Auth Middleware** — All API routes validate Supabase JWTs server-side
+
+### UX & Design
+- 🎬 **Cinematic Loading Screen** — Full-screen branded intro with sweep animation
+- 🎛️ **AeroFacts Panel** — Context-aware physics education panel
+- 🔊 **Stall Audio Alarm** — Configurable audio alert when pitch crosses stall threshold
+- 📐 **Settings Modal** — Air density controls, altitude presets, graph bounds, sound settings, and unit toggle (SI/Imperial)
 
 ---
 
-## 🧪 Testing
-Currently, the codebase relies on static analysis and manual integration testing. 
+## 🔄 Data Flow
 
-**Linting:**
-To check the frontend codebase for errors and enforce code style, use ESLint:
-```bash
-cd frontend
-npm run lint
+```
+User visits Vercel → React app loads
+         ↓
+Supabase Auth → JWT issued → AppContext loads user tier
+         ↓
+User selects airfoil & runs simulation
+         ↓
+[Pro/Pro Max] POST /api/analyze → Railway validates JWT via Supabase
+         ↓
+Node.js forwards to Python NeuralFoil daemon via stdin
+         ↓
+Python daemon returns {aoa, cl, cd} array via stdout
+         ↓
+Recharts renders live charts on frontend
+         ↓
+User clicks Upgrade → POST /api/create-checkout-session → Stripe URL
+         ↓
+Stripe processes payment → POST /api/webhooks/stripe → Supabase tier updated
+         ↓
+Railway calls Resend → welcome email sent
 ```
 
-**Manual Verification:**
-1. Start both servers.
-2. Ensure the backend console displays `[Python]: Loading Neuralfoil model into memory...` and does not crash.
-3. Open the frontend and manipulate the "Angle of Attack" slider. The Data Charts and 3D Canvas should update synchronously without stuttering. 
+---
+
+## 🔑 API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/status` | None | Health check |
+| `POST` | `/api/analyze` | Yes (Pro+) | NeuralFoil aerodynamic simulation |
+| `POST` | `/api/increment-import` | Yes | Track import count, enforce tier limits |
+| `POST` | `/api/create-checkout-session` | Yes | Create Stripe checkout session |
+| `POST` | `/api/webhooks/stripe` | Stripe signature | Handle payment confirmation |
+| `POST` | `/api/log` | None | Browser error log relay |
+
+---
+
+## 💎 Subscription Tiers
+
+| Feature | Free | Pro | Pro Max |
+|---|---|---|---|
+| Basic simulation (local model) | ✅ | ✅ | ✅ |
+| NeuralFoil AI solver | ❌ | ✅ | ✅ |
+| Airfoil imports | 1 | 10 | Unlimited |
+| Particle flow (full quality) | ❌ | ❌ | ✅ |
+| Fast Tune | ❌ | ✅ | ✅ |
+| Deep Tune | ❌ | ❌ | ✅ |
+| Compare Mode | ✅ | ✅ | ✅ |
+| PDF Export | ✅ | ✅ | ✅ |
+| 3D STL Export | ✅ | ✅ | ✅ |
 
 ---
 
 ## 📁 Folder Structure
-```text
-├── backend/                  # Node.js and Python Physics Engine
-│   ├── run_nf.py             # Python daemon utilizing NeuralFoil
-│   ├── server.js             # Express.js REST API gateway
-│   ├── Dockerfile            # Docker configuration for Railway deployment
-│   ├── requirements.txt      # Python dependencies
-│   └── package.json          # Backend Node dependencies
-├── frontend/                 # React SPA & 3D Engine
-│   ├── .env.production       # Production environment variables
-│   ├── public/               # Static assets (Banner, Icons)
-│   ├── src/                  
-│   │   ├── components/       # Reusable UI & 3D Components (SimulationView, DataChart, etc.)
-│   │   ├── context/          # Global React Context for state management
-│   │   ├── layouts/          # Main application wrappers
-│   │   ├── pages/            # View routes (Home, Profile, Settings)
-│   │   ├── services/         # Axios API interceptors
-│   │   ├── App.jsx           # Root component
-│   │   └── index.css         # Tailwind v4 configuration and global styles
-│   ├── index.html            # Entry point
-│   ├── vite.config.js        # Vite build configuration
-│   └── package.json          # Frontend dependencies
-├── start_servers.bat         # Windows batch script to launch both environments
-├── vercel.json               # Vercel deployment configuration
-├── vercel_deployment_guide.md# Step-by-step production deployment guide
-└── README.md                 # Project Documentation
+
+```
+├── backend/
+│   ├── run_nf.py              # Python NeuralFoil daemon (stdin/stdout protocol)
+│   ├── server.js              # Express API, auth middleware, Stripe & Resend logic
+│   ├── Dockerfile             # Docker config for Railway deployment
+│   ├── requirements.txt       # Python dependencies (neuralfoil, numpy)
+│   ├── .env.example           # Backend env variable reference
+│   └── package.json
+│
+├── frontend/
+│   ├── .env.production        # Production env (VITE_API_URL, Supabase keys)
+│   ├── .env.example           # Env variable reference
+│   ├── public/                # Static assets (banner, icons, favicon)
+│   └── src/
+│       ├── assets/            # Logo image
+│       ├── components/
+│       │   ├── AeroFactsPanel.jsx      # Context-aware physics education panel
+│       │   ├── AuthGuard.jsx           # Route protection (dev bypass included)
+│       │   ├── ControlSlider.jsx       # Styled parameter sliders
+│       │   ├── DataChart.jsx           # Cl/Cd vs AoA line charts with legends
+│       │   ├── Export3DModal.jsx       # Full-screen 3D STL export modal
+│       │   ├── LoadingScreen.jsx       # Cinematic intro loading screen
+│       │   ├── PdfReportTemplate.jsx   # Multi-page PDF template (hidden render)
+│       │   ├── PolarChart.jsx          # Drag polar scatter chart
+│       │   ├── ShapeCard.jsx           # Airfoil selection card
+│       │   └── SimulationView.jsx      # WebGL 3D particle flow engine
+│       ├── context/
+│       │   └── AppContext.jsx          # Global state: auth, tier, simulation params
+│       ├── layouts/
+│       │   └── DashboardLayout.jsx     # Top navbar and page wrapper
+│       ├── pages/
+│       │   ├── Home.jsx                # Main simulation dashboard
+│       │   ├── Login.jsx               # Auth page
+│       │   ├── Pricing.jsx             # Subscription tier page
+│       │   ├── Profile.jsx             # User profile, CSV export, airfoil hangar
+│       │   └── Settings.jsx            # App settings
+│       ├── services/
+│       │   ├── apiService.js           # Axios instance with base URL
+│       │   └── supabaseClient.js       # Supabase client initialization
+│       ├── App.jsx
+│       ├── main.jsx
+│       └── index.css                   # Tailwind v4 + custom design tokens
+│
+├── vercel.json                # Vercel deployment config
+├── start_servers.bat          # Windows: starts frontend + backend together
+└── README.md
 ```
 
 ---
 
-## 🚀 How to Run the Project
+## 🚀 Local Development Setup
 
 ### Prerequisites
-- **Node.js** (v18+)
-- **Python 3.9+** (with pip)
+- Node.js v18+
+- Python 3.9+
 
-### 1. Root Directory Setup
-Clone the repository, then initialize dependencies.
+### 1. Clone
+```bash
+git clone https://github.com/yOuSSefOSS/2jaefar.git
+cd 2jaefar
+```
 
-### 2. Backend Setup
-The ML engine needs a Python environment and Node server.
+### 2. Backend
 ```bash
 cd backend
 npm install
 
-# Install Python dependencies (using a virtual environment is recommended)
-python -m pip install neuralfoil numpy
+# Python virtual environment
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
 
-# Start the Node.js API and Python Daemon
+pip install neuralfoil numpy
+
+# Copy and fill in env vars
+cp .env.example .env
+
+# Start server (Python daemon launches automatically)
 node server.js
 ```
-*Wait until the console says "Firing up persistent Python Neuralfoil Daemon..."*
 
-### 3. Frontend Setup
-Open a **new** terminal window:
+### 3. Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*Navigate to `http://localhost:5173` in a hardware-accelerated browser (such as Chrome or Edge).*
+
+Navigate to `http://localhost:5173` — you are **automatically logged in** as a `pro_max` dev user. No Supabase credentials required locally.
+
+### Dev Auth Bypass
+When running in development mode:
+- `AppContext.jsx` injects a mock user (`dev-mock-user`, `pro_max` tier) — no Supabase login needed
+- `AuthGuard.jsx` skips the redirect to `/login`
+- `server.js` auth middleware skips JWT validation
+
+This bypass is **strictly guarded** by `MODE === 'development'` / `NODE_ENV !== 'production'` and is **never active on Vercel or Railway**.
+
+### Windows Shortcut
+```bash
+start_servers.bat   # Launches both servers from project root
+```
 
 ---
 
-## 🌍 Deployment (Production)
-The project is built with a dual-deployment strategy:
-1. **Frontend (Vercel):** The React SPA is deployed directly on Vercel using the configuration inside `vercel.json`. It securely connects to the deployed backend via the `VITE_API_URL` environment variable.
-2. **Backend (Railway):** Due to the complex requirement of a persistent Python daemon (`run_nf.py`) running alongside a Node.js API, the backend is containerized using `backend/Dockerfile`. It is hosted on Railway to ensure the NeuralFoil ML model stays in memory for instantaneous frontend predictions.
+## 🌍 Production Deployment
 
-For detailed step-by-step instructions on setting this up, please see the [Vercel Deployment Guide](vercel_deployment_guide.md).
+### Frontend → Vercel
+Set in **Vercel Dashboard → Settings → Environment Variables:**
+
+| Variable | Value |
+|---|---|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
+| `VITE_API_URL` | `https://2jaefar-production.up.railway.app` |
+
+### Backend → Railway
+Set in **Railway Dashboard → Variables:**
+
+| Variable | Value |
+|---|---|
+| `SUPABASE_URL` | Your Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (admin) |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `RESEND_API_KEY` | Resend API key |
+
+### Stripe Webhook
+Register in Stripe dashboard → Webhooks:
+```
+https://2jaefar-production.up.railway.app/api/webhooks/stripe
+```
 
 ---
 
-## 🔮 Future Improvements
-- **3D Volumetric Smoke:** Upgrade the particle system to simulate volumetric smoke trails and realistic turbulence wakes.
-- **Automated Test Suite:** Implement `Vitest` and `React Testing Library` for the frontend UI, and `pytest` for the Python physics core.
-- **Export & Reporting:** Generate downloadable PDF reports of the tested aerodynamic performance (Lift/Drag ratios over time).
-- **Multi-threaded Web Workers:** Offload the formatting of heavy ML data arrays to Web Workers to ensure the main UI thread never blocks during massive computations.
+## 🧪 Testing
+
+```bash
+# Frontend lint
+cd frontend && npm run lint
+
+# Backend health check
+curl https://2jaefar-production.up.railway.app/api/status
+```
+
+Manual checklist:
+1. Backend starts → console shows `[Python]: Loading Neuralfoil model...`
+2. Move Pitch Angle slider → charts update in real time
+3. Enable Compare Mode → select two airfoils → three chart groups appear
+4. Click Export PDF → multi-page PDF downloads correctly
+5. Click Extract as 3D → STL file downloads
+
+---
+
+## 🔮 Roadmap
+
+- [ ] Volumetric smoke trails and turbulence wake visualization
+- [ ] Vitest + React Testing Library frontend test suite
+- [ ] pytest for Python physics engine
+- [ ] Multi-wing assembly (simulate full wing configurations)
+- [ ] Web Workers for heavy ML data formatting
+- [ ] MATLAB/CSV export of full polar sweep data
