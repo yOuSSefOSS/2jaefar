@@ -41,7 +41,7 @@ async function sendSubscriptionEmail(toEmail, tier) {
         <p style="color:#64748b;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 12px;">Your ${tierName} features</p>
         <ul style="list-style:none;padding:0;margin:0;">${featureList}</ul>
       </div>
-      <a href="https://2jaefar.vercel.app/dashboard" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#0ea5e9,${tierColor});color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:15px;">Open Dashboard →</a>
+      <a href="https://vortex-gen.vercel.app/dashboard" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#0ea5e9,${tierColor});color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:15px;">Open Dashboard →</a>
     </div>
     <div style="padding:24px;text-align:center;border-top:1px solid rgba(51,65,85,0.3);"><p style="margin:0;color:#334155;font-size:12px;">© 2025 Vortex-Gen · Aerodynamic Simulation Platform</p></div>
     <div style="height:2px;background:linear-gradient(90deg,transparent,${tierColor},transparent);"></div>

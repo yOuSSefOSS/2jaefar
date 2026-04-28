@@ -4,7 +4,7 @@
 
 # 🌀 Vortex-Gen — Aerodynamic Simulation Platform
 
-> **Live:** [2jaefar.vercel.app](https://2jaefar.vercel.app) · **API:** [2jaefar-production.up.railway.app](https://2jaefar-production.up.railway.app/api/status)
+> **Live:** [vortex-gen.vercel.app](https://vortex-gen.vercel.app) · **API:** [2jaefar-production.up.railway.app](https://2jaefar-production.up.railway.app/api/status)
 
 **Vortex-Gen** is a full-stack, production-grade aerodynamic simulation platform for engineering students, researchers, and aerospace enthusiasts. Users can select or import airfoil geometries, run fluid-dynamics simulations powered by a Python NeuralFoil AI engine, visualize interactive charts, compare airfoils side-by-side, export 3D STL files, and generate multi-page PDF analysis reports — all from a premium glassmorphism dashboard.
 
@@ -15,7 +15,7 @@
 | Service | URL | Role |
 |---|---|---|
 | **GitHub** | `github.com/yOuSSefOSS/2jaefar` | Source of truth & CI/CD trigger |
-| **Vercel** | `2jaefar.vercel.app` | Frontend hosting (React SPA) |
+| **Vercel** | `vortex-gen.vercel.app` | Frontend hosting (React SPA) |
 | **Railway** | `2jaefar-production.up.railway.app` | Backend (Node.js + Python daemon) |
 | **Supabase** | `dashboard.supabase.com` | Authentication + PostgreSQL database |
 | **Stripe** | `dashboard.stripe.com` | Payments & subscription webhooks |
