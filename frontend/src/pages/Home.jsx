@@ -595,7 +595,7 @@ const Home = () => {
     const candidates = [...iterateNACA4DigitCandidates(mode)];
     const total = candidates.length;
     const alphaList = buildAlphaList(graphBounds);
-    const reynolds = (windSpeed * density) / 1.5e-5;
+    const reynolds = (windSpeed * density) / 1.81e-5;
 
     let bestCl = -Infinity;
     let bestAoa = graphBounds.min;
@@ -810,7 +810,7 @@ const Home = () => {
     }
     
     // Approximate Reynolds number based on wind speed and standard chord of 1m
-    const reynolds = (windSpeed * density) / 1.5e-5;
+    const reynolds = (windSpeed * density) / 1.81e-5;
 
     const fetchShapeData = (shape, isSym) => {
       return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
