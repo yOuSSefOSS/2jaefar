@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, User, Wind, Gem } from 'lucide-react';
+import { Settings, User, Wind, Gem, ArrowLeft, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/logo.png';
@@ -16,10 +16,23 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
       <header className="h-16 flex-shrink-0 bg-[var(--color-brand-800)]/50 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-20 shadow-[0_5px_30px_rgba(0,0,0,0.5)]">
         
         {/* Logo & Main Nav Area */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-5">
+          <Link 
+            to="/explore" 
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wider
+              text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 transition-all border border-white/5 hover:border-white/10"
+            title="Back to Explorer"
+          >
+            <ArrowLeft size={13} />
+            Explorer
+          </Link>
+
           <div className="flex items-center gap-3">
             <img src={logoUrl} alt="Vortex-Gen Logo" className="h-30 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
             <span className="font-bold text-xl tracking-widest text-white">Vortex-Gen</span>
+            <span className="hidden sm:inline-block text-[9px] font-mono tracking-widest text-[var(--color-accent-neon)] bg-[var(--color-accent-neon)]/8 px-2 py-0.5 rounded-full border border-[var(--color-accent-neon)]/20">
+              LAB
+            </span>
           </div>
 
           <nav className="hidden md:flex items-center gap-3">

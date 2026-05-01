@@ -6,7 +6,7 @@ import SimulationView from '../components/SimulationView';
 import DataChart from '../components/DataChart';
 import PolarChart from '../components/PolarChart';
 import AeroFactsPanel from '../components/AeroFactsPanel';
-import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X } from 'lucide-react';
+import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X, BookOpen, Info } from 'lucide-react';
 import Export3DModal from '../components/Export3DModal';
 import PdfReportTemplate from '../components/PdfReportTemplate';
 import { motion } from 'framer-motion';
@@ -315,6 +315,7 @@ const Home = () => {
   const [aeroFactsActive, setAeroFactsActive] = useState(false);
   const [showDensitySettings, setShowDensitySettings] = useState(false);
   const [densityError, setDensityError] = useState('');
+  const [showLabManual, setShowLabManual] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [manualDensity, setManualDensity] = useState(false);
   const fileInputRef = useRef(null);
@@ -918,8 +919,31 @@ const Home = () => {
     <motion.div 
        initial="hidden" animate="visible"
        variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
-       className="flex flex-col gap-6 max-w-[1800px] mx-auto w-full pb-8"
+       className="flex flex-col gap-6 max-w-[1800px] mx-auto w-full pb-8 px-4 sm:px-6"
     >
+      {/* ── Lab Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 edu-animate-in">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            Wind Tunnel Lab
+            <span className="text-[10px] font-mono tracking-widest text-[var(--color-edu-sky)] bg-[var(--color-edu-sky)]/10 px-2.5 py-1 rounded-full border border-[var(--color-edu-sky)]/20 uppercase">
+              Simulation Phase
+            </span>
+          </h1>
+          <p className="text-[var(--color-edu-text-muted)] text-sm mt-1">
+            Test real-world aerodynamics using NeuralFoil™ CFD technology.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowLabManual(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[var(--color-edu-sky)]/30 text-white transition-all group"
+          >
+            <BookOpen size={16} className="text-[var(--color-edu-sky)] group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-semibold tracking-wide">Lab Manual</span>
+          </button>
+        </div>
+      </div>
 
       {/* Top 4-col grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-[500px]">
@@ -927,9 +951,10 @@ const Home = () => {
         {/* ── Left: Library + Importer ── */}
         <motion.div 
            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-           className="col-span-1 premium-glass p-4 flex flex-col gap-4 max-h-[600px] shadow-2xl"
+           className="col-span-1 bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 max-h-[600px] shadow-2xl relative overflow-hidden"
         >
-          <h2 className="text-sm font-mono tracking-widest text-[var(--color-accent-neon)] uppercase flex-shrink-0">Geometry Library</h2>
+          <div className="absolute inset-0 edu-grid-bg opacity-20 pointer-events-none" />
+          <h2 className="text-[11px] font-mono tracking-widest text-[var(--color-edu-sky)] uppercase flex-shrink-0 relative z-10">Geometry Library</h2>
 
           <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
             {ALL_SHAPES.map(shape=>(
@@ -941,8 +966,8 @@ const Home = () => {
           </div>
 
           {/* Importer */}
-          <div className="flex-shrink-0 border-t border-white/10 pt-4 flex flex-col gap-2">
-            <h3 className="text-xs font-mono tracking-widest text-[var(--color-accent-blue)] uppercase">Import Airfoil</h3>
+          <div className="flex-shrink-0 border-t border-white/10 pt-4 flex flex-col gap-2 relative z-10">
+            <h3 className="text-xs font-mono tracking-widest text-[var(--color-edu-sky)] uppercase">Import Airfoil</h3>
             <button onClick={()=>fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-white/20 hover:border-[var(--color-accent-blue)]/60 hover:bg-[var(--color-accent-blue)]/5 text-brand-400 hover:text-[var(--color-accent-blue)] text-xs font-mono tracking-wider transition-all">
               <Upload size={13}/> UPLOAD .DAT FILE
             </button>
@@ -1083,10 +1108,11 @@ const Home = () => {
         {/* ── Right: Controls ── */}
         <motion.div 
            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-           className="col-span-1 premium-glass p-6 flex flex-col max-h-[600px] shadow-2xl"
+           className="col-span-1 bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-6 flex flex-col max-h-[600px] shadow-2xl relative overflow-hidden"
         >
-          <div ref={densitySettingsRef} className="relative flex justify-between items-center mb-2 flex-shrink-0 w-full">
-            <h2 className="text-sm font-mono tracking-widest text-[var(--color-accent-blue)] uppercase">Environment</h2>
+          <div className="absolute inset-0 edu-grid-bg opacity-10 pointer-events-none" />
+          <div ref={densitySettingsRef} className="relative flex justify-between items-center mb-2 flex-shrink-0 w-full z-10">
+            <h2 className="text-[11px] font-mono tracking-widest text-[var(--color-edu-sky)] uppercase">Environment</h2>
             <button 
               onClick={() => setShowDensitySettings(!showDensitySettings)} 
               className={`p-1.5 rounded-md transition-colors ${showDensitySettings ? 'bg-[var(--color-accent-blue)] text-white shadow-[0_0_10px_var(--color-accent-blue)]' : 'text-brand-300 hover:text-white hover:bg-white/5'}`}
@@ -1194,18 +1220,18 @@ const Home = () => {
 
           {/* Live metrics */}
           <div
-            className={`mt-4 border-t border-white/10 pt-3 flex-shrink-0 rounded-xl transition-[box-shadow,border-color] duration-500 ${
+            className={`mt-4 border-t border-white/10 pt-3 flex-shrink-0 rounded-xl transition-[box-shadow,border-color] duration-500 relative z-10 ${
               goldenLiftActive
-                ? 'shadow-[0_0_32px_rgba(234,179,8,0.22),inset_0_0_24px_rgba(234,179,8,0.06)] border border-amber-500/35 p-3 -m-1 bg-amber-500/[0.04]'
+                ? 'shadow-[0_0_32px_rgba(245,158,11,0.22),inset_0_0_24px_rgba(245,158,11,0.06)] border border-amber-500/35 p-3 -m-1 bg-amber-500/[0.04]'
                 : ''
             }`}
           >
             <h2
-              className={`text-sm font-mono tracking-widest uppercase mb-2 ${
-                goldenLiftActive ? 'text-amber-200/90' : 'text-[var(--color-accent-pink)]'
+              className={`text-[11px] font-mono tracking-widest uppercase mb-2 ${
+                goldenLiftActive ? 'text-amber-200/90' : 'text-[var(--color-edu-sky)]'
               }`}
             >
-              Live Metrics
+              Analysis Results
               {goldenLiftActive && (
                 <span className="ml-2 text-[10px] font-normal text-amber-400/90 tracking-normal">· Golden optimum</span>
               )}
@@ -1216,14 +1242,14 @@ const Home = () => {
                   <div className="text-[11px] text-brand-400 font-bold">DRAG <span className="font-normal opacity-70">(Cd)</span></div>
                   <div className="text-[10px] text-brand-500">{hasTarget ? (currentForce.drag || 0).toFixed(0) : '--'} N</div>
                 </div>
-                <div className="text-lg font-bold font-mono text-[var(--color-accent-pink)]">{isSimulating || !hasTarget ? '--' : (currentAeroItem.cd || 0).toFixed(3)}</div>
+                <div className="text-lg font-bold font-mono text-[var(--color-edu-rose)]">{(isSimulating || !hasTarget) ? '--' : (currentAeroItem.cd || 0).toFixed(4)}</div>
               </div>
               <div className="bg-brand-900/50 p-2 rounded-lg border border-white/5 flex flex-col justify-center">
                 <div className="flex justify-between items-end mb-0.5">
-                  <div className="text-[11px] text-[var(--color-accent-neon)] font-bold">LIFT <span className="font-normal opacity-70">(Cl)</span></div>
+                  <div className="text-[11px] text-[var(--color-edu-sky)] font-bold">LIFT <span className="font-normal opacity-70">(Cl)</span></div>
                   <div className="text-[10px] text-brand-500">{hasTarget ? (currentForce.lift || 0).toFixed(0) : '--'} N</div>
                 </div>
-                <div className="text-lg font-bold font-mono text-[var(--color-accent-neon)] neon-text">{isSimulating || !hasTarget ? '--' : (currentAeroItem.cl || 0).toFixed(3)}</div>
+                <div className="text-lg font-bold font-mono text-[var(--color-edu-sky)]">{(isSimulating || !hasTarget) ? '--' : (currentAeroItem.cl || 0).toFixed(4)}</div>
               </div>
               <div className="bg-brand-900/50 p-2 rounded-lg border border-white/5 col-span-2">
                 <div className="flex items-center justify-between">
@@ -1255,10 +1281,10 @@ const Home = () => {
            className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[280px] flex-shrink-0 relative"
         >
           {isSimulating && (
-             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
-               <div className="text-[var(--color-brand-100)] font-mono animate-pulse tracking-widest text-sm flex gap-3 items-center">
-                 <div className="w-4 h-4 border-2 border-[var(--color-accent-neon)] border-t-transparent rounded-full animate-spin"></div>
-                 COMPUTING NEURALFOIL CFD...
+             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-md rounded-xl">
+               <div className="text-[var(--color-edu-sky)] font-mono animate-pulse tracking-widest text-xs flex gap-3 items-center">
+                 <div className="w-4 h-4 border-2 border-[var(--color-edu-sky)] border-t-transparent rounded-full animate-spin"></div>
+                 PROCESSING CFD EQUATIONS...
                </div>
              </div>
           )}
@@ -1349,6 +1375,99 @@ const Home = () => {
               >
                 Add to Library
               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Lab Manual Modal */}
+      {showLabManual && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            onClick={() => setShowLabManual(false)}
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-2xl bg-[var(--color-edu-surface)] border border-white/10 rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.6)]"
+          >
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-transparent via-[var(--color-edu-sky)] to-transparent opacity-60" />
+            
+            <div className="p-8 flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-[var(--color-edu-sky)]/10 text-[var(--color-edu-sky)] border border-[var(--color-edu-sky)]/20">
+                    <BookOpen size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white tracking-tight">Lab Operations Manual</h2>
+                    <p className="text-[var(--color-edu-text-muted)] text-xs font-mono uppercase tracking-widest mt-0.5">Instructional Guide v2.0</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowLabManual(false)}
+                  className="p-2 rounded-full hover:bg-white/5 text-brand-400 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <h3 className="text-sm font-bold text-[var(--color-edu-sky)] flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-[var(--color-edu-sky)]/10 flex items-center justify-center text-[10px]">1</div>
+                      Geometry Selection
+                    </h3>
+                    <p className="text-xs text-[var(--color-edu-text-muted)] leading-relaxed">
+                      Choose an airfoil from the library or upload a custom .DAT coordinate file. The physical shape directly determines how air flows around the wing.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <h3 className="text-sm font-bold text-[var(--color-edu-rose)] flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-[var(--color-edu-rose)]/10 flex items-center justify-center text-[10px]">2</div>
+                      Control Parameters
+                    </h3>
+                    <p className="text-xs text-[var(--color-edu-text-muted)] leading-relaxed">
+                      Adjust <strong>Wind Speed</strong> and <strong>Pitch Angle</strong> (Angle of Attack). Watch for <strong>Stall</strong> conditions where lift drops sharply.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-amber-400/10 flex items-center justify-center text-[10px]">3</div>
+                      Analysis Interpretation
+                    </h3>
+                    <p className="text-xs text-[var(--color-edu-text-muted)] leading-relaxed">
+                      Study the <strong>Cl/Cd Polar</strong>. The goal is maximum Lift with minimum Drag. Use the Autotune feature to find the mathematical optimum.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[var(--color-edu-sky)]/5 border border-[var(--color-edu-sky)]/10">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                      <Info size={14} className="text-[var(--color-edu-sky)]" />
+                      Pro Tip
+                    </h3>
+                    <p className="text-xs text-[var(--color-edu-sky-muted)] leading-relaxed italic">
+                      "Compare Mode" allows you to benchmark two different geometries side-by-side to understand relative performance advantages.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-6 border-t border-white/5">
+                <button 
+                  onClick={() => setShowLabManual(false)}
+                  className="w-full py-4 rounded-2xl bg-[var(--color-edu-sky)] hover:bg-[var(--color-edu-sky-muted)] text-[var(--color-edu-navy)] font-bold transition-all shadow-[0_8px_24px_rgba(56,189,248,0.25)]"
+                >
+                  I'm Ready to Experiment
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

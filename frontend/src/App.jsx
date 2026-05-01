@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
+import ExplorerLayout from './layouts/ExplorerLayout';
 import { checkBackendStatus } from './services/apiService';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -8,6 +9,11 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Pricing from './pages/Pricing';
+import LandingPage from './pages/LandingPage';
+import Explorer from './pages/Explorer';
+import FuselageSection from './pages/explore/FuselageSection';
+import WingsSection from './pages/explore/WingsSection';
+import AirfoilSection from './pages/explore/AirfoilSection';
 import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
@@ -53,18 +59,26 @@ function App() {
       )}
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
+          {/* ── Public Routes ── */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected Routes */}
+          {/* ── Explorer Routes (Public — educational content) ── */}
+          <Route path="/explore" element={<ExplorerLayout />}>
+            <Route index element={<Explorer />} />
+            <Route path="fuselage" element={<FuselageSection />} />
+            <Route path="wings" element={<WingsSection />} />
+            <Route path="airfoil" element={<AirfoilSection />} />
+          </Route>
+
+          {/* ── Protected Lab / Dashboard Routes ── */}
           <Route
             path="/*"
             element={
               <AuthGuard>
                 <DashboardLayout isBackendConnected={isConnected}>
                   <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Home />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
