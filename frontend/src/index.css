@@ -16,6 +16,20 @@
   --color-accent-blue: #3b82f6;
   --color-accent-pink: #f43f5e;
   --color-accent-purple: #8b5cf6;
+
+  /* ── Academic / Education Palette ── */
+  --color-edu-navy: #0a1628;
+  --color-edu-navy-light: #111d33;
+  --color-edu-navy-mid: #162240;
+  --color-edu-sky: #38bdf8;
+  --color-edu-sky-muted: #7dd3fc;
+  --color-edu-amber: #f59e0b;
+  --color-edu-green: #22c55e;
+  --color-edu-rose: #fb7185;
+  --color-edu-surface: #0d1a2d;
+  --color-edu-surface-light: #132038;
+  --color-edu-text: #e2e8f0;
+  --color-edu-text-muted: #94a3b8;
 }
 
 :root {
@@ -34,6 +48,20 @@
   --color-accent-blue: #3b82f6;
   --color-accent-pink: #f43f5e;
   --color-accent-purple: #8b5cf6;
+
+  /* ── Academic / Education Palette ── */
+  --color-edu-navy: #0a1628;
+  --color-edu-navy-light: #111d33;
+  --color-edu-navy-mid: #162240;
+  --color-edu-sky: #38bdf8;
+  --color-edu-sky-muted: #7dd3fc;
+  --color-edu-amber: #f59e0b;
+  --color-edu-green: #22c55e;
+  --color-edu-rose: #fb7185;
+  --color-edu-surface: #0d1a2d;
+  --color-edu-surface-light: #132038;
+  --color-edu-text: #e2e8f0;
+  --color-edu-text-muted: #94a3b8;
 }
 
 @layer base {
@@ -609,5 +637,331 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
   }
 }
 
+/* ═══════════════════════════════════════════════
+   EDUCATIONAL COMPONENT STYLES
+   ═══════════════════════════════════════════════ */
 
+/* ── Explorer Card ── */
+.explorer-card {
+  position: relative;
+  background: var(--color-edu-surface-light);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 28px;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s ease,
+              border-color 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+.explorer-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 0%, var(--card-glow, rgba(56, 189, 248, 0.08)), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.explorer-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4),
+              0 0 32px var(--card-glow, rgba(56, 189, 248, 0.06));
+}
+.explorer-card:hover::before {
+  opacity: 1;
+}
 
+/* ── Theory Section ── */
+.theory-section {
+  background: var(--color-edu-surface);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.theory-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--section-accent, var(--color-edu-sky)), transparent);
+  opacity: 0.6;
+}
+
+/* ── Knowledge Chip ── */
+.knowledge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-edu-text-muted);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.knowledge-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-edu-text);
+}
+.knowledge-chip.active {
+  background: color-mix(in srgb, var(--chip-color, var(--color-edu-sky)) 15%, transparent);
+  border-color: color-mix(in srgb, var(--chip-color, var(--color-edu-sky)) 35%, transparent);
+  color: var(--chip-color, var(--color-edu-sky));
+}
+
+/* ── Aircraft SVG Interactive Zone ── */
+.aircraft-zone {
+  cursor: pointer;
+  transition: filter 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+}
+.aircraft-zone:hover {
+  filter: drop-shadow(0 0 12px var(--zone-color, rgba(56, 189, 248, 0.5)))
+          drop-shadow(0 0 24px var(--zone-color, rgba(56, 189, 248, 0.2)));
+}
+.aircraft-zone:hover .aircraft-zone-fill {
+  fill-opacity: 0.25;
+}
+.aircraft-zone .aircraft-zone-fill {
+  fill-opacity: 0.08;
+  transition: fill-opacity 0.3s ease;
+}
+
+/* ── Complexity Toggle (Beginner / Advanced) ── */
+.complexity-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 3px;
+  overflow: hidden;
+}
+.complexity-toggle-btn {
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-edu-text-muted);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.complexity-toggle-btn.active {
+  background: var(--color-edu-sky);
+  color: var(--color-edu-navy);
+  box-shadow: 0 2px 12px rgba(56, 189, 248, 0.3);
+}
+.complexity-toggle-btn:hover:not(.active) {
+  color: var(--color-edu-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Quiz Component ── */
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 14px;
+  color: var(--color-edu-text);
+}
+.quiz-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.quiz-option.correct {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+.quiz-option.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+.quiz-option.selected {
+  border-color: var(--color-edu-sky);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* ── Hero Typography ── */
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: white;
+}
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-edu-text-muted);
+  max-width: 540px;
+}
+
+/* ── Landing CTA Button ── */
+.cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-edu-sky), #0284c7);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3),
+              0 0 0 1px rgba(56, 189, 248, 0.1);
+  text-decoration: none;
+}
+.cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(56, 189, 248, 0.4),
+              0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+.cta-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-edu-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ── Explorer Page Grid Background ── */
+.edu-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Animated gradient orbs (background decoration) ── */
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-10px, 20px) scale(0.97); }
+  75% { transform: translate(-25px, -10px) scale(1.02); }
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  animation: orb-float 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Smooth page entrance for explorer sections ── */
+@keyframes edu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+.edu-animate-in {
+  animation: edu-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.edu-animate-in-delay-1 { animation-delay: 0.1s; }
+.edu-animate-in-delay-2 { animation-delay: 0.2s; }
+.edu-animate-in-delay-3 { animation-delay: 0.3s; }
+.edu-animate-in-delay-4 { animation-delay: 0.4s; }
+
+/* ── Explorer page scrollbar for edu content ── */
+.edu-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.edu-scroll::-webkit-scrollbar { width: 4px; }
+.edu-scroll::-webkit-scrollbar-track { background: transparent; }
+.edu-scroll::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
+}
+.edu-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.35);
+}
+/* ── Design Spells ── */
+.premium-glow {
+  box-shadow: 0 0 50px -10px var(--glow-color, rgba(56, 189, 248, 0.2));
+}
+
+.hover-glow:hover {
+  filter: drop-shadow(0 0 8px var(--glow-color, rgba(56, 189, 248, 0.3)));
+}
+
+.academic-border {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+}
+
+.edu-text-gradient {
+  background: linear-gradient(to bottom right, #fff, var(--color-edu-text-muted));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.edu-pulse {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* ── Smooth Transitions ── */
+.transition-edu {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}

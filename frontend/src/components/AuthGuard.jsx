@@ -15,7 +15,7 @@ const AuthGuard = ({ children }) => {
   }
 
   if (!user && import.meta.env.MODE !== 'development') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // If in development mode and not logged in, we let them through by mocking a user or just passing through.
