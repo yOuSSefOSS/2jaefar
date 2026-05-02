@@ -1,0 +1,24 @@
+{
+  "nav": {
+    "explorer": "Explorer",
+    "lab": "Wind Tunnel Lab",
+    "signIn": "Sign In",
+    "getStarted": "Get Started",
+    "profile": "Profile",
+    "settings": "Settings",
+    "pricing": "Pricing",
+    "simulation": "Simulation"
+  },
+  "status": {
+    "apiUp": "API_LINK_UP",
+    "apiDown": "API_LINK_DOWN"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "brand": {
+    "name": "Vortex-Gen",
+    "lab": "LAB",
+    "academy": "ACADEMY"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Academy",
+  "sections": {
+    "explorer": "Explorer",
+    "fuselage": "Fuselage",
+    "wings": "Wings",
+    "airfoil": "Airfoil"
+  },
+  "cta": {
+    "windTunnelLab": "Wind Tunnel Lab"
+  }
+}
