@@ -1,0 +1,26 @@
+{
+  "simulation": "Simulation",
+  "shapes": {
+    "naca4412": "NACA 4412",
+    "naca0012": "NACA 0012"
+  },
+  "presets": {
+    "standard": "Standard Air",
+    "highAlt": "High Altitude"
+  },
+  "controls": {
+    "windSpeed": "Wind Speed",
+    "pitchAngle": "Pitch Angle",
+    "density": "Air Density"
+  },
+  "export": {
+    "pdf": "Export PDF Report",
+    "model3d": "Export 3D Model"
+  },
+  "metrics": {
+    "liftCoefficient": "Lift Coefficient",
+    "dragCoefficient": "Drag Coefficient",
+    "liftToDrag": "Lift / Drag Ratio",
+    "reynoldsNumber": "Reynolds Number"
+  }
+}

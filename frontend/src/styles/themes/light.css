@@ -1,0 +1,35 @@
+:root[data-theme="light"] {
+  /* Brand scale — warm grey, not white */
+  --color-bg-base:     #e8eaed;
+  --color-bg-surface:  #f0f1f3;
+  --color-bg-elevated: #f8f9fa;
+  --color-border:      rgba(0, 0, 0, 0.10);
+  --color-text-primary:   #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted:     #6b7280;
+
+  /* Accent — darkened for contrast on light bg */
+  --color-accent:        #0284c7;
+  --color-accent-dim:    rgba(2, 132, 199, 0.10);
+  --color-accent-blue:   #1d4ed8;
+  --color-accent-pink:   #e11d48;
+  --color-accent-purple: #7c3aed;
+
+  /* Academy-specific */
+  --color-academy-bg:      #dde1e7;
+  --color-academy-surface: #e8eaed;
+  --color-academy-sky:     #0369a1;
+  --color-academy-amber:   #b45309;
+  --color-academy-green:   #15803d;
+
+  /* Legacy aliases */
+  --color-brand-900:       #e8eaed;
+  --color-brand-800:       #f0f1f3;
+  --color-brand-50:        #111827;
+  --color-accent-neon:     #0284c7;
+  --color-edu-navy:        #dde1e7;
+  --color-edu-navy-light:  #e8eaed;
+  --color-edu-sky:         #0369a1;
+  --color-edu-text:        #1f2937;
+  --color-edu-text-muted:  #6b7280;
+}
