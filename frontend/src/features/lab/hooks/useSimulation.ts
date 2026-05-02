@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useSimulationStore, useSettingsStore, useAuthStore } from '@/store';
 import { calculateAerodynamics } from './useAerodynamics';
 import { SHAPES } from '../data/shapes';
@@ -96,10 +97,14 @@ export const useSimulation = (customAirfoils: any[] = []) => {
       (_, i) => i + graphBounds.min
     );
 
-    const fetchShape = (shape: any, isSym: boolean): Promise<ChartPoint[]> =>
-      fetch(`${API_URL}/api/analyze`, {
+    const fetchShape = async (shape: any, isSym: boolean): Promise<ChartPoint[]> => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return fetch(`${API_URL}/api/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           name: shape.name,
           alpha: alphaRange,
@@ -127,6 +132,7 @@ export const useSimulation = (customAirfoils: any[] = []) => {
             return { aoa: d.aoa, cl, cd };
           });
         });
+    };
 
     const promises = [fetchShape(activeShape, isSymmetric)];
     if (compareActive) promises.push(fetchShape(compareShape!, isCompareSymmetric));

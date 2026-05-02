@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useAppContext } from '@/store';
 import ShapeCard from '../components/simulation/ShapeCard';
 import ControlSlider from '@/components/ui/ControlSlider';
@@ -560,9 +561,13 @@ const Home = () => {
   }, [pitchAngle, activeShapeId, setGoldenLiftActive]);
 
   const fetchNeuralPolar = async (points, alphaList, re, signal, modelSize = 'large') => {
+    const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`
+      },
       body: JSON.stringify({ alpha: alphaList, Re: re, mach: 0, points, modelSize }),
       signal,
     });
@@ -813,10 +818,14 @@ const Home = () => {
     // Approximate Reynolds number based on wind speed and standard chord of 1m
     const reynolds = (windSpeed * density) / 1.81e-5;
 
-    const fetchShapeData = (shape, isSym) => {
+    const fetchShapeData = async (shape, isSym) => {
+      const { data: { session } } = await supabase.auth.getSession();
       return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           name: shape.name,
           alpha: Array.from({length: graphBounds.max - graphBounds.min + 1}, (_, i) => i + graphBounds.min),
