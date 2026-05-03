@@ -145,43 +145,36 @@ Railway calls Resend → welcome email sent
 │   ├── run_nf.py              # Python NeuralFoil daemon (stdin/stdout protocol)
 │   ├── server.js              # Express API, auth middleware, Stripe & Resend logic
 │   ├── Dockerfile             # Docker config for Railway deployment
-│   ├── requirements.txt       # Python dependencies (neuralfoil, numpy)
+│   ├── requirements.txt       # Python dependencies
 │   ├── .env.example           # Backend env variable reference
 │   └── package.json
 │
 ├── frontend/
-│   ├── .env.production        # Production env (VITE_API_URL, Supabase keys)
-│   ├── .env.example           # Env variable reference
 │   ├── public/                # Static assets (banner, icons, favicon)
 │   └── src/
-│       ├── assets/            # Logo image
-│       ├── components/
-│       │   ├── AeroFactsPanel.jsx      # Context-aware physics education panel
-│       │   ├── AuthGuard.jsx           # Route protection (dev bypass included)
-│       │   ├── ControlSlider.jsx       # Styled parameter sliders
-│       │   ├── DataChart.jsx           # Cl/Cd vs AoA line charts with legends
-│       │   ├── Export3DModal.jsx       # Full-screen 3D STL export modal
-│       │   ├── LoadingScreen.jsx       # Cinematic intro loading screen
-│       │   ├── PdfReportTemplate.jsx   # Multi-page PDF template (hidden render)
-│       │   ├── PolarChart.jsx          # Drag polar scatter chart
-│       │   ├── ShapeCard.jsx           # Airfoil selection card
-│       │   └── SimulationView.jsx      # WebGL 3D particle flow engine
-│       ├── context/
-│       │   └── AppContext.jsx          # Global state: auth, tier, simulation params
-│       ├── layouts/
-│       │   └── DashboardLayout.jsx     # Top navbar and page wrapper
-│       ├── pages/
-│       │   ├── Home.jsx                # Main simulation dashboard
-│       │   ├── Login.jsx               # Auth page
-│       │   ├── Pricing.jsx             # Subscription tier page
-│       │   ├── Profile.jsx             # User profile, CSV export, airfoil hangar
-│       │   └── Settings.jsx            # App settings
-│       ├── services/
-│       │   ├── apiService.js           # Axios instance with base URL
-│       │   └── supabaseClient.js       # Supabase client initialization
-│       ├── App.jsx
-│       ├── main.jsx
-│       └── index.css                   # Tailwind v4 + custom design tokens
+│       ├── assets/            # Images, SVGs, and branding assets
+│       ├── components/        # Shared UI components and global modals
+│       ├── config/            # Constants and configuration
+│       ├── context/           # AppContext (global state for Auth/Tier)
+│       ├── features/          # New Feature-Based Architecture (Next-Gen TS)
+│       │   ├── academy/       # Educational modules (Airfoil, Fuselage, Wings)
+│       │   ├── auth/          # Authentication flows
+│       │   ├── lab/           # Aerodynamic simulation lab core
+│       │   ├── landing/       # Landing page module
+│       │   ├── pricing/       # Subscription plans
+│       │   ├── profile/       # User profile and hangar
+│       │   └── settings/      # App settings
+│       ├── hooks/             # Custom React hooks
+│       ├── i18n/              # Internationalization (en, ar)
+│       ├── layouts/           # Page wrappers (DashboardLayout, ExplorerLayout)
+│       ├── lib/               # Utility functions, API and Supabase clients
+│       ├── pages/             # Legacy JSX pages (Home, Login, Signup, Explorer)
+│       ├── services/          # API Services
+│       ├── store/             # State management stores
+│       ├── styles/            # CSS Modules, Themes, Animations
+│       ├── App.jsx / App.tsx
+│       ├── main.jsx / main.tsx
+│       └── index.css
 │
 ├── vercel.json                # Vercel deployment config
 ├── start_servers.bat          # Windows: starts frontend + backend together
