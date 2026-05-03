@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wind, GraduationCap, FlaskConical, ChevronRight, Menu, X, User, Settings } from 'lucide-react';
+import { Wind, GraduationCap, FlaskConical, ChevronRight, Menu, X, User } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/logo.png';
 
@@ -97,9 +97,6 @@ const ExplorerLayout = () => {
           {/* Auth section */}
           {user ? (
             <>
-              <Link to="/settings" className="hidden sm:flex p-2 text-[var(--color-edu-text-muted)] hover:text-white hover:bg-white/5 rounded-lg transition-all" title="Settings">
-                <Settings size={18} />
-              </Link>
               <Link to="/profile" className="flex items-center gap-2 p-1.5 px-3 rounded-lg text-[12px] font-semibold bg-[var(--color-edu-sky)]/8 border border-[var(--color-edu-sky)]/20 text-[var(--color-edu-sky)] hover:bg-[var(--color-edu-sky)]/15 transition-all" title="Profile">
                 <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg, #00f0ff, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#020817', flexShrink: 0 }}>
                   {displayName.slice(0, 2).toUpperCase()}

@@ -64,6 +64,12 @@ const Explorer = () => {
 
   return (
     <div className="min-h-full px-6 lg:px-10 py-8 max-w-7xl mx-auto">
+      <style>{`
+        @keyframes airfoilPulse {
+          0%, 100% { box-shadow: 0 0 10px rgba(245,158,11,0.4), 0 0 4px rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.85); }
+          50% { box-shadow: 0 0 26px rgba(245,158,11,0.75), 0 0 12px rgba(245,158,11,0.45); border-color: rgba(245,158,11,1); }
+        }
+      `}</style>
       
       {/* ── Header ── */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8 edu-animate-in">
@@ -130,23 +136,50 @@ const Explorer = () => {
               {AIRCRAFT_ZONES.map((zone) => {
                 const pos = ZONE_OVERLAYS[zone.id];
                 const isHovered = hoveredZone === zone.id;
+                const isAirfoil = zone.id === 'airfoil';
                 return (
                   <div
                     key={zone.id}
                     className="absolute cursor-pointer transition-all duration-300"
                     style={{
                       ...pos,
-                      background: isHovered ? `${zone.color}18` : 'transparent',
-                      border: isHovered ? `2px solid ${zone.color}60` : '2px solid transparent',
+                      background: isHovered ? `${zone.color}18` : isAirfoil ? `${zone.color}08` : 'transparent',
+                      border: isHovered
+                        ? `2px solid ${zone.color}60`
+                        : isAirfoil
+                        ? `2px solid rgba(245,158,11,0.85)`
+                        : '2px solid transparent',
                       boxShadow: isHovered
                         ? `0 0 30px ${zone.color}30, inset 0 0 20px ${zone.color}10`
+                        : isAirfoil
+                        ? '0 0 18px rgba(245,158,11,0.45), 0 0 6px rgba(245,158,11,0.25)'
                         : 'none',
-                      zIndex: isHovered ? 15 : 10,
+                      zIndex: isHovered ? 15 : isAirfoil ? 12 : 10,
+                      animation: isAirfoil && !isHovered ? 'airfoilPulse 2.5s ease-in-out infinite' : 'none',
+                      borderRadius: isAirfoil ? '50%' : pos.borderRadius,
                     }}
                     onMouseEnter={() => setHoveredZone(zone.id)}
                     onMouseLeave={() => setHoveredZone(null)}
                     onClick={() => navigate(zone.link)}
                   >
+                    {/* Airfoil always-visible label */}
+                    {isAirfoil && !isHovered && (
+                      <span style={{
+                        position: 'absolute',
+                        bottom: '-20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: 8,
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        letterSpacing: '0.18em',
+                        color: '#f59e0b',
+                        whiteSpace: 'nowrap',
+                        textShadow: '0 0 8px rgba(245,158,11,0.7)',
+                        pointerEvents: 'none',
+                      }}>AIRFOIL</span>
+                    )}
+
                     {/* Zone label on hover */}
                     <AnimatePresence>
                       {isHovered && (
@@ -157,12 +190,12 @@ const Explorer = () => {
                           transition={{ duration: 0.2 }}
                           className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap"
                         >
-                          <div 
+                          <div
                             className="px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide backdrop-blur-sm"
-                            style={{ 
+                            style={{
                               background: `${zone.color}20`,
                               border: `1px solid ${zone.color}40`,
-                              color: zone.color 
+                              color: zone.color
                             }}
                           >
                             {zone.label} — Click to explore
@@ -173,6 +206,7 @@ const Explorer = () => {
                   </div>
                 );
               })}
+
 
               {/* Airfoil cross-section callout */}
               <AnimatePresence>
