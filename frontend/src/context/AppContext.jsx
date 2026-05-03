@@ -150,6 +150,7 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     user, setUser,
+    displayName: user?.user_metadata?.display_name || user?.email || 'Guest',
     subscriptionTier, setSubscriptionTier,
     importsCount, setImportsCount,
     isAuthLoading,

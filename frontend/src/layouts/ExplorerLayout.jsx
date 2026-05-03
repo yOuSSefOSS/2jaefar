@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wind, GraduationCap, FlaskConical, ChevronRight, Menu, X } from 'lucide-react';
+import { Wind, GraduationCap, FlaskConical, ChevronRight, Menu, X, User, Settings } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/logo.png';
 
 const NAV_ITEMS = [
   { to: '/explore', label: 'Explorer', exact: true },
   { to: '/explore/fuselage', label: 'Fuselage' },
   { to: '/explore/wings', label: 'Wings' },
+  { to: '/explore/tail', label: 'Tail' },
   { to: '/explore/airfoil', label: 'Airfoil' },
 ];
 
 const ExplorerLayout = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, displayName } = useAppContext();
 
   // Build breadcrumb from current path
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -36,6 +39,7 @@ const ExplorerLayout = () => {
               src={logoUrl} 
               alt="Vortex-Gen Logo" 
               className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] group-hover:drop-shadow-[0_0_16px_rgba(56,189,248,0.6)] transition-all" 
+              style={{ mixBlendMode: 'screen' }}
             />
             <span className="font-bold text-lg tracking-wider text-white">
               Vortex-Gen
@@ -78,9 +82,9 @@ const ExplorerLayout = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-          {/* Lab CTA */}
+          {/* Labs CTA */}
           <Link
-            to="/dashboard"
+            to="/lab"
             className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold tracking-wider uppercase
               bg-gradient-to-r from-[var(--color-edu-sky)]/15 to-[var(--color-accent-purple)]/15
               border border-[var(--color-edu-sky)]/25 text-[var(--color-edu-sky)]
@@ -88,8 +92,27 @@ const ExplorerLayout = () => {
               transition-all duration-300"
           >
             <FlaskConical size={14} />
-            Wind Tunnel Lab
+            Labs
           </Link>
+
+          {/* Auth section */}
+          {user ? (
+            <>
+              <Link to="/settings" className="hidden sm:flex p-2 text-[var(--color-edu-text-muted)] hover:text-white hover:bg-white/5 rounded-lg transition-all" title="Settings">
+                <Settings size={18} />
+              </Link>
+              <Link to="/profile" className="flex items-center gap-2 p-1.5 px-3 rounded-lg text-[12px] font-semibold bg-[var(--color-edu-sky)]/8 border border-[var(--color-edu-sky)]/20 text-[var(--color-edu-sky)] hover:bg-[var(--color-edu-sky)]/15 transition-all" title="Profile">
+                <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg, #00f0ff, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#020817', flexShrink: 0 }}>
+                  {displayName.slice(0, 2).toUpperCase()}
+                </div>
+                <span className="hidden sm:block">{displayName.split(' ')[0]}</span>
+              </Link>
+            </>
+          ) : (
+            <Link to="/login" className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-[var(--color-edu-text-muted)] hover:text-white hover:bg-white/5 border border-white/5 hover:border-white/15 transition-all">
+              Sign In
+            </Link>
+          )}
 
           {/* Mobile menu toggle */}
           <button

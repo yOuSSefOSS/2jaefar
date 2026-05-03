@@ -40,7 +40,7 @@ const AIRCRAFT_ZONES = [
     label: 'Tail Section',
     description: 'The horizontal and vertical stabilizers provide pitch and yaw stability during flight.',
     advancedDesc: 'The empennage consists of the horizontal stabilizer (pitch stability, Cm_α < 0) and vertical stabilizer (yaw stability, Cn_β > 0). Elevator and rudder are the primary control surfaces.',
-    link: '/explore/fuselage',
+    link: '/explore/tail',
     color: '#22c55e',
     icon: <Triangle size={18} />,
     facts: ['Horizontal + vertical stabilizers', 'Contains elevator and rudder', 'Critical for stability'],
