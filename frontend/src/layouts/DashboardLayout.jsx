@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Wind, Gem, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Settings, User, Wind, Gem, ArrowLeft, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/logo.png';
@@ -38,6 +38,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           <nav className="hidden md:flex items-center gap-3">
             <TopNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} />
             <TopNavItem to="/profile" label="Profile" currentPath={location.pathname} />
+            <TopNavItem to="/settings" label="Settings" currentPath={location.pathname} />
             <TopNavItem to="/pricing" label="Pricing" currentPath={location.pathname} />
           </nav>
         </div>
@@ -54,6 +55,9 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           <div className="flex items-center gap-3">
              <Link to="/pricing" className="hidden sm:flex items-center gap-2 p-1.5 px-3 border border-[var(--color-accent-blue)]/50 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-neon)] rounded-full hover:bg-[var(--color-accent-blue)]/20 transition-all text-xs font-bold uppercase tracking-widest">
                <Gem size={14} /> {subscriptionTier}
+             </Link>
+             <Link to="/settings" className="p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="Settings">
+               <Settings size={20} />
              </Link>
              <Link to="/profile" className="p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="User Profile">
                <User size={20} />
