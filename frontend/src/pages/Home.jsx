@@ -10,7 +10,7 @@ import AeroFactsPanel from '../components/AeroFactsPanel';
 import { Box, Circle, Upload, Mountain, Globe, Wind, Layers, Settings, X, BookOpen, Info } from 'lucide-react';
 import Export3DModal from '../components/Export3DModal';
 import PdfReportTemplate from '../components/PdfReportTemplate';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
