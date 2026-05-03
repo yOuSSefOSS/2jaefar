@@ -151,40 +151,7 @@ const LandingPage = () => {
               {/* Subtle glow under the plane */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,rgba(56,189,248,0.1),transparent)] pointer-events-none" />
 
-              {/* Always-glowing airfoil callout — pulsing orange oval on wing */}
-              <div
-                onClick={() => navigate('/explore/airfoil')}
-                title="Click to explore Airfoil Profile"
-                style={{
-                  position: 'absolute',
-                  top: '30%',
-                  left: '44%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '14%',
-                  aspectRatio: '2.5 / 1',
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  zIndex: 10,
-                  animation: 'airfoilPulse 2.5s ease-in-out infinite',
-                  border: '2px solid rgba(245,158,11,0.85)',
-                  background: 'rgba(245,158,11,0.06)',
-                }}
-              >
-                <span style={{
-                  position: 'absolute',
-                  bottom: '-22px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontSize: 8,
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  letterSpacing: '0.18em',
-                  color: '#f59e0b',
-                  whiteSpace: 'nowrap',
-                  textShadow: '0 0 8px rgba(245,158,11,0.7)',
-                  pointerEvents: 'none',
-                }}>AIRFOIL</span>
-              </div>
+
             </div>
           </motion.div>
         </div>
