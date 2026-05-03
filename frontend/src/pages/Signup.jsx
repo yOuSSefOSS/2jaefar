@@ -127,7 +127,7 @@ const Signup = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 0 30px rgba(99,102,241,0.2)'
           }}>
-            <img src={logoUrl} alt="Vortex-Gen" style={{ width: '48px', height: 'auto', mixBlendMode: 'screen', filter: 'brightness(1.1)' }} />
+            <img src={logoUrl} alt="Vortex-Gen" style={{ width: '48px', height: 'auto', filter: 'brightness(1.1)' }} />
           </div>
           <h1 style={{
             fontSize: '1.75rem', fontWeight: 800, margin: 0,
