@@ -190,7 +190,94 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* ── Wind Tunnel Spotlight ── */}
+      <section className="relative py-20 px-6 lg:px-10 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.06) 0%, transparent 65%)' }} />
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
+          >
+            <div className="relative rounded-2xl overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.07) 0%, rgba(15,23,42,0.95) 100%)', border: '1px solid rgba(245,158,11,0.25)', boxShadow: '0 0 60px rgba(245,158,11,0.06)' }}>
+              <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.7), transparent)' }} />
+              <div className="p-8 md:p-12">
+                <div className="flex flex-col lg:flex-row items-center gap-10">
+                  {/* Left: mini airfoil diagram */}
+                  <div className="flex-shrink-0 w-full lg:w-72">
+                    <div className="relative rounded-xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(245,158,11,0.2)', padding: '1.5rem' }}>
+                      <svg viewBox="-0.55 -0.28 1.1 0.56" className="w-full h-auto">
+                        <defs>
+                          <linearGradient id="foilGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6"/>
+                            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2"/>
+                          </linearGradient>
+                        </defs>
+                        {/* Flow lines */}
+                        {[-0.2,-0.1,0,0.1,0.2].map((y,i) => (
+                          <path key={i} d={`M-0.55,${y} C-0.3,${y} -0.1,${y + (Math.abs(y)<0.05?-0.06:y<0?0.01:-0.01)} 0.55,${y}`}
+                            stroke="rgba(56,189,248,0.3)" strokeWidth="0.006" fill="none"/>
+                        ))}
+                        {/* Airfoil */}
+                        <path d="M-0.5,0 C-0.3,-0.12 0.1,-0.16 0.42,-0.07 L0.5,0 L0.42,0.06 C0.1,0.1 -0.3,0.08 -0.5,0 Z"
+                          fill="url(#foilGrad)" stroke="#f59e0b" strokeWidth="0.007"/>
+                        {/* Lift arrow */}
+                        <line x1="0" y1="-0.08" x2="0" y2="-0.24" stroke="#22c55e" strokeWidth="0.01" markerEnd="url(#liftArr)"/>
+                        <defs>
+                          <marker id="liftArr" markerWidth="6" markerHeight="6" refX="3" refY="6" orient="auto">
+                            <path d="M0,6 L3,0 L6,6 Z" fill="#22c55e"/>
+                          </marker>
+                        </defs>
+                        <text x="0.05" y="-0.2" fill="#22c55e" fontSize="0.05" fontFamily="monospace">LIFT</text>
+                        {/* Angle indicator */}
+                        <text x="-0.52" y="0.22" fill="rgba(245,158,11,0.7)" fontSize="0.045" fontFamily="monospace">α = 6°</text>
+                        <text x="-0.52" y="0.26" fill="rgba(56,189,248,0.5)" fontSize="0.04" fontFamily="monospace">Cl = 0.85  Cd = 0.011</text>
+                      </svg>
+                      <div className="absolute bottom-2 right-3 text-[9px] font-mono text-amber-500/50">NACA 4412</div>
+                    </div>
+                  </div>
+
+                  {/* Right: text */}
+                  <div className="flex-1">
+                    <div className="text-[11px] font-mono tracking-widest uppercase mb-3" style={{ color: '#f59e0b' }}>
+                      ⚡ Flagship Simulator
+                    </div>
+                    <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
+                      Wind Tunnel Lab — <span style={{ color: '#f59e0b' }}>Powered by AI</span>
+                    </h2>
+                    <p className="text-[var(--color-edu-text-muted)] leading-relaxed mb-5">
+                      The most sophisticated airfoil simulator available to students. Using the <strong className="text-white">NeuralFoil</strong> machine learning model, 
+                      it delivers aerodynamic predictions comparable to full CFD simulations — in real-time, in your browser.
+                    </p>
+                    <ul className="space-y-2 mb-6">
+                      {['Real ML predictions on any NACA airfoil','Cl / Cd polar charts and drag polars','Import your own .dat airfoil files','Autotune — find the best airfoil for your conditions'].map(f => (
+                        <li key={f} className="flex items-center gap-2.5 text-sm text-[var(--color-edu-text-muted)]">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#f59e0b' }} />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex flex-wrap gap-3">
+                      <Link to="/login" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+                        style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}>
+                        Open Wind Tunnel <ArrowRight size={16} />
+                      </Link>
+                      <Link to="/lab" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors"
+                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                        See All Labs
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── Features Section ── */}
+
       <section className="relative py-24 px-6 lg:px-10">
         <div className="max-w-6xl mx-auto">
           <motion.div 
