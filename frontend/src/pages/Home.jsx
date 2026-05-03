@@ -497,7 +497,7 @@ const Home = () => {
       return;
     }
     if (subscriptionTier === 'pro' && importsCount >= 10) {
-      alert('Pro tier is limited to 10 imports. Please upgrade to Pro Max.');
+      alert('Pro tier is limited to 10 imports. Please upgrade to Ultra.');
       return;
     }
 
@@ -583,7 +583,7 @@ const Home = () => {
       return;
     }
     if (mode === 'heavy' && subscriptionTier !== 'pro_max') {
-      alert('Deep Tune is only available on the Pro Max tier.');
+      alert('Deep Tune is only available on the Ultra tier.');
       return;
     }
 

@@ -62,25 +62,29 @@ const SECTIONS = [
   },
 ];
 
-const QUIZ = {
-  question: 'What does the "44" in NACA 4412 represent?',
-  options: [
-    { text: '44% maximum thickness', correct: false },
-    { text: '4% max camber at 40% of the chord from the leading edge', correct: true },
-    { text: 'The wing span is 44 feet', correct: false },
-    { text: 'The airfoil was the 44th design tested', correct: false },
-  ],
-  explanation: 'In the NACA 4-digit series: the first digit (4) is the maximum camber in percent of chord (4%), the second digit (4) is the position of maximum camber in tenths of chord (0.4 = 40% from leading edge), and the last two digits (12) give the maximum thickness as percent of chord (12%).',
-};
+const QUIZ_BEGINNER = [
+  { question: 'What does the "44" in NACA 4412 represent?', options: [{ text: '44% maximum thickness', correct: false }, { text: '4% max camber at 40% of chord from leading edge', correct: true }, { text: 'The wing span is 44 feet', correct: false }, { text: 'The 44th airfoil design tested', correct: false }], explanation: 'NACA 4-digit: 1st digit = max camber %, 2nd digit = camber position (tenths of chord), last two = max thickness %. So 4412 = 4% camber at 40% chord, 12% thick.' },
+  { question: 'What happens to airflow at the critical angle of attack?', options: [{ text: 'The aircraft climbs more steeply', correct: false }, { text: 'Lift keeps increasing past this angle', correct: false }, { text: 'Boundary layer separates and lift drops — stall occurs', correct: true }, { text: 'Drag disappears, allowing higher speed', correct: false }], explanation: 'Beyond the critical AoA, the adverse pressure gradient causes boundary layer separation from the upper surface. Lift drops sharply and drag spikes — this is stall.' },
+  { question: 'Why does a cambered airfoil generate more lift than a symmetric one at the same AoA?', options: [{ text: 'It is heavier, so gravity helps', correct: false }, { text: 'The curved camber line creates additional circulation even at zero AoA', correct: true }, { text: 'It has a larger trailing edge area', correct: false }, { text: 'Camber reduces skin friction drag', correct: false }], explanation: 'A cambered airfoil has a non-zero zero-lift angle of attack (α₀ < 0). The camber line creates additional circulation, boosting C_L even at α = 0° — perfect for cruising efficiently.' },
+];
+
+const QUIZ_ADVANCED = [
+  { question: 'In thin airfoil theory, what is the lift curve slope (dC_L/dα)?', options: [{ text: '2π per radian (~0.11/degree)', correct: true }, { text: '1.0 per degree', correct: false }, { text: 'π per radian', correct: false }, { text: 'It depends entirely on thickness', correct: false }], explanation: 'Thin airfoil theory gives dC_L/dα = 2π/rad ≈ 0.1097/degree. Real airfoils achieve ~5.7–6.0/rad due to viscous effects. Finite span further reduces the slope by the factor (πeAR / (πeAR + 2π)).' },
+  { question: 'The Kutta-Joukowski theorem states L\' = ρ·V·Γ. What is Γ?', options: [{ text: 'The angle of attack in radians', correct: false }, { text: 'The circulation — line integral of velocity around the airfoil', correct: true }, { text: 'The coefficient of viscosity', correct: false }, { text: 'The pressure coefficient at the leading edge', correct: false }], explanation: 'Γ = ∮ V·dl is the circulation, a line integral of velocity around a closed contour enclosing the airfoil. The Kutta condition determines Γ such that the trailing edge is a stagnation line.' },
+  { question: 'Which stall type occurs on a thick airfoil (t/c > 15%)?', options: [{ text: 'Leading-edge (abrupt) stall from laminar bubble burst', correct: false }, { text: 'Trailing-edge (gradual) stall as separation progresses forward', correct: true }, { text: 'Shock-induced separation at transonic speeds', correct: false }, { text: 'Tip stall due to span-wise flow', correct: false }], explanation: 'Thick airfoils stall from the trailing edge: the separation point moves progressively forward with increasing AoA, giving a gradual lift peak and gentler post-stall behavior. Thin airfoils have abrupt leading-edge stall.' },
+];
 
 const AirfoilSection = () => {
   const [isAdvanced, setIsAdvanced] = useState(false);
-  const [quizAnswer, setQuizAnswer] = useState(null);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState({});
   const [aoa, setAoa] = useState(4);
   const [camber, setCamber] = useState(4);
   const [thickness, setThickness] = useState(12);
   const navigate = useNavigate();
+
+  const activeQuiz = isAdvanced ? QUIZ_ADVANCED : QUIZ_BEGINNER;
+  const handleAnswer = (qIdx, aIdx) => setQuizAnswers(prev => ({ ...prev, [qIdx]: aIdx }));
+  const handleModeSwitch = (adv) => { setIsAdvanced(adv); setQuizAnswers({}); };
 
   const m = camber / 100;
   const p = 0.4; // fixed camber position for simplicity
@@ -116,8 +120,8 @@ const AirfoilSection = () => {
             <p className="text-[var(--color-edu-text-muted)]">The shape that makes flight possible</p>
           </div>
           <div className="complexity-toggle">
-            <button className={`complexity-toggle-btn ${!isAdvanced ? 'active' : ''}`} onClick={() => setIsAdvanced(false)}>Beginner</button>
-            <button className={`complexity-toggle-btn ${isAdvanced ? 'active' : ''}`} onClick={() => setIsAdvanced(true)}>Advanced</button>
+            <button className={`complexity-toggle-btn ${!isAdvanced ? 'active' : ''}`} onClick={() => handleModeSwitch(false)}>Beginner</button>
+            <button className={`complexity-toggle-btn ${isAdvanced ? 'active' : ''}`} onClick={() => handleModeSwitch(true)}>Advanced</button>
           </div>
         </div>
       </motion.div>
@@ -274,74 +278,53 @@ const AirfoilSection = () => {
         ))}
       </div>
 
-      {/* Quiz */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mt-10 bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-6"
-      >
-        <div className="text-[10px] font-mono tracking-widest text-[var(--color-edu-amber)] uppercase mb-3">✦ Knowledge Check</div>
-        <h3 className="text-lg font-bold text-white mb-4">{QUIZ.question}</h3>
-        <div className="space-y-2.5">
-          {QUIZ.options.map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => { setQuizAnswer(i); setShowExplanation(true); }}
-              disabled={quizAnswer !== null}
-              className={`quiz-option w-full text-left
-                ${quizAnswer === i && opt.correct ? 'correct' : ''}
-                ${quizAnswer === i && !opt.correct ? 'incorrect' : ''}
-                ${quizAnswer !== null && opt.correct && quizAnswer !== i ? 'correct' : ''}
-              `}
-            >
-              <div className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                {String.fromCharCode(65 + i)}
-              </div>
-              {opt.text}
-            </button>
-          ))}
-        </div>
-        {showExplanation && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 rounded-xl bg-[var(--color-edu-green)]/8 border border-[var(--color-edu-green)]/20 text-sm text-[var(--color-edu-text-muted)]">
-            <span className="font-bold text-[var(--color-edu-green)]">Explanation: </span>{QUIZ.explanation}
-          </motion.div>
-        )}
+      {/* Knowledge Check — 6 questions (3 per mode) */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+        className="mt-10 bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-6 space-y-6">
+        <div className="text-[10px] font-mono tracking-widest text-[var(--color-edu-amber)] uppercase">✦ Knowledge Check · {isAdvanced ? 'Advanced' : 'Beginner'}</div>
+        {activeQuiz.map((q, qIdx) => (
+          <div key={`${isAdvanced}-${qIdx}`} className="border-t border-white/5 pt-5 first:border-t-0 first:pt-0">
+            <h3 className="text-base font-bold text-white mb-3">{q.question}</h3>
+            <div className="space-y-2">
+              {q.options.map((opt, aIdx) => (
+                <button key={aIdx} onClick={() => handleAnswer(qIdx, aIdx)} disabled={quizAnswers[qIdx] !== undefined}
+                  className={`quiz-option w-full text-left ${quizAnswers[qIdx] === aIdx && opt.correct ? 'correct' : ''} ${quizAnswers[qIdx] === aIdx && !opt.correct ? 'incorrect' : ''} ${quizAnswers[qIdx] !== undefined && opt.correct && quizAnswers[qIdx] !== aIdx ? 'correct' : ''}`}>
+                  <div className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0">{String.fromCharCode(65 + aIdx)}</div>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+            {quizAnswers[qIdx] !== undefined && (
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className="mt-3 p-3 rounded-xl bg-[var(--color-edu-green)]/8 border border-[var(--color-edu-green)]/20 text-sm text-[var(--color-edu-text-muted)]">
+                <span className="font-bold text-[var(--color-edu-green)]">Explanation: </span>{q.explanation}
+              </motion.div>
+            )}
+          </div>
+        ))}
       </motion.div>
 
-      {/* ── Bridge to Lab CTA ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="mt-10 bg-gradient-to-br from-[var(--color-edu-sky)]/8 to-[var(--color-accent-purple)]/8 border border-[var(--color-edu-sky)]/15 rounded-2xl p-8 text-center"
-      >
+      {/* Bridge to Lab CTA */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+        className="mt-10 bg-gradient-to-br from-[var(--color-edu-sky)]/8 to-[var(--color-accent-purple)]/8 border border-[var(--color-edu-sky)]/15 rounded-2xl p-8 text-center">
         <div className="w-14 h-14 rounded-2xl bg-[var(--color-edu-sky)]/15 border border-[var(--color-edu-sky)]/25 flex items-center justify-center mx-auto mb-4 text-[var(--color-edu-sky)]">
           <FlaskConical size={24} />
         </div>
         <h3 className="text-xl font-bold text-white mb-2">Ready to Test It Yourself?</h3>
         <p className="text-sm text-[var(--color-edu-text-muted)] max-w-md mx-auto mb-6">
-          You've learned the theory — now open the Wind Tunnel Lab and run real simulations. 
+          You've learned the theory — now open the Wind Tunnel Lab and run real ML simulations.
           Change the angle of attack, visualize airflow, and see exactly when stall occurs.
         </p>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="cta-primary"
-        >
-          <FlaskConical size={18} />
-          Open Wind Tunnel Lab
-          <ArrowRight size={18} />
+        <button onClick={() => navigate('/lab/airfoil')} className="cta-primary">
+          <FlaskConical size={18} /> Open Wind Tunnel Lab <ArrowRight size={18} />
         </button>
       </motion.div>
 
       {/* Navigation */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
         className="mt-8 flex items-center justify-between pb-8">
-        <Link to="/explore/wings" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">← Wings</Link>
-        <Link to="/explore" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">
-          Back to Explorer →
-        </Link>
+        <Link to="/explore/tail" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">← Tail Section</Link>
+        <Link to="/explore" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">Back to Explorer →</Link>
       </motion.div>
     </div>
   );

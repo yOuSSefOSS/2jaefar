@@ -14,6 +14,11 @@ import Explorer from './pages/Explorer';
 import FuselageSection from './pages/explore/FuselageSection';
 import WingsSection from './pages/explore/WingsSection';
 import AirfoilSection from './pages/explore/AirfoilSection';
+import TailSection from './pages/explore/TailSection';
+import LabHub from './pages/lab/LabHub';
+import WingsLab from './pages/lab/WingsLab';
+import TailLab from './pages/lab/TailLab';
+import FuselageLab from './pages/lab/FuselageLab';
 import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
@@ -69,17 +74,38 @@ function App() {
             <Route index element={<Explorer />} />
             <Route path="fuselage" element={<FuselageSection />} />
             <Route path="wings" element={<WingsSection />} />
+            <Route path="tail" element={<TailSection />} />
             <Route path="airfoil" element={<AirfoilSection />} />
           </Route>
 
-          {/* ── Protected Lab / Dashboard Routes ── */}
+          {/* ── Lab Routes (Public Hub + labs, Airfoil lab auth-protected) ── */}
+          <Route path="/lab" element={<LabHub />} />
+          <Route path="/lab/wings" element={<WingsLab />} />
+          <Route path="/lab/tail" element={<TailLab />} />
+          <Route path="/lab/fuselage" element={<FuselageLab />} />
+          <Route
+            path="/lab/airfoil"
+            element={
+              <AuthGuard>
+                <DashboardLayout isBackendConnected={isConnected}>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                  </Routes>
+                </DashboardLayout>
+              </AuthGuard>
+            }
+          />
+
+          {/* Legacy /dashboard redirect */}
+          <Route path="/dashboard" element={<Navigate to="/lab/airfoil" replace />} />
+
+          {/* ── Protected Settings / Profile / Pricing ── */}
           <Route
             path="/*"
             element={
               <AuthGuard>
                 <DashboardLayout isBackendConnected={isConnected}>
                   <Routes>
-                    <Route path="/dashboard" element={<Home />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/pricing" element={<Pricing />} />

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Loader2, AlertCircle, Wind, CheckCircle } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, Wind, CheckCircle, User } from 'lucide-react';
 
 const Signup = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +16,11 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { display_name: name } }
+    });
     if (error) setError(error.message);
     else setSuccess(true);
     setLoading(false);
@@ -147,6 +152,24 @@ const Signup = () => {
 
         {/* Form */}
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '0.4rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Full Name</label>
+            <div style={{ position: 'relative' }}>
+              <User size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#334155', pointerEvents: 'none' }} />
+              <input
+                type="text" value={name} onChange={(e) => setName(e.target.value)}
+                placeholder="Your name" required
+                style={{
+                  width: '100%', boxSizing: 'border-box', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.7rem', paddingBottom: '0.7rem',
+                  background: 'rgba(2,8,23,0.8)', border: '1px solid rgba(51,65,85,0.8)',
+                  borderRadius: '10px', color: '#e2e8f0', fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.2s'
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(51,65,85,0.8)'}
+              />
+            </div>
+          </div>
+
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '0.4rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Email</label>
             <div style={{ position: 'relative' }}>

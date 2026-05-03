@@ -38,16 +38,71 @@ const SECTIONS = [
   },
 ];
 
-const QUIZ = {
-  question: 'Why is fuel stored in the wings rather than the fuselage?',
-  options: [
-    { text: 'Wings have more empty space available', correct: false },
-    { text: 'Fuel weight in the wings counteracts lift forces, reducing structural stress', correct: true },
-    { text: 'It keeps the fuel cooler at altitude', correct: false },
-    { text: 'It makes refueling faster at the airport', correct: false },
-  ],
-  explanation: 'Storing fuel in the wings provides "bending relief" — the downward weight of the fuel opposes the upward lift force, reducing the bending moment at the wing root by up to 40%. This allows lighter wing structures.',
-};
+const QUIZ_BEGINNER = [
+  {
+    question: 'Why is fuel stored in the wings rather than the fuselage?',
+    options: [
+      { text: 'Wings have more empty space available', correct: false },
+      { text: 'Fuel weight in the wings counteracts lift forces, reducing structural stress', correct: true },
+      { text: 'It keeps the fuel cooler at altitude', correct: false },
+      { text: 'It makes refueling faster at the airport', correct: false },
+    ],
+    explanation: 'Storing fuel in wings provides "bending relief" — fuel weight opposes upward lift, reducing root bending moment by up to 40%, allowing lighter wing structures.',
+  },
+  {
+    question: 'What do flaps do during takeoff and landing?',
+    options: [
+      { text: 'They steer the airplane left and right', correct: false },
+      { text: 'They increase lift at low speeds by extending the wing area', correct: true },
+      { text: 'They slow the airplane by increasing drag only', correct: false },
+      { text: 'They control altitude by changing wing thickness', correct: false },
+    ],
+    explanation: 'Flaps extend the wing chord and increase camber, dramatically boosting C_Lmax so the airplane can fly at lower speeds during takeoff and landing.',
+  },
+  {
+    question: 'A glider has long, narrow wings. What advantage does this give?',
+    options: [
+      { text: 'Better maneuverability at high speeds', correct: false },
+      { text: 'Higher structural strength for aerobatics', correct: false },
+      { text: 'Reduced induced drag, giving better lift-to-drag ratio', correct: true },
+      { text: 'More fuel storage capacity', correct: false },
+    ],
+    explanation: 'Long, narrow wings have a high aspect ratio, which minimizes induced drag (C_Di = C_L²/πeAR), dramatically improving glide efficiency.',
+  },
+];
+
+const QUIZ_ADVANCED = [
+  {
+    question: 'What is the Kutta-Joukowski theorem relationship for lift?',
+    options: [
+      { text: 'L\' = ½ρV²C_L', correct: false },
+      { text: 'L\' = ρ·V·Γ (lift per unit span = density × velocity × circulation)', correct: true },
+      { text: 'L\' = C_L / (π·e·AR)', correct: false },
+      { text: 'L\' = q·S·α (dynamic pressure × area × AoA)', correct: false },
+    ],
+    explanation: 'The Kutta-Joukowski theorem states that lift per unit span L\' = ρVΓ, where Γ is the circulation. The Kutta condition at the trailing edge determines the circulation magnitude.',
+  },
+  {
+    question: 'Wing sweep angle (Λ) primarily helps with which effect?',
+    options: [
+      { text: 'Increasing maximum lift coefficient', correct: false },
+      { text: 'Delaying transonic wave drag rise by reducing effective Mach number', correct: true },
+      { text: 'Improving low-speed stall characteristics', correct: false },
+      { text: 'Reducing structural bending moment', correct: false },
+    ],
+    explanation: 'Sweep reduces the component of Mach number normal to the leading edge (M_normal = M·cos Λ), delaying the onset of wave drag as the aircraft approaches transonic speeds.',
+  },
+  {
+    question: 'What is taper ratio (λ) in wing design?',
+    options: [
+      { text: 'The ratio of wing area to fuselage cross-section', correct: false },
+      { text: 'Span squared divided by wing area (b²/S)', correct: false },
+      { text: 'Tip chord divided by root chord (c_tip / c_root)', correct: true },
+      { text: 'The ratio of sweep at 25% chord to 50% chord', correct: false },
+    ],
+    explanation: 'Taper ratio λ = c_tip/c_root. A tapered wing (λ < 1) more closely approximates the elliptical lift distribution, reducing induced drag compared to a constant-chord (rectangular) wing.',
+  },
+];
 
 const SURFACE_INFO = {
   slat: {
@@ -78,9 +133,19 @@ const SURFACE_INFO = {
 
 const WingsSection = () => {
   const [isAdvanced, setIsAdvanced] = useState(false);
-  const [quizAnswer, setQuizAnswer] = useState(null);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState({});
   const [activeFlap, setActiveFlap] = useState(null);
+
+  const activeQuiz = isAdvanced ? QUIZ_ADVANCED : QUIZ_BEGINNER;
+
+  const handleAnswer = (qIdx, aIdx) => {
+    setQuizAnswers(prev => ({ ...prev, [qIdx]: aIdx }));
+  };
+
+  const handleModeSwitch = (advanced) => {
+    setIsAdvanced(advanced);
+    setQuizAnswers({});
+  };
 
   const surfaceData = activeFlap ? SURFACE_INFO[activeFlap] : null;
 
@@ -104,8 +169,8 @@ const WingsSection = () => {
             <p className="text-[var(--color-edu-text-muted)]">Lift, control, and fuel — the most critical component</p>
           </div>
           <div className="complexity-toggle">
-            <button className={`complexity-toggle-btn ${!isAdvanced ? 'active' : ''}`} onClick={() => setIsAdvanced(false)}>Beginner</button>
-            <button className={`complexity-toggle-btn ${isAdvanced ? 'active' : ''}`} onClick={() => setIsAdvanced(true)}>Advanced</button>
+            <button className={`complexity-toggle-btn ${!isAdvanced ? 'active' : ''}`} onClick={() => handleModeSwitch(false)}>Beginner</button>
+            <button className={`complexity-toggle-btn ${isAdvanced ? 'active' : ''}`} onClick={() => handleModeSwitch(true)}>Advanced</button>
           </div>
         </div>
       </motion.div>
@@ -356,49 +421,58 @@ const WingsSection = () => {
         ))}
       </div>
 
-      {/* Quiz */}
+      {/* Knowledge Check — 3 questions per mode */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="mt-10 bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-6"
+        className="mt-10 bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-6 space-y-6"
       >
-        <div className="text-[10px] font-mono tracking-widest text-[var(--color-edu-amber)] uppercase mb-3">✦ Knowledge Check</div>
-        <h3 className="text-lg font-bold text-white mb-4">{QUIZ.question}</h3>
-        <div className="space-y-2.5">
-          {QUIZ.options.map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => { setQuizAnswer(i); setShowExplanation(true); }}
-              disabled={quizAnswer !== null}
-              className={`quiz-option w-full text-left
-                ${quizAnswer === i && opt.correct ? 'correct' : ''}
-                ${quizAnswer === i && !opt.correct ? 'incorrect' : ''}
-                ${quizAnswer !== null && opt.correct && quizAnswer !== i ? 'correct' : ''}
-              `}
-            >
-              <div className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                {String.fromCharCode(65 + i)}
-              </div>
-              {opt.text}
-            </button>
-          ))}
-        </div>
-        {showExplanation && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 rounded-xl bg-[var(--color-edu-green)]/8 border border-[var(--color-edu-green)]/20 text-sm text-[var(--color-edu-text-muted)]">
-            <span className="font-bold text-[var(--color-edu-green)]">Explanation: </span>{QUIZ.explanation}
-          </motion.div>
-        )}
+        <div className="text-[10px] font-mono tracking-widest text-[var(--color-edu-amber)] uppercase">✦ Knowledge Check · {isAdvanced ? 'Advanced' : 'Beginner'}</div>
+        {activeQuiz.map((q, qIdx) => (
+          <div key={`${isAdvanced}-${qIdx}`} className="border-t border-white/5 pt-5 first:border-t-0 first:pt-0">
+            <h3 className="text-base font-bold text-white mb-3">{q.question}</h3>
+            <div className="space-y-2">
+              {q.options.map((opt, aIdx) => (
+                <button
+                  key={aIdx}
+                  onClick={() => handleAnswer(qIdx, aIdx)}
+                  disabled={quizAnswers[qIdx] !== undefined}
+                  className={`quiz-option w-full text-left
+                    ${quizAnswers[qIdx] === aIdx && opt.correct ? 'correct' : ''}
+                    ${quizAnswers[qIdx] === aIdx && !opt.correct ? 'incorrect' : ''}
+                    ${quizAnswers[qIdx] !== undefined && opt.correct && quizAnswers[qIdx] !== aIdx ? 'correct' : ''}
+                  `}
+                >
+                  <div className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {String.fromCharCode(65 + aIdx)}
+                  </div>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+            {quizAnswers[qIdx] !== undefined && (
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className="mt-3 p-3 rounded-xl bg-[var(--color-edu-green)]/8 border border-[var(--color-edu-green)]/20 text-sm text-[var(--color-edu-text-muted)]">
+                <span className="font-bold text-[var(--color-edu-green)]">Explanation: </span>{q.explanation}
+              </motion.div>
+            )}
+          </div>
+        ))}
       </motion.div>
 
       {/* Navigation */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
         className="mt-8 flex items-center justify-between pb-8">
         <Link to="/explore/fuselage" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">← Fuselage</Link>
-        <Link to="/explore/airfoil" className="cta-primary !py-2.5 !px-5 !text-[13px] !rounded-lg">
-          Next: Airfoil Theory <ArrowRight size={16} />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/lab/wings" className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold tracking-wider border border-[#a78bfa]/30 text-[#a78bfa] bg-[#a78bfa]/8 hover:bg-[#a78bfa]/15 transition-all">
+            🧪 Wings Lab
+          </Link>
+          <Link to="/explore/tail" className="cta-primary !py-2.5 !px-5 !text-[13px] !rounded-lg">
+            Next: Tail <ArrowRight size={16} />
+          </Link>
+        </div>
       </motion.div>
     </div>
   );

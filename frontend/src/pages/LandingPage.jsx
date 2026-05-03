@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plane, FlaskConical, BookOpen, Layers, ArrowRight, Wind, GraduationCap, Sparkles } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/logo.png';
 import aircraftImg from '../assets/aircraft-topview.png';
 
@@ -46,6 +47,8 @@ const fadeUp = (delay = 0) => ({
 });
 
 const LandingPage = () => {
+  const { user, displayName } = useAppContext();
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] overflow-x-hidden">
       
@@ -59,15 +62,31 @@ const LandingPage = () => {
           <Link to="/explore" className="hidden sm:block text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">
             Explorer
           </Link>
-          <Link to="/dashboard" className="hidden sm:block text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">
-            Lab
+          <Link to="/lab" className="hidden sm:block text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">
+            Labs
           </Link>
-          <Link to="/login" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">
-            Sign In
-          </Link>
-          <Link to="/signup" className="cta-primary !py-2.5 !px-5 !text-[13px] !rounded-lg">
-            Get Started
-          </Link>
+          {user ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderRadius: 8, background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)' }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #00f0ff, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#020817', flexShrink: 0 }}>
+                  {displayName.slice(0, 2).toUpperCase()}
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{displayName.split(' ')[0]}</span>
+              </div>
+              <Link to="/lab/airfoil" className="cta-primary !py-2.5 !px-5 !text-[13px] !rounded-lg">
+                Go to Lab <ArrowRight size={14} />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors">
+                Sign In
+              </Link>
+              <Link to="/signup" className="cta-primary !py-2.5 !px-5 !text-[13px] !rounded-lg">
+                Get Started
+              </Link>
+            </>
+          )}
         </nav>
       </header>
 
@@ -111,8 +130,8 @@ const LandingPage = () => {
             <Link to="/explore" className="cta-primary">
               Start Exploring <ArrowRight size={18} />
             </Link>
-            <Link to="/dashboard" className="cta-secondary">
-              <FlaskConical size={18} /> Go to Lab
+            <Link to="/lab" className="cta-secondary">
+              <FlaskConical size={18} /> Labs Hub
             </Link>
           </motion.div>
 
@@ -130,7 +149,42 @@ const LandingPage = () => {
                 style={{ filter: 'brightness(0.8) saturate(1.2)' }}
               />
               {/* Subtle glow under the plane */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,rgba(56,189,248,0.1),transparent)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,rgba(56,189,248,0.1),transparent)] pointer-events-none" />
+
+              {/* Always-glowing airfoil callout — pulsing orange oval on wing */}
+              <div
+                onClick={() => navigate('/explore/airfoil')}
+                title="Click to explore Airfoil Profile"
+                style={{
+                  position: 'absolute',
+                  top: '30%',
+                  left: '44%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '14%',
+                  aspectRatio: '2.5 / 1',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  animation: 'airfoilPulse 2.5s ease-in-out infinite',
+                  border: '2px solid rgba(245,158,11,0.85)',
+                  background: 'rgba(245,158,11,0.06)',
+                }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  bottom: '-22px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: 8,
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  letterSpacing: '0.18em',
+                  color: '#f59e0b',
+                  whiteSpace: 'nowrap',
+                  textShadow: '0 0 8px rgba(245,158,11,0.7)',
+                  pointerEvents: 'none',
+                }}>AIRFOIL</span>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -245,6 +299,12 @@ const LandingPage = () => {
           Academic Aviation Explorer & Wind Tunnel Lab · Built for students and educators
         </p>
       </footer>
+      <style>{`
+        @keyframes airfoilPulse {
+          0%, 100% { box-shadow: 0 0 14px rgba(245,158,11,0.55), inset 0 0 10px rgba(245,158,11,0.08); opacity: 0.8; }
+          50% { box-shadow: 0 0 34px rgba(245,158,11,0.95), inset 0 0 18px rgba(245,158,11,0.18); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

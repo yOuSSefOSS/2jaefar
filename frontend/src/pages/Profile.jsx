@@ -6,7 +6,7 @@ import { supabase } from '../services/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const { customAirfoils, setCustomAirfoils, lastSimulationData, activeShapeIdGlobal, user, subscriptionTier } = useAppContext();
+  const { customAirfoils, setCustomAirfoils, lastSimulationData, activeShapeIdGlobal, user, subscriptionTier, displayName } = useAppContext();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -42,11 +42,14 @@ const Profile = () => {
           className="flex items-center gap-6 mb-8 border-b border-white/10 pb-6"
        >
           <div className="w-20 h-20 bg-brand-800 rounded-full border-2 border-[var(--color-accent-blue)] flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(14,165,233,0.3)] shrink-0">
-             <div className="w-full h-full bg-[radial-gradient(circle_at_30%_30%,var(--color-accent-neon),var(--color-accent-blue))] opacity-80 animate-pulse"></div>
+             <span className="text-2xl font-bold text-[var(--color-accent-neon)]">
+               {displayName.slice(0, 2).toUpperCase()}
+             </span>
           </div>
           <div>
-             <h1 className="text-3xl font-bold text-white tracking-widest uppercase mb-1">{user?.email || 'Guest User'}</h1>
-             <p className="text-[var(--color-accent-neon)] font-mono text-sm uppercase">Tier: {subscriptionTier}</p>
+             <h1 className="text-3xl font-bold text-white tracking-widest uppercase mb-0.5">{displayName}</h1>
+             <p className="text-[var(--color-edu-text-muted)] text-sm mb-1">{user?.email}</p>
+             <p className="text-[var(--color-accent-neon)] font-mono text-xs uppercase">Tier: {subscriptionTier}</p>
           </div>
           <button 
              onClick={handleLogout}
