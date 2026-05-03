@@ -52,8 +52,15 @@ const ZONE_OVERLAYS = {
   fuselage: { top: '44%', left: '8%', width: '82%', height: '12%', borderRadius: '40px' },
   wings:    { top: '5%',  left: '30%', width: '35%', height: '90%', borderRadius: '20px' },
   tail:     { top: '25%', left: '80%', width: '15%', height: '50%', borderRadius: '12px' },
-  airfoil:  { top: '15%', left: '42%', width: '8%', height: '12%', borderRadius: '8px' },
 };
+
+// Airfoil cross-section strips — thin diagonal slices on each wing, always glowing
+const AIRFOIL_STRIPS = [
+  // Upper wing (right wing) — mid-span slice angled to match wing sweep
+  { id: 'airfoil-upper', top: '22%', left: '35%', width: '18%', height: '4%', rotate: '-32deg', origin: 'center center' },
+  // Lower wing (left wing) — mirrored
+  { id: 'airfoil-lower', top: '72%', left: '35%', width: '18%', height: '4%', rotate: '32deg', origin: 'center center' },
+];
 
 const Explorer = () => {
   const navigate = useNavigate();
@@ -65,9 +72,21 @@ const Explorer = () => {
   return (
     <div className="min-h-full px-6 lg:px-10 py-8 max-w-7xl mx-auto">
       <style>{`
-        @keyframes airfoilPulse {
-          0%, 100% { box-shadow: 0 0 10px rgba(245,158,11,0.4), 0 0 4px rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.85); }
-          50% { box-shadow: 0 0 26px rgba(245,158,11,0.75), 0 0 12px rgba(245,158,11,0.45); border-color: rgba(245,158,11,1); }
+        @keyframes stripPulse {
+          0%, 100% {
+            box-shadow: 0 0 8px rgba(245,158,11,0.5), 0 0 2px rgba(245,158,11,0.3);
+            background: rgba(245,158,11,0.12);
+            border-color: rgba(245,158,11,0.7);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(245,158,11,0.85), 0 0 8px rgba(245,158,11,0.5);
+            background: rgba(245,158,11,0.22);
+            border-color: rgba(245,158,11,1);
+          }
+        }
+        @keyframes stripPulseHover {
+          0%, 100% { box-shadow: 0 0 28px rgba(245,158,11,1), 0 0 12px rgba(245,158,11,0.7); }
+          50% { box-shadow: 0 0 40px rgba(245,158,11,1), 0 0 20px rgba(245,158,11,0.9); }
         }
       `}</style>
       
@@ -132,54 +151,26 @@ const Explorer = () => {
                 }}
               />
 
-              {/* Interactive zone overlays */}
-              {AIRCRAFT_ZONES.map((zone) => {
+              {/* Interactive zone overlays (excluding airfoil) */}
+              {AIRCRAFT_ZONES.filter(z => z.id !== 'airfoil').map((zone) => {
                 const pos = ZONE_OVERLAYS[zone.id];
                 const isHovered = hoveredZone === zone.id;
-                const isAirfoil = zone.id === 'airfoil';
                 return (
                   <div
                     key={zone.id}
                     className="absolute cursor-pointer transition-all duration-300"
                     style={{
                       ...pos,
-                      background: isHovered ? `${zone.color}18` : isAirfoil ? `${zone.color}08` : 'transparent',
-                      border: isHovered
-                        ? `2px solid ${zone.color}60`
-                        : isAirfoil
-                        ? `2px solid rgba(245,158,11,0.85)`
-                        : '2px solid transparent',
-                      boxShadow: isHovered
-                        ? `0 0 30px ${zone.color}30, inset 0 0 20px ${zone.color}10`
-                        : isAirfoil
-                        ? '0 0 18px rgba(245,158,11,0.45), 0 0 6px rgba(245,158,11,0.25)'
-                        : 'none',
-                      zIndex: isHovered ? 15 : isAirfoil ? 12 : 10,
-                      animation: isAirfoil && !isHovered ? 'airfoilPulse 2.5s ease-in-out infinite' : 'none',
-                      borderRadius: isAirfoil ? '50%' : pos.borderRadius,
+                      background: isHovered ? `${zone.color}18` : 'transparent',
+                      border: isHovered ? `2px solid ${zone.color}60` : '2px solid transparent',
+                      boxShadow: isHovered ? `0 0 30px ${zone.color}30, inset 0 0 20px ${zone.color}10` : 'none',
+                      zIndex: isHovered ? 15 : 10,
+                      borderRadius: pos.borderRadius,
                     }}
                     onMouseEnter={() => setHoveredZone(zone.id)}
                     onMouseLeave={() => setHoveredZone(null)}
                     onClick={() => navigate(zone.link)}
                   >
-                    {/* Airfoil always-visible label */}
-                    {isAirfoil && !isHovered && (
-                      <span style={{
-                        position: 'absolute',
-                        bottom: '-20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: 8,
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        letterSpacing: '0.18em',
-                        color: '#f59e0b',
-                        whiteSpace: 'nowrap',
-                        textShadow: '0 0 8px rgba(245,158,11,0.7)',
-                        pointerEvents: 'none',
-                      }}>AIRFOIL</span>
-                    )}
-
                     {/* Zone label on hover */}
                     <AnimatePresence>
                       {isHovered && (
@@ -207,27 +198,84 @@ const Explorer = () => {
                 );
               })}
 
+              {/* Airfoil Cross-Section Strips */}
+              {AIRFOIL_STRIPS.map((strip) => {
+                const isHovered = hoveredZone === 'airfoil';
+                const airfoilColor = '#f59e0b';
+                const counterRotate = strip.rotate.startsWith('-') ? strip.rotate.substring(1) : '-' + strip.rotate;
 
-              {/* Airfoil cross-section callout */}
-              <AnimatePresence>
-                {hoveredZone === 'airfoil' && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute z-20 pointer-events-none"
-                    style={{ top: '10%', left: '38%' }}
+                return (
+                  <div
+                    key={strip.id}
+                    className="absolute cursor-pointer transition-all duration-300"
+                    style={{
+                      top: strip.top,
+                      left: strip.left,
+                      width: strip.width,
+                      height: strip.height,
+                      transform: `rotate(${strip.rotate})`,
+                      transformOrigin: strip.origin,
+                      background: isHovered ? `rgba(245,158,11,0.3)` : `rgba(245,158,11,0.12)`,
+                      border: `1px solid ${isHovered ? '#f59e0b' : 'rgba(245,158,11,0.7)'}`,
+                      borderRadius: '10px',
+                      zIndex: 20,
+                      animation: isHovered ? 'stripPulseHover 1s ease-in-out infinite' : 'stripPulse 2.5s ease-in-out infinite',
+                    }}
+                    onMouseEnter={() => setHoveredZone('airfoil')}
+                    onMouseLeave={() => setHoveredZone(null)}
+                    onClick={() => navigate('/explore/airfoil')}
                   >
-                    <svg width="120" height="60" viewBox="0 0 120 60">
-                      <path 
-                        d="M5,30 Q10,12 30,8 Q60,6 80,12 Q95,18 115,30 Q95,38 80,42 Q60,45 30,44 Q10,40 5,30 Z"
-                        fill="#f59e0b" fillOpacity="0.15" stroke="#f59e0b" strokeWidth="2" strokeOpacity="0.8"
-                      />
-                      <text x="60" y="56" textAnchor="middle" fill="#f59e0b" fontSize="9" fontFamily="monospace" fontWeight="bold">PROFILE</text>
-                    </svg>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    {/* Airfoil always-visible label */}
+                    {strip.id === 'airfoil-upper' && (
+                      <span style={{
+                        position: 'absolute',
+                        bottom: '120%',
+                        left: '50%',
+                        transform: `translateX(-50%) rotate(${counterRotate})`,
+                        fontSize: 8,
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        letterSpacing: '0.18em',
+                        color: '#f59e0b',
+                        whiteSpace: 'nowrap',
+                        textShadow: '0 0 8px rgba(245,158,11,0.7)',
+                        pointerEvents: 'none',
+                        opacity: isHovered ? 0 : 1,
+                        transition: 'opacity 0.2s ease',
+                      }}>AIRFOIL</span>
+                    )}
+
+                    {/* Airfoil label on hover */}
+                    <AnimatePresence>
+                      {isHovered && strip.id === 'airfoil-upper' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 6 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute whitespace-nowrap"
+                          style={{
+                            bottom: '160%',
+                            left: '50%',
+                            transform: `translateX(-50%) rotate(${counterRotate})`,
+                          }}
+                        >
+                          <div
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide backdrop-blur-sm"
+                            style={{
+                              background: `${airfoilColor}20`,
+                              border: `1px solid ${airfoilColor}40`,
+                              color: airfoilColor
+                            }}
+                          >
+                            Airfoil Profile — Click to explore
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Instruction hint */}
