@@ -1222,7 +1222,7 @@ const Home = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col pt-2 pb-2">
-            <ControlSlider label="Wind Speed"    value={windSpeed}     min={0}   max={300}   unit={units === 'imperial' ? 'mph' : 'm/s'} onChange={setWindSpeed}     accent="neon"/>
+            <ControlSlider label="Wind Speed"    value={windSpeed}     min={0}   max={300}   step={5}  unit={units === 'imperial' ? 'mph' : 'm/s'} onChange={setWindSpeed}     accent="neon"/>
             <ControlSlider label="Pitch Angle"   value={pitchAngle}    min={-45} max={45}    unit="°"   onChange={setPitchAngle}    accent="blue"/>
           </div>
 
