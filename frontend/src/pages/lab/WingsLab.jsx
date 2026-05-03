@@ -1,15 +1,35 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plane, ArrowLeft } from 'lucide-react';
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+const Slider = ({ label, value, min, max, step = 1, unit, onChange, color = '#a78bfa' }) => (
+  <div style={{ marginBottom: '1.1rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+      <span style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color }}>{value}{unit}</span>
+    </div>
+    <input type="range" min={min} max={max} step={step} value={value}
+      onChange={e => onChange(Number(e.target.value))}
+      style={{ width: '100%', accentColor: color, height: '4px', cursor: 'pointer', touchAction: 'none' }} />
+  </div>
+);
+
+const WING_ZONES = {
+  root: { id: 'root', label: 'Wing Root', color: '#f59e0b', desc: 'The thickest part of the wing where it meets the fuselage. It must withstand massive bending moments from the lift generated across the entire span.' },
+  tip: { id: 'tip', label: 'Wing Tip', color: '#38bdf8', desc: 'The outermost edge. High-pressure air bleeds over to the low-pressure top, creating vortices and induced drag. Winglets are often added here.' },
+  leadingEdge: { id: 'leadingEdge', label: 'Leading Edge', color: '#22c55e', desc: 'The forward boundary. Its sweep angle determines how well the aircraft handles transonic speeds by delaying drag-producing shockwaves.' },
+  trailingEdge: { id: 'trailingEdge', label: 'Trailing Edge', color: '#a78bfa', desc: 'The rear boundary. Houses critical high-lift devices (flaps) and control surfaces (ailerons) that modify camber and roll the aircraft.' },
+};
 
 const WingsLab = () => {
   const [span, setSpan] = useState(30);
   const [sweep, setSweep] = useState(25);
   const [chord, setChord] = useState(4);
   const [cl, setCl] = useState(0.5);
+  const [activeZone, setActiveZone] = useState(null);
 
   const S = useMemo(() => span * chord * 0.6, [span, chord]);
   const AR = useMemo(() => (span * span) / S, [span, S]);
@@ -45,17 +65,7 @@ const WingsLab = () => {
   });
   const maxCdi = Math.max(...bars.map(b => b.cdi), 0.001);
 
-  const Slider = ({ label, value, min, max, step = 1, unit, onChange, color = '#a78bfa' }) => (
-    <div style={{ marginBottom: '1.1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-        <span style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color }}>{value}{unit}</span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: color, height: '4px', cursor: 'pointer' }} />
-    </div>
-  );
+
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#05091a 0%,#090d1f 100%)', color: '#e2e8f0', fontFamily: "'Inter','Segoe UI',sans-serif" }}>
@@ -90,17 +100,50 @@ const WingsLab = () => {
             <Slider label="Sweep Angle" value={sweep} min={0} max={55} unit="°" onChange={setSweep} color="#38bdf8" />
             <Slider label="Design CL" value={cl} min={0.1} max={1.5} step={0.05} unit="" onChange={setCl} color="#f59e0b" />
 
-            {/* Insight */}
-            <div style={{ marginTop: '1.25rem', padding: '1rem', borderRadius: '12px', background: `${wingColor}0d`, border: `1px solid ${wingColor}25` }}>
-              <div style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: wingColor, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Design Insight</div>
-              <p style={{ fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                {AR > 10 ? '✓ High AR — excellent long-range cruise efficiency (airliner).' :
-                 AR > 6  ? '✓ Moderate AR — balanced speed and efficiency.' :
-                           '△ Low AR — optimized for maneuverability or speed (fighter).'}
-                {sweep > 35 ? ' High sweep delays transonic drag rise.' :
-                 sweep > 20 ? ' Moderate sweep improves transonic performance.' :
-                              ' Low sweep ideal for subsonic cruise.'}
-              </p>
+            {/* Insight / Info Panel */}
+            <div style={{ marginTop: '1.25rem', minHeight: '145px', position: 'relative' }}>
+              <AnimatePresence mode="wait">
+                {activeZone ? (
+                  <motion.div
+                    key={activeZone.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ padding: '1rem', borderRadius: '12px', background: `${activeZone.color}0d`, border: `1px solid ${activeZone.color}25` }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: activeZone.color, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{activeZone.label}</div>
+                      <button onClick={() => setActiveZone(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.7rem', padding: 0 }}>✕</button>
+                    </div>
+                    <p style={{ fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                      {activeZone.desc}
+                    </p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="default"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ padding: '1rem', borderRadius: '12px', background: `${wingColor}0d`, border: `1px solid ${wingColor}25` }}
+                  >
+                    <div style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: wingColor, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Design Insight</div>
+                    <p style={{ fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                      {AR > 10 ? '✓ High AR — excellent long-range cruise efficiency.' :
+                       AR > 6  ? '✓ Moderate AR — balanced speed and efficiency.' :
+                                 '△ Low AR — optimized for maneuverability.'}
+                      <br/>
+                      {sweep > 35 ? ' High sweep delays transonic drag rise.' :
+                       sweep > 20 ? ' Moderate sweep improves transonic performance.' :
+                                    ' Low sweep ideal for subsonic cruise.'}
+                      <br/>
+                      <span style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem', display: 'block' }}>Hover over the wing planform to inspect components.</span>
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div style={{ marginTop: '1rem' }}>
               <Link to="/explore/wings" style={{ fontSize: '0.78rem', color: '#a78bfa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>📖 Learn about Wings →</Link>
@@ -158,6 +201,45 @@ const WingsLab = () => {
                 <rect x={cx - 7} y={cy - 4} width={14} height={rootChordPx + 8} rx="4"
                   fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" strokeWidth="1"
                   style={{ transition: 'all 0.35s ease' }} />
+
+                {/* INTERACTIVE ZONES */}
+                {/* Root */}
+                <line x1={cx} y1={cy} x2={cx} y2={cy + rootChordPx}
+                  stroke="transparent" strokeWidth="35" style={{ cursor: 'pointer', transition: 'all 0.35s ease' }}
+                  onMouseEnter={() => setActiveZone(WING_ZONES.root)} />
+                {activeZone?.id === 'root' && (
+                  <line x1={cx} y1={cy} x2={cx} y2={cy + rootChordPx}
+                    stroke={WING_ZONES.root.color} strokeWidth="8" strokeLinecap="round"
+                    filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }} />
+                )}
+
+                {/* Leading Edge */}
+                <path d={`M${cx - halfSpan},${tipY} L${cx},${cy} L${cx + halfSpan},${tipY}`} fill="none" stroke="transparent" strokeWidth="25" style={{ cursor: 'pointer', transition: 'all 0.35s ease' }}
+                  onMouseEnter={() => setActiveZone(WING_ZONES.leadingEdge)} />
+                {activeZone?.id === 'leadingEdge' && (
+                  <path d={`M${cx - halfSpan},${tipY} L${cx},${cy} L${cx + halfSpan},${tipY}`} fill="none" stroke={WING_ZONES.leadingEdge.color} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"
+                    filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }} />
+                )}
+
+                {/* Trailing Edge */}
+                <path d={`M${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="25" style={{ cursor: 'pointer', transition: 'all 0.35s ease' }}
+                  onMouseEnter={() => setActiveZone(WING_ZONES.trailingEdge)} />
+                {activeZone?.id === 'trailingEdge' && (
+                  <path d={`M${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.trailingEdge.color} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"
+                    filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }} />
+                )}
+
+                {/* Tips */}
+                <g style={{ cursor: 'pointer', transition: 'all 0.35s ease' }} onMouseEnter={() => setActiveZone(WING_ZONES.tip)}>
+                  <path d={`M${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" />
+                  <path d={`M${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" />
+                </g>
+                {activeZone?.id === 'tip' && (
+                  <g filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }}>
+                    <path d={`M${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.tip.color} strokeWidth="8" strokeLinecap="round" />
+                    <path d={`M${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.tip.color} strokeWidth="8" strokeLinecap="round" />
+                  </g>
+                )}
 
                 {/* Span annotation */}
                 <line x1={cx - halfSpan} y1={tipY - 10} x2={cx + halfSpan} y2={tipY - 10} stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" markerEnd="url(#arr)" markerStart="url(#arr)" />

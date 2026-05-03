@@ -54,12 +54,12 @@ const ZONE_OVERLAYS = {
   tail:     { top: '25%', left: '80%', width: '15%', height: '50%', borderRadius: '12px' },
 };
 
-// Airfoil cross-section strips — thin diagonal slices on each wing, always glowing
+// Airfoil cross-section strips — placed directly on the main wings
 const AIRFOIL_STRIPS = [
-  // Upper wing (right wing) — mid-span slice angled to match wing sweep
-  { id: 'airfoil-upper', top: '22%', left: '35%', width: '18%', height: '4%', rotate: '-32deg', origin: 'center center' },
-  // Lower wing (left wing) — mirrored
-  { id: 'airfoil-lower', top: '72%', left: '35%', width: '18%', height: '4%', rotate: '32deg', origin: 'center center' },
+  // Upper wing
+  { id: 'airfoil-upper', top: '30%', left: '42%', width: '12%', height: '4%', rotate: '-30deg', origin: 'center center' },
+  // Lower wing
+  { id: 'airfoil-lower', top: '65%', left: '42%', width: '12%', height: '4%', rotate: '30deg', origin: 'center center' },
 ];
 
 const Explorer = () => {
@@ -168,7 +168,6 @@ const Explorer = () => {
                       borderRadius: pos.borderRadius,
                     }}
                     onMouseEnter={() => setHoveredZone(zone.id)}
-                    onMouseLeave={() => setHoveredZone(null)}
                     onClick={() => navigate(zone.link)}
                   >
                     {/* Zone label on hover */}
@@ -222,7 +221,6 @@ const Explorer = () => {
                       animation: isHovered ? 'stripPulseHover 1s ease-in-out infinite' : 'stripPulse 2.5s ease-in-out infinite',
                     }}
                     onMouseEnter={() => setHoveredZone('airfoil')}
-                    onMouseLeave={() => setHoveredZone(null)}
                     onClick={() => navigate('/explore/airfoil')}
                   >
                     {/* Airfoil always-visible label */}
@@ -287,8 +285,8 @@ const Explorer = () => {
 
         {/* ── Side Panel ── */}
         <div className="space-y-4 edu-animate-in edu-animate-in-delay-2">
-          {/* Info Panel — absolute so it never pushes nav cards */}
-          <div style={{ position: 'relative', height: 320 }}>
+          {/* Info Panel */}
+          <div style={{ position: 'relative', minHeight: 320 }}>
             <AnimatePresence mode="wait">
               {activeZone ? (
                 <motion.div
@@ -298,7 +296,7 @@ const Explorer = () => {
                   exit={{ opacity: 0, x: -12 }}
                   transition={{ duration: 0.25 }}
                   className="explorer-card"
-                  style={{ '--card-glow': `${activeZone.color}15`, cursor: 'default', position: 'absolute', inset: 0 }}
+                  style={{ '--card-glow': `${activeZone.color}15`, cursor: 'default' }}
                 >
                   <div 
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
@@ -341,7 +339,7 @@ const Explorer = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="explorer-card text-center"
-                  style={{ cursor: 'default', position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ cursor: 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', padding: '3rem 1.5rem' }}
                 >
                   <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
                     <Info size={20} className="text-[var(--color-edu-text-muted)]" />
@@ -362,7 +360,6 @@ const Explorer = () => {
                 key={zone.id}
                 onClick={() => navigate(zone.link)}
                 onMouseEnter={() => setHoveredZone(zone.id)}
-                onMouseLeave={() => setHoveredZone(null)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300 text-left group
                   ${hoveredZone === zone.id 
                     ? 'bg-white/5 border-white/12' 

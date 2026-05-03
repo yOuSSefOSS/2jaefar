@@ -16,7 +16,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
       <header className="h-16 flex-shrink-0 bg-[var(--color-brand-800)]/50 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-20 shadow-[0_5px_30px_rgba(0,0,0,0.5)]">
         
         {/* Logo & Main Nav Area */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5"> 
           <Link 
             to="/explore" 
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wider

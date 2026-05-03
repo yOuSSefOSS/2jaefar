@@ -5,6 +5,18 @@ import { Box, ArrowLeft } from 'lucide-react';
 
 const clamp = (v, mn, mx) => Math.min(mx, Math.max(mn, v));
 
+const Slider = ({ label, value, min, max, step = 1, unit, onChange, color }) => (
+  <div style={{ marginBottom: '1.1rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+      <span style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color }}>{typeof value === 'number' && value >= 1000 ? value.toLocaleString() : value}{unit}</span>
+    </div>
+    <input type="range" min={min} max={max} step={step} value={value}
+      onChange={e => onChange(Number(e.target.value))}
+      style={{ width: '100%', accentColor: color, height: '4px', cursor: 'pointer', touchAction: 'none' }} />
+  </div>
+);
+
 const FuselageLab = () => {
   const [altitude, setAltitude] = useState(35000);
   const [radius, setRadius] = useState(2.0);
@@ -49,17 +61,7 @@ const FuselageLab = () => {
     };
   });
 
-  const Slider = ({ label, value, min, max, step = 1, unit, onChange, color }) => (
-    <div style={{ marginBottom: '1.1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-        <span style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color }}>{typeof value === 'number' && value >= 1000 ? value.toLocaleString() : value}{unit}</span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: color, height: '4px', cursor: 'pointer' }} />
-    </div>
-  );
+
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#030c14 0%,#05091a 100%)', color: '#e2e8f0', fontFamily: "'Inter','Segoe UI',sans-serif" }}>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
 import ExplorerLayout from './layouts/ExplorerLayout';
+import LabLayout from './layouts/LabLayout';
 import { checkBackendStatus } from './services/apiService';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -79,10 +80,12 @@ function App() {
           </Route>
 
           {/* ── Lab Routes (Public Hub + labs, Airfoil lab auth-protected) ── */}
-          <Route path="/lab" element={<LabHub />} />
-          <Route path="/lab/wings" element={<WingsLab />} />
-          <Route path="/lab/tail" element={<TailLab />} />
-          <Route path="/lab/fuselage" element={<FuselageLab />} />
+          <Route path="/lab" element={<LabLayout />}>
+            <Route index element={<LabHub />} />
+            <Route path="wings" element={<WingsLab />} />
+            <Route path="tail" element={<TailLab />} />
+            <Route path="fuselage" element={<FuselageLab />} />
+          </Route>
           <Route
             path="/lab/airfoil"
             element={
