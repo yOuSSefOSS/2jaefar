@@ -28,7 +28,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           </Link>
 
           <div className="flex items-center gap-3">
-            <img src={logoUrl} alt="Vortex-Gen Logo" className="h-30 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+            <img src={logoUrl} alt="Vortex-Gen Logo" className="h-30 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" style={{ mixBlendMode: 'screen' }} />
             <span className="font-bold text-xl tracking-widest text-white">Vortex-Gen</span>
             <span className="hidden sm:inline-block text-[9px] font-mono tracking-widest text-[var(--color-accent-neon)] bg-[var(--color-accent-neon)]/8 px-2 py-0.5 rounded-full border border-[var(--color-accent-neon)]/20">
               LAB

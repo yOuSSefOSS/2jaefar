@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Loader2, AlertCircle, Wind } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import logoUrl from '../assets/logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -87,7 +88,7 @@ const Login = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 0 30px rgba(56,189,248,0.2)'
           }}>
-            <Wind size={32} color="#38bdf8" />
+            <img src={logoUrl} alt="Vortex-Gen" style={{ width: '48px', height: 'auto', mixBlendMode: 'screen', filter: 'brightness(1.1)' }} />
           </div>
           <h1 style={{
             fontSize: '1.75rem', fontWeight: 800, margin: 0,

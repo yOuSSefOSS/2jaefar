@@ -55,7 +55,7 @@ const LandingPage = () => {
       {/* ── Navbar ── */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 lg:px-10 bg-[var(--color-edu-navy)]/80 backdrop-blur-xl border-b border-white/5">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logoUrl} alt="Vortex-Gen" className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.4)]" />
+          <img src={logoUrl} alt="Vortex-Gen" className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.4)]" style={{ mixBlendMode: 'screen' }} />
           <span className="font-bold text-lg tracking-wider text-white">Vortex-Gen</span>
         </Link>
         <nav className="flex items-center gap-4">
@@ -292,7 +292,7 @@ const LandingPage = () => {
       {/* ── Footer ── */}
       <footer className="py-10 px-6 border-t border-white/5 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
-          <img src={logoUrl} alt="Vortex-Gen" className="h-6 w-auto opacity-60" />
+          <img src={logoUrl} alt="Vortex-Gen" className="h-6 w-auto opacity-60" style={{ mixBlendMode: 'screen' }} />
           <span className="text-sm font-semibold text-[var(--color-edu-text-muted)]">Vortex-Gen Academy</span>
         </div>
         <p className="text-xs text-[var(--color-edu-text-muted)]/60">

@@ -39,6 +39,7 @@ const ExplorerLayout = () => {
               src={logoUrl} 
               alt="Vortex-Gen Logo" 
               className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] group-hover:drop-shadow-[0_0_16px_rgba(56,189,248,0.6)] transition-all" 
+              style={{ mixBlendMode: 'screen' }}
             />
             <span className="font-bold text-lg tracking-wider text-white">
               Vortex-Gen
