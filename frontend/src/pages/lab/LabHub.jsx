@@ -37,6 +37,12 @@ const SUPPORT_LABS = [
     icon: <Box size={24} />, color: '#38bdf8', tag: 'Free',
     features: ['Atmosphere column', 'Live cross-section', 'Hoop stress arrows'],
   },
+  {
+    id: 'engines', route: '/lab/engines', label: 'Turbofan Simulator', subtitle: 'Engines Lab',
+    description: 'Adjust bypass ratio, thrust setting, altitude and Mach. Watch net thrust, propulsive efficiency, TSFC and EGT update live.',
+    icon: <Zap size={24} />, color: '#fb923c', tag: 'Free',
+    features: ['Brayton cycle model', 'ISA atmosphere', 'Mach sweep charts'],
+  },
 ];
 
 const LabHub = () => {

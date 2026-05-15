@@ -39,7 +39,7 @@ const PolarTooltip = ({ active, payload }) => {
   return null;
 };
 
-const PolarChart = ({ data, compareData = [], currentCd, currentCl, stallCd, stallCl, isStalling }) => {
+const PolarChart = ({ data, compareData = [], currentCd, currentCl, stallCd, stallCl, isStalling, isOptimistic = false }) => {
   // Build polar data: {cd, cl, aoa} for each point
   const polarData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -94,8 +94,12 @@ const PolarChart = ({ data, compareData = [], currentCd, currentCl, stallCd, sta
     <div
       className="w-full h-full glass-panel p-4 flex flex-col"
       style={{
-        boxShadow: isStalling ? '0 0 20px rgba(255,68,68,0.25), inset 0 0 30px rgba(255,68,68,0.05)' : undefined,
-        transition: 'box-shadow 0.3s ease'
+        boxShadow: isStalling
+          ? '0 0 20px rgba(255,68,68,0.25), inset 0 0 30px rgba(255,68,68,0.05)'
+          : isOptimistic
+            ? '0 0 18px rgba(239,68,68,0.15), inset 0 0 24px rgba(239,68,68,0.04)'
+            : undefined,
+        transition: 'box-shadow 0.5s ease'
       }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -107,6 +111,16 @@ const PolarChart = ({ data, compareData = [], currentCd, currentCl, stallCd, sta
             </span>
           )}
         </div>
+        {isOptimistic && (
+          <span style={{
+            fontFamily: 'monospace', fontSize: 9, fontWeight: 700, letterSpacing: '0.15em',
+            color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)',
+            padding: '2px 8px', borderRadius: 20, background: 'rgba(239,68,68,0.08)',
+            animation: 'pulse 1.5s ease-in-out infinite',
+          }}>
+            ◉ ESTIMATING…
+          </span>
+        )}
         {isStalling && (
           <span className="text-[10px] font-mono font-bold text-[#ff4444] animate-pulse tracking-widest border border-[#ff4444]/50 px-2 py-0.5 rounded-full bg-[#ff4444]/10">
             ⚠ STALL
@@ -177,8 +191,8 @@ const PolarChart = ({ data, compareData = [], currentCd, currentCl, stallCd, sta
               {/* Main drag polar curve */}
               <Scatter
                 data={polarData}
-                fill="var(--color-accent-blue)"
-                line={{ stroke: 'var(--color-accent-blue)', strokeWidth: 2 }}
+                fill={isOptimistic ? 'rgba(239,68,68,0.7)' : 'var(--color-accent-blue)'}
+                line={{ stroke: isOptimistic ? '#ef4444' : 'var(--color-accent-blue)', strokeWidth: isOptimistic ? 1.5 : 2, strokeDasharray: isOptimistic ? '6 3' : undefined }}
                 lineType="joint"
                 shape={<circle r={0} />}
               />

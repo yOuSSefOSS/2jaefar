@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wind, GraduationCap, FlaskConical, ChevronRight, Menu, X, User } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { SkeletonExplorePage, SkeletonViewer } from '../components/Skeleton';
 import logoUrl from '../assets/logo.png';
 
 const NAV_ITEMS = [
@@ -11,12 +12,21 @@ const NAV_ITEMS = [
   { to: '/explore/wings', label: 'Wings' },
   { to: '/explore/tail', label: 'Tail' },
   { to: '/explore/airfoil', label: 'Airfoil' },
+  { to: '/explore/engines', label: 'Engines' },
 ];
 
 const ExplorerLayout = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { user, displayName } = useAppContext();
+
+  // Artificial delay to show skeleton and prevent UI freezing on heavy component mount
+  React.useEffect(() => {
+    setIsNavigating(true);
+    const timer = setTimeout(() => setIsNavigating(false), 600);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // Build breadcrumb from current path
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -189,7 +199,17 @@ const ExplorerLayout = () => {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="min-h-full"
             >
-              <Outlet />
+              {isNavigating ? (
+                location.pathname === '/explore' ? (
+                  <div className="p-8 max-w-6xl mx-auto h-full flex items-center justify-center">
+                    <SkeletonViewer />
+                  </div>
+                ) : (
+                  <SkeletonExplorePage />
+                )
+              ) : (
+                <Outlet />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Menu, X, FlaskConical, Plane, Box, Triangle, Wind } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { SkeletonLabHub, SkeletonExplorePage } from '../components/Skeleton';
 import logoUrl from '../assets/logo.png';
 
 const LAB_NAV_ITEMS = [
@@ -10,12 +11,21 @@ const LAB_NAV_ITEMS = [
   { to: '/lab/fuselage', label: 'Fuselage', icon: <Box size={14} /> },
   { to: '/lab/wings', label: 'Wings', icon: <Plane size={14} /> },
   { to: '/lab/tail', label: 'Tail', icon: <Triangle size={14} /> },
+  { to: '/lab/engines', label: 'Engines', icon: <Wind size={14} /> },
 ];
 
 const LabLayout = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { user, displayName } = useAppContext();
+
+  React.useEffect(() => {
+    setIsNavigating(true);
+    const timer = setTimeout(() => setIsNavigating(false), 600);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
 
   // Breadcrumbs
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -204,7 +214,15 @@ const LabLayout = () => {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="min-h-full"
           >
-            <Outlet />
+            {isNavigating ? (
+              location.pathname === '/lab' ? (
+                <SkeletonLabHub />
+              ) : (
+                <SkeletonExplorePage />
+              )
+            ) : (
+              <Outlet />
+            )}
           </motion.div>
         </AnimatePresence>
       </main>

@@ -1,34 +1,65 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane, ArrowLeft } from 'lucide-react';
+import { Plane, ArrowLeft, Wind, Activity, Zap, Layers } from 'lucide-react';
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-const Slider = ({ label, value, min, max, step = 1, unit, onChange, color = '#a78bfa' }) => (
-  <div style={{ marginBottom: '1.1rem' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-      <span style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color }}>{value}{unit}</span>
+const Slider = ({ label, icon: Icon, value, min, max, step = 1, unit, onChange, color }) => (
+  <div className="mb-5">
+    <div className="flex justify-between items-center mb-3">
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 rounded-md flex items-center justify-center border" style={{ background: `${color}15`, color, borderColor: `${color}30` }}>
+          <Icon size={14} />
+        </div>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+      </div>
+      <div className="text-sm font-mono font-bold" style={{ color, textShadow: `0 0 10px ${color}50` }}>
+        {value.toFixed(step < 1 ? 2 : 0)}<span className="text-slate-500 ml-1">{unit}</span>
+      </div>
     </div>
-    <input type="range" min={min} max={max} step={step} value={value}
-      onChange={e => onChange(Number(e.target.value))}
-      style={{ width: '100%', accentColor: color, height: '4px', cursor: 'pointer', touchAction: 'none' }} />
+    <div className="relative h-2 bg-black/50 border border-white/5 rounded-full overflow-visible flex items-center group">
+      <div className="absolute left-0 h-full rounded-full pointer-events-none transition-all duration-75" style={{ width: `${((value - min) / (max - min)) * 100}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}80` }} />
+      <input 
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        className="w-full absolute inset-0 opacity-0 cursor-pointer z-10"
+        style={{ touchAction: 'none' }}
+      />
+      <div 
+        className="w-5 h-5 rounded-full bg-[#0b1221] border-2 shadow-[0_0_15px_rgba(0,0,0,0.8)] transition-transform group-hover:scale-125 absolute pointer-events-none"
+        style={{ 
+          borderColor: color,
+          boxShadow: `0 0 10px ${color}, inset 0 0 4px ${color}`,
+          left: `calc(${((value - min) / (max - min)) * 100}% - 10px)`
+        }}
+      >
+        <div className="absolute inset-1 rounded-full bg-white/20" />
+      </div>
+    </div>
   </div>
 );
 
 const WING_ZONES = {
-  root: { id: 'root', label: 'Wing Root', color: '#f59e0b', desc: 'The thickest part of the wing where it meets the fuselage. It must withstand massive bending moments from the lift generated across the entire span.' },
-  tip: { id: 'tip', label: 'Wing Tip', color: '#38bdf8', desc: 'The outermost edge. High-pressure air bleeds over to the low-pressure top, creating vortices and induced drag. Winglets are often added here.' },
-  leadingEdge: { id: 'leadingEdge', label: 'Leading Edge', color: '#22c55e', desc: 'The forward boundary. Its sweep angle determines how well the aircraft handles transonic speeds by delaying drag-producing shockwaves.' },
-  trailingEdge: { id: 'trailingEdge', label: 'Trailing Edge', color: '#a78bfa', desc: 'The rear boundary. Houses critical high-lift devices (flaps) and control surfaces (ailerons) that modify camber and roll the aircraft.' },
+  root: { id: 'root', label: 'Wing Root', color: '#f59e0b', desc: 'The thickest part of the wing. Handles massive bending moments.' },
+  tip: { id: 'tip', label: 'Wing Tip', color: '#38bdf8', desc: 'Outermost edge. Generates induced drag vortices as high-pressure air bleeds to the top.' },
+  leadingEdge: { id: 'leadingEdge', label: 'Leading Edge', color: '#22c55e', desc: 'Forward boundary. Sweep angle delays transonic shockwaves.' },
+  trailingEdge: { id: 'trailingEdge', label: 'Trailing Edge', color: '#a78bfa', desc: 'Rear boundary. Houses flaps and ailerons.' },
 };
 
+const TelemetryBox = ({ label, value, color }) => (
+  <div className="flex flex-col bg-black/40 border border-white/10 rounded-xl p-3">
+    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-mono mb-1">{label}</span>
+    <span className="text-xl font-mono font-bold" style={{ color, textShadow: `0 0 15px ${color}50` }}>{value}</span>
+  </div>
+);
+
 const WingsLab = () => {
-  const [span, setSpan] = useState(30);
-  const [sweep, setSweep] = useState(25);
-  const [chord, setChord] = useState(4);
+  const [span, setSpan] = useState(35);
+  const [sweep, setSweep] = useState(35);
+  const [chord, setChord] = useState(5);
   const [cl, setCl] = useState(0.5);
+  const [mach, setMach] = useState(0.85);
   const [activeZone, setActiveZone] = useState(null);
 
   const S = useMemo(() => span * chord * 0.6, [span, chord]);
@@ -38,268 +69,314 @@ const WingsLab = () => {
   const ld = useMemo(() => cl / (0.02 + cdi), [cl, cdi]);
   const sweepRad = (sweep * Math.PI) / 180;
 
-  // SVG planform dims — fills the box
-  const W = 420, H = 220;
-  const cx = W / 2, cy = H * 0.35;
-  const halfSpan = clamp((span / 80) * (W * 0.46), 20, W * 0.46);
+  // Transonic effects
+  // Shockwave angle = asin(1/Mach). If Mach < 1, shockwave hasn't formed fully, but critical mach effects start around 0.8.
+  const criticalMach = 0.75 / Math.cos(sweepRad);
+  const isSupersonic = mach > 1.0;
+  const isTransonic = mach > 0.8 && mach <= 1.0;
+  const shockAngleRad = isSupersonic ? Math.asin(1 / mach) : (isTransonic ? Math.PI/2 - (mach-0.8)*2 : 0);
+  const shockAngleDeg = shockAngleRad * (180 / Math.PI);
+  
+  // Severe drag if shockwave angle is wider than sweep angle (meaning wing is outside the cone)
+  const isShockwaveHitting = isSupersonic && ((90 - shockAngleDeg) > sweep);
+
+  // SVG planform dims
+  const W = 800, H = 500;
+  const cx = W / 2, cy = H * 0.25;
+  const halfSpan = clamp((span / 80) * (W * 0.45), 40, W * 0.45);
   const tipOffset = Math.tan(sweepRad) * halfSpan;
-  const rootChordPx = clamp((chord / 12) * (H * 0.72), 14, H * 0.8);
-  const taper = 0.42;
+  const rootChordPx = clamp((chord / 12) * (H * 0.4), 30, H * 0.45);
+  const taper = 0.35;
   const tipChordPx = rootChordPx * taper;
   const tipY = cy + tipOffset;
 
-  // Wing paths (top-view planform)
   const leftWingPath = `M${cx},${cy} L${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} Z`;
   const rightWingPath = `M${cx},${cy} L${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} Z`;
 
-  // Color based on L/D efficiency
-  const wingColor = ld > 20 ? '#22c55e' : ld > 12 ? '#a78bfa' : ld > 7 ? '#f59e0b' : '#fb7185';
-  const efficiencyPct = clamp(((ld - 3) / 27) * 100, 0, 100);
+  // Color logic
+  let wingColor = ld > 18 ? '#22c55e' : ld > 12 ? '#38bdf8' : ld > 8 ? '#f59e0b' : '#fb7185';
+  if (isShockwaveHitting) wingColor = '#ef4444'; // Red if taking severe shockwave drag
 
-  // Bar chart data for induced drag vs span
-  const bars = [10, 20, 30, 40, 50, 60, 70, 80].map(s => {
+  // Bars for Cdi vs Span chart
+  const bars = [20, 30, 40, 50, 60, 70, 80].map(s => {
     const sArea = s * chord * 0.6;
     const sAR = (s * s) / sArea;
-    const sCdi = (cl * cl) / (Math.PI * e * sAR);
-    return { s, cdi: sCdi };
+    return { s, cdi: (cl * cl) / (Math.PI * e * sAR) };
   });
   const maxCdi = Math.max(...bars.map(b => b.cdi), 0.001);
 
-
+  // Vortex visualization lines based on Cdi
+  const numVortices = Math.floor(clamp(cdi * 200, 2, 8));
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#05091a 0%,#090d1f 100%)', color: '#e2e8f0', fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem 3rem' }}>
-
+    <div className="min-h-full bg-gradient-to-br from-[#02050a] via-[#0b1221] to-[#040814] p-4 lg:p-8 font-sans text-white">
+      <div className="max-w-7xl mx-auto">
+        
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} style={{ paddingTop: '5rem', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', fontFamily: 'monospace', letterSpacing: '0.1em', color: '#a78bfa', textTransform: 'uppercase', marginBottom: '1rem' }}>
-            <Link to="/lab" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><ArrowLeft size={12} /> Labs</Link>
-            <span style={{ opacity: 0.4 }}>/</span><span>Wing Configurator</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
-              <Plane size={22} />
-            </div>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link to="/lab" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors backdrop-blur-md">
+              <ArrowLeft size={18} />
+            </Link>
             <div>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', margin: 0 }}>Wing Configurator</h1>
-              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>Adjust geometry and see lift/drag performance in real-time</p>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                  <Wind size={18} />
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Wings Lab</h1>
+              </div>
+              <p className="text-slate-400 text-xs mt-1 font-mono uppercase tracking-widest">Transonic Wind Tunnel Chamber</p>
             </div>
           </div>
         </motion.div>
 
         {/* Main Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.25rem', alignItems: 'start' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[calc(100vh-140px)] min-h-[750px]">
+          
+          {/* Controls Panel */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-3 flex flex-col gap-4">
+            
+            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl flex-1 flex flex-col">
+              <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: wingColor, boxShadow: `0 0 20px ${wingColor}` }} />
+              
+              <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-4 flex items-center gap-2">
+                <Activity size={12} className="animate-pulse" style={{ color: wingColor }}/> Chamber Controls
+              </div>
 
-          {/* Controls */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '1.5rem' }}>
-            <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a78bfa', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Wing Parameters</div>
-            <Slider label="Wing Span" value={span} min={10} max={80} unit=" m" onChange={setSpan} color="#a78bfa" />
-            <Slider label="Root Chord" value={chord} min={1} max={12} step={0.5} unit=" m" onChange={setChord} color="#a78bfa" />
-            <Slider label="Sweep Angle" value={sweep} min={0} max={55} unit="°" onChange={setSweep} color="#38bdf8" />
-            <Slider label="Design CL" value={cl} min={0.1} max={1.5} step={0.05} unit="" onChange={setCl} color="#f59e0b" />
+              <Slider label="Mach Number" icon={Zap} value={mach} min={0.3} max={2.5} step={0.05} unit=" M" onChange={setMach} color="#ef4444" />
+              <Slider label="Sweep Angle" icon={Layers} value={sweep} min={0} max={65} unit="°" onChange={setSweep} color="#38bdf8" />
+              <Slider label="Wing Span" icon={Wind} value={span} min={20} max={80} unit=" m" onChange={setSpan} color="#a78bfa" />
+              <Slider label="Root Chord" icon={Wind} value={chord} min={2} max={12} step={0.5} unit=" m" onChange={setChord} color="#10b981" />
+              <Slider label="Design CL" icon={Wind} value={cl} min={0.1} max={1.5} step={0.05} unit="" onChange={setCl} color="#f59e0b" />
+              
+              {/* Insight Panel */}
+              <div className="mt-auto pt-4 relative min-h-[140px]">
+                <AnimatePresence mode="wait">
+                  {activeZone ? (
+                    <motion.div
+                      key={activeZone.id}
+                      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                      className="absolute inset-0 bg-black/60 border rounded-xl p-4 flex flex-col justify-center"
+                      style={{ borderColor: `${activeZone.color}40`, boxShadow: `inset 0 0 20px ${activeZone.color}20` }}
+                    >
+                      <div className="text-[10px] font-mono uppercase tracking-widest mb-2 flex justify-between" style={{ color: activeZone.color }}>
+                        <span>[ LIDAR SCAN: {activeZone.label} ]</span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed font-mono">{activeZone.desc}</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="default"
+                      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                      className="absolute inset-0 bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col justify-center"
+                    >
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-2">Performance Insight</div>
+                      <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                        {isShockwaveHitting ? (
+                          <span className="text-red-400 font-bold">WARNING: Severe wave drag! Sweep angle is insufficient to remain inside the Mach cone.</span>
+                        ) : isSupersonic ? (
+                          <span className="text-[#38bdf8]">Supersonic flight optimal. Wing sweep keeps leading edge strictly inside the shock cone.</span>
+                        ) : isTransonic ? (
+                          <span className="text-[#f59e0b]">Transonic regime. Shockwaves forming on wing surface.</span>
+                        ) : (
+                          <span>Subsonic cruise optimal. Minimizing induced drag is the primary objective.</span>
+                        )}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
 
-            {/* Insight / Info Panel */}
-            <div style={{ marginTop: '1.25rem', minHeight: '145px', position: 'relative' }}>
-              <AnimatePresence mode="wait">
-                {activeZone ? (
-                  <motion.div
-                    key={activeZone.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ padding: '1rem', borderRadius: '12px', background: `${activeZone.color}0d`, border: `1px solid ${activeZone.color}25` }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <div style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: activeZone.color, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{activeZone.label}</div>
-                      <button onClick={() => setActiveZone(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.7rem', padding: 0 }}>✕</button>
-                    </div>
-                    <p style={{ fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                      {activeZone.desc}
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="default"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ padding: '1rem', borderRadius: '12px', background: `${wingColor}0d`, border: `1px solid ${wingColor}25` }}
-                  >
-                    <div style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: wingColor, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Design Insight</div>
-                    <p style={{ fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                      {AR > 10 ? '✓ High AR — excellent long-range cruise efficiency.' :
-                       AR > 6  ? '✓ Moderate AR — balanced speed and efficiency.' :
-                                 '△ Low AR — optimized for maneuverability.'}
-                      <br/>
-                      {sweep > 35 ? ' High sweep delays transonic drag rise.' :
-                       sweep > 20 ? ' Moderate sweep improves transonic performance.' :
-                                    ' Low sweep ideal for subsonic cruise.'}
-                      <br/>
-                      <span style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem', display: 'block' }}>Hover over the wing planform to inspect components.</span>
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <div style={{ marginTop: '1rem' }}>
-              <Link to="/explore/wings" style={{ fontSize: '0.78rem', color: '#a78bfa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>📖 Learn about Wings →</Link>
-            </div>
           </motion.div>
 
-          {/* Visualization Panel */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Visualization Canvas */}
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }} className="lg:col-span-9 flex flex-col gap-4">
+            
+            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex-1 shadow-2xl flex flex-col">
+              
+              <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
+                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 font-mono text-[10px] text-white tracking-widest uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: wingColor, boxShadow: `0 0 10px ${wingColor}` }} /> 
+                  Wind Tunnel Active
+                </div>
+                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 text-right shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  <div className="font-mono text-[9px] text-slate-500 tracking-widest uppercase mb-1">Critical Mach</div>
+                  <div className="font-mono text-sm font-bold text-[#f59e0b]">M_crit ≈ {criticalMach.toFixed(2)}</div>
+                </div>
+              </div>
 
-            {/* Wing planform — LARGE */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '1.5rem', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', letterSpacing: '0.12em', color: '#64748b', textTransform: 'uppercase' }}>Wing Planform — Top View</div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  {[['AR', AR.toFixed(1),'#a78bfa'], ['L/D', ld.toFixed(1), wingColor]].map(([k,v,c]) => (
-                    <div key={k} style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#475569', textTransform: 'uppercase' }}>{k}</div>
-                      <div style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'monospace', color: c }}>{v}</div>
-                    </div>
+              <div className="flex-1 w-full relative">
+                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full absolute inset-0">
+                  <defs>
+                    <radialGradient id="tunnelGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="rgba(56,189,248,0.15)" />
+                      <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={wingColor} stopOpacity="0.5" />
+                      <stop offset="100%" stopColor={wingColor} stopOpacity="0.1" />
+                    </linearGradient>
+                    <filter id="neonGlow">
+                      <feGaussianBlur stdDeviation="4" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="intenseGlow">
+                      <feGaussianBlur stdDeviation="8" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Wind Tunnel Background & Core Glow */}
+                  <rect width="100%" height="100%" fill="url(#tunnelGlow)" />
+                  
+                  {/* Grid Lines */}
+                  {[...Array(10)].map((_,i) => (
+                    <line key={`v${i}`} x1={i*W/10} y1={0} x2={i*W/10} y2={H} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
                   ))}
-                </div>
-              </div>
+                  {[...Array(8)].map((_,i) => (
+                    <line key={`h${i}`} x1={0} y1={i*H/8} x2={W} y2={i*H/8} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                  ))}
 
-              <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
-                <defs>
-                  <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={wingColor} stopOpacity="0.18" />
-                    <stop offset="100%" stopColor={wingColor} stopOpacity="0.06" />
-                  </linearGradient>
-                  <filter id="wingGlow">
-                    <feGaussianBlur stdDeviation="3" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                  </filter>
-                </defs>
+                  {/* Centerline */}
+                  <line x1={cx} y1={0} x2={cx} y2={H} stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="10 10" />
 
-                {/* Grid lines */}
-                {[...Array(9)].map((_,i) => (
-                  <line key={i} x1={i*W/8} y1={0} x2={i*W/8} y2={H} stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
-                ))}
-                {[...Array(5)].map((_,i) => (
-                  <line key={i} x1={0} y1={i*H/4} x2={W} y2={i*H/4} stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
-                ))}
-
-                {/* Centerline */}
-                <line x1={cx} y1={0} x2={cx} y2={H} stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="6 4" />
-
-                {/* Wings */}
-                <path d={leftWingPath} fill="url(#wingGrad)" stroke={wingColor} strokeWidth="1.5" strokeOpacity="0.7"
-                  style={{ transition: 'd 0.35s cubic-bezier(0.4,0,0.2,1), stroke 0.35s ease' }} filter="url(#wingGlow)" />
-                <path d={rightWingPath} fill="url(#wingGrad)" stroke={wingColor} strokeWidth="1.5" strokeOpacity="0.7"
-                  style={{ transition: 'd 0.35s cubic-bezier(0.4,0,0.2,1), stroke 0.35s ease' }} filter="url(#wingGlow)" />
-
-                {/* Fuselage stub */}
-                <rect x={cx - 7} y={cy - 4} width={14} height={rootChordPx + 8} rx="4"
-                  fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" strokeWidth="1"
-                  style={{ transition: 'all 0.35s ease' }} />
-
-                {/* INTERACTIVE ZONES */}
-                {/* Root */}
-                <line x1={cx} y1={cy} x2={cx} y2={cy + rootChordPx}
-                  stroke="transparent" strokeWidth="35" style={{ cursor: 'pointer', transition: 'all 0.35s ease' }}
-                  onMouseEnter={() => setActiveZone(WING_ZONES.root)} />
-                {activeZone?.id === 'root' && (
-                  <line x1={cx} y1={cy} x2={cx} y2={cy + rootChordPx}
-                    stroke={WING_ZONES.root.color} strokeWidth="8" strokeLinecap="round"
-                    filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }} />
-                )}
-
-                {/* Leading Edge */}
-                <path d={`M${cx - halfSpan},${tipY} L${cx},${cy} L${cx + halfSpan},${tipY}`} fill="none" stroke="transparent" strokeWidth="25" style={{ cursor: 'pointer', transition: 'all 0.35s ease' }}
-                  onMouseEnter={() => setActiveZone(WING_ZONES.leadingEdge)} />
-                {activeZone?.id === 'leadingEdge' && (
-                  <path d={`M${cx - halfSpan},${tipY} L${cx},${cy} L${cx + halfSpan},${tipY}`} fill="none" stroke={WING_ZONES.leadingEdge.color} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"
-                    filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }} />
-                )}
-
-                {/* Trailing Edge */}
-                <path d={`M${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="25" style={{ cursor: 'pointer', transition: 'all 0.35s ease' }}
-                  onMouseEnter={() => setActiveZone(WING_ZONES.trailingEdge)} />
-                {activeZone?.id === 'trailingEdge' && (
-                  <path d={`M${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.trailingEdge.color} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"
-                    filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }} />
-                )}
-
-                {/* Tips */}
-                <g style={{ cursor: 'pointer', transition: 'all 0.35s ease' }} onMouseEnter={() => setActiveZone(WING_ZONES.tip)}>
-                  <path d={`M${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" />
-                  <path d={`M${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" />
-                </g>
-                {activeZone?.id === 'tip' && (
-                  <g filter="url(#wingGlow)" style={{ pointerEvents: 'none', transition: 'all 0.35s ease' }}>
-                    <path d={`M${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.tip.color} strokeWidth="8" strokeLinecap="round" />
-                    <path d={`M${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.tip.color} strokeWidth="8" strokeLinecap="round" />
+                  {/* Wind Tunnel Laser Smoke Lines */}
+                  <g opacity="0.4">
+                    {[...Array(24)].map((_,i) => (
+                      <line key={`smoke${i}`} x1={cx - 360 + (i*30)} y1="0" x2={cx - 360 + (i*30)} y2={H} stroke="#38bdf8" strokeWidth="1" strokeDasharray="40 120" opacity={0.3 + Math.random()*0.5}>
+                        <animate attributeName="stroke-dashoffset" from="160" to="0" dur={`${1.2 / mach}s`} repeatCount="indefinite" />
+                      </line>
+                    ))}
                   </g>
-                )}
 
-                {/* Span annotation */}
-                <line x1={cx - halfSpan} y1={tipY - 10} x2={cx + halfSpan} y2={tipY - 10} stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" markerEnd="url(#arr)" markerStart="url(#arr)" />
-                <text x={cx} y={tipY - 14} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9" fontFamily="monospace">{span}m span</text>
+                  {/* Shockwave Visuals */}
+                  {mach >= 0.8 && (
+                    <g opacity={isSupersonic ? 0.8 : 0.4} filter="url(#intenseGlow)">
+                      {/* Left shockwave */}
+                      <line x1={cx} y1={cy} x2={cx - 400 * Math.tan(shockAngleRad)} y2={cy + 400} stroke={isShockwaveHitting ? "#ef4444" : "#f59e0b"} strokeWidth="3" />
+                      {/* Right shockwave */}
+                      <line x1={cx} y1={cy} x2={cx + 400 * Math.tan(shockAngleRad)} y2={cy + 400} stroke={isShockwaveHitting ? "#ef4444" : "#f59e0b"} strokeWidth="3" />
+                      
+                      {/* Mach cone fill */}
+                      <path d={`M${cx},${cy} L${cx - 400 * Math.tan(shockAngleRad)},${cy + 400} L${cx + 400 * Math.tan(shockAngleRad)},${cy + 400} Z`} fill={isShockwaveHitting ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.08)"} />
+                    </g>
+                  )}
 
-                {/* Sweep angle annotation */}
-                <text x={cx + halfSpan * 0.55} y={tipY - 3} fill="rgba(56,189,248,0.7)" fontSize="8" fontFamily="monospace">{sweep}° sweep</text>
+                  {/* Wings */}
+                  <path d={leftWingPath} fill="url(#wingGrad)" stroke={wingColor} strokeWidth="2" filter="url(#neonGlow)" style={{ transition: 'all 0.4s ease' }} />
+                  <path d={rightWingPath} fill="url(#wingGrad)" stroke={wingColor} strokeWidth="2" filter="url(#neonGlow)" style={{ transition: 'all 0.4s ease' }} />
 
-                {/* Efficiency overlay */}
-                <text x={cx} y={cy + rootChordPx * 0.6} textAnchor="middle" fill={wingColor} fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.5">
-                  L/D {ld.toFixed(1)}
-                </text>
-              </svg>
+                  {/* Fuselage Core (Wind tunnel sting/mount) */}
+                  <rect x={cx - 12} y={cy - 20} width={24} height={H} fill="rgba(15,23,42,0.9)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                  <ellipse cx={cx} cy={cy - 20} rx="12" ry="40" fill="rgba(255,255,255,0.1)" />
+                  <path d={`M${cx-10},${cy+20} L${cx+10},${cy+20}`} stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
 
-              {/* Efficiency bar */}
-              <div style={{ marginTop: '0.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                  <span style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: '#475569', textTransform: 'uppercase' }}>Aerodynamic Efficiency</span>
-                  <span style={{ fontSize: '0.62rem', fontFamily: 'monospace', color: wingColor }}>{efficiencyPct.toFixed(0)}%</span>
-                </div>
-                <div style={{ height: '5px', background: 'rgba(255,255,255,0.06)', borderRadius: '99px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${efficiencyPct}%`, background: `linear-gradient(90deg, #6366f1, ${wingColor})`, borderRadius: '99px', transition: 'width 0.4s ease' }} />
-                </div>
+                  {/* Wingtip Vortices (Induced Drag visualization) */}
+                  <g filter="url(#neonGlow)">
+                    {[...Array(numVortices)].map((_, i) => (
+                      <React.Fragment key={`vort${i}`}>
+                        {/* Left tip vortex */}
+                        <path 
+                          d={`M${cx - halfSpan},${tipY + tipChordPx} Q${cx - halfSpan - 20 - i*8},${tipY + tipChordPx + 80 + i*20} ${cx - halfSpan + 10},${H}`} 
+                          fill="none" stroke="#a78bfa" strokeWidth="1.5" opacity={0.7 - (i*0.1)} strokeDasharray="10 15"
+                        >
+                          <animate attributeName="stroke-dashoffset" from="25" to="0" dur={`${0.4 + i*0.1}s`} repeatCount="indefinite" />
+                        </path>
+                        {/* Right tip vortex */}
+                        <path 
+                          d={`M${cx + halfSpan},${tipY + tipChordPx} Q${cx + halfSpan + 20 + i*8},${tipY + tipChordPx + 80 + i*20} ${cx + halfSpan - 10},${H}`} 
+                          fill="none" stroke="#a78bfa" strokeWidth="1.5" opacity={0.7 - (i*0.1)} strokeDasharray="10 15"
+                        >
+                          <animate attributeName="stroke-dashoffset" from="25" to="0" dur={`${0.4 + i*0.1}s`} repeatCount="indefinite" />
+                        </path>
+                      </React.Fragment>
+                    ))}
+                  </g>
+
+                  {/* INTERACTIVE LIDAR ZONES */}
+                  <g style={{ transition: 'all 0.3s' }}>
+                    {/* Root */}
+                    <line x1={cx} y1={cy} x2={cx} y2={cy + rootChordPx} stroke="transparent" strokeWidth="40" style={{ cursor: 'crosshair' }} onMouseEnter={() => setActiveZone(WING_ZONES.root)} onMouseLeave={() => setActiveZone(null)} />
+                    {activeZone?.id === 'root' && (
+                      <line x1={cx} y1={cy} x2={cx} y2={cy + rootChordPx} stroke={WING_ZONES.root.color} strokeWidth="8" strokeDasharray="4 4" filter="url(#neonGlow)" style={{ pointerEvents: 'none' }} />
+                    )}
+
+                    {/* Leading Edge */}
+                    <path d={`M${cx - halfSpan},${tipY} L${cx},${cy} L${cx + halfSpan},${tipY}`} fill="none" stroke="transparent" strokeWidth="30" style={{ cursor: 'crosshair' }} onMouseEnter={() => setActiveZone(WING_ZONES.leadingEdge)} onMouseLeave={() => setActiveZone(null)} />
+                    {activeZone?.id === 'leadingEdge' && (
+                      <path d={`M${cx - halfSpan},${tipY} L${cx},${cy} L${cx + halfSpan},${tipY}`} fill="none" stroke={WING_ZONES.leadingEdge.color} strokeWidth="6" strokeDasharray="4 4" filter="url(#neonGlow)" style={{ pointerEvents: 'none' }} />
+                    )}
+
+                    {/* Trailing Edge */}
+                    <path d={`M${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" style={{ cursor: 'crosshair' }} onMouseEnter={() => setActiveZone(WING_ZONES.trailingEdge)} onMouseLeave={() => setActiveZone(null)} />
+                    {activeZone?.id === 'trailingEdge' && (
+                      <path d={`M${cx - halfSpan},${tipY + tipChordPx} L${cx},${cy + rootChordPx} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.trailingEdge.color} strokeWidth="6" strokeDasharray="4 4" filter="url(#neonGlow)" style={{ pointerEvents: 'none' }} />
+                    )}
+
+                    {/* Tips */}
+                    <g style={{ cursor: 'crosshair' }} onMouseEnter={() => setActiveZone(WING_ZONES.tip)} onMouseLeave={() => setActiveZone(null)}>
+                      <path d={`M${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" />
+                      <path d={`M${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke="transparent" strokeWidth="30" />
+                    </g>
+                    {activeZone?.id === 'tip' && (
+                      <g filter="url(#neonGlow)" style={{ pointerEvents: 'none' }}>
+                        <path d={`M${cx - halfSpan},${tipY} L${cx - halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.tip.color} strokeWidth="8" strokeDasharray="2 4" />
+                        <path d={`M${cx + halfSpan},${tipY} L${cx + halfSpan},${tipY + tipChordPx}`} fill="none" stroke={WING_ZONES.tip.color} strokeWidth="8" strokeDasharray="2 4" />
+                      </g>
+                    )}
+                  </g>
+
+                </svg>
               </div>
-            </div>
 
-            {/* Metrics row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
-              {[
-                { label: 'Wing Area', value: S.toFixed(1), unit: 'm²', color: '#a78bfa' },
-                { label: 'Aspect Ratio', value: AR.toFixed(2), unit: '', color: '#a78bfa' },
-                { label: 'Induced Drag', value: cdi.toFixed(4), unit: 'Cdi', color: '#fb7185' },
-                { label: 'L/D Ratio', value: ld.toFixed(1), unit: '', color: wingColor },
-              ].map(m => (
-                <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.9rem 0.75rem', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.58rem', fontFamily: 'monospace', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>{m.label}</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, fontFamily: 'monospace', color: m.color }}>{m.value}<span style={{ fontSize: '0.7rem', marginLeft: '0.2rem', color: '#475569' }}>{m.unit}</span></div>
+              {/* Bottom Telemetry Bar */}
+              <div className="border-t border-white/10 bg-[#0b1221]/90 backdrop-blur-xl p-5 z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <TelemetryBox label="Wing Area (S)" value={`${S.toFixed(1)} m²`} color="#a78bfa" />
+                  <TelemetryBox label="Aspect Ratio" value={AR.toFixed(2)} color="#a78bfa" />
+                  <TelemetryBox label="Induced Drag" value={cdi.toFixed(4)} color="#a78bfa" />
+                  <TelemetryBox label="L/D Ratio" value={ld.toFixed(1)} color={wingColor} />
                 </div>
-              ))}
-            </div>
 
-            {/* Induced drag vs span bar chart */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '1.25rem' }}>
-              <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', letterSpacing: '0.12em', color: '#64748b', textTransform: 'uppercase', marginBottom: '1rem' }}>Induced Drag (Cdi) vs Wing Span</div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.4rem', height: '64px' }}>
-                {bars.map(b => {
-                  const isActive = b.s === span;
-                  const h = clamp((b.cdi / maxCdi) * 64, 4, 64);
-                  return (
-                    <div key={b.s} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
-                      <div style={{ width: '100%', height: `${h}px`, background: isActive ? '#a78bfa' : 'rgba(167,139,250,0.2)', borderRadius: '4px 4px 0 0', transition: 'all 0.35s ease', boxShadow: isActive ? '0 0 10px rgba(167,139,250,0.4)' : 'none' }} />
-                      <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: isActive ? '#a78bfa' : '#334155' }}>{b.s}m</span>
-                    </div>
-                  );
-                })}
+                {/* High-Tech Induced Drag Radar Chart */}
+                <div className="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col justify-end relative overflow-hidden" style={{ height: '70px' }}>
+                  <div className="absolute top-2 left-3 text-[8px] uppercase tracking-widest font-mono text-slate-500">Induced Drag Spectral Analysis</div>
+                  <div className="flex items-end gap-[2px] w-full h-[40px] px-2 z-10">
+                    {bars.map(b => {
+                      const isActive = Math.abs(b.s - span) < 5;
+                      const h = clamp((b.cdi / maxCdi) * 40, 4, 40);
+                      return (
+                        <div key={b.s} className="flex-1 flex flex-col items-center gap-1">
+                          <div 
+                            className="w-full rounded-t-sm transition-all duration-300"
+                            style={{ 
+                              height: `${h}px`, 
+                              backgroundColor: isActive ? wingColor : 'rgba(255,255,255,0.15)',
+                              boxShadow: isActive ? `0 0 15px ${wingColor}` : 'none'
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Scanline overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent h-4 animate-[scan_2s_linear_infinite]" />
+                </div>
+
               </div>
+
             </div>
           </motion.div>
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes scan {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(500%); }
+        }
+      `}} />
     </div>
   );
 };

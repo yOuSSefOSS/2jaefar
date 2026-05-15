@@ -16,10 +16,12 @@ import FuselageSection from './pages/explore/FuselageSection';
 import WingsSection from './pages/explore/WingsSection';
 import AirfoilSection from './pages/explore/AirfoilSection';
 import TailSection from './pages/explore/TailSection';
+import EnginesSection from './pages/explore/EnginesSection';
 import LabHub from './pages/lab/LabHub';
 import WingsLab from './pages/lab/WingsLab';
 import TailLab from './pages/lab/TailLab';
 import FuselageLab from './pages/lab/FuselageLab';
+import EnginesLab from './pages/lab/EnginesLab';
 import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
@@ -77,6 +79,7 @@ function App() {
             <Route path="wings" element={<WingsSection />} />
             <Route path="tail" element={<TailSection />} />
             <Route path="airfoil" element={<AirfoilSection />} />
+            <Route path="engines" element={<EnginesSection />} />
           </Route>
 
           {/* ── Lab Routes (Public Hub + labs, Airfoil lab auth-protected) ── */}
@@ -85,6 +88,7 @@ function App() {
             <Route path="wings" element={<WingsLab />} />
             <Route path="tail" element={<TailLab />} />
             <Route path="fuselage" element={<FuselageLab />} />
+            <Route path="engines" element={<EnginesLab />} />
           </Route>
           <Route
             path="/lab/airfoil"

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Info, Plane, Box, Wind, Triangle, FlaskConical } from 'lucide-react';
-import aircraftImg from '../assets/aircraft-topview.png';
+import { ChevronRight, Info, Plane, Box, Wind, Triangle, FlaskConical, Zap } from 'lucide-react';
+import AircraftViewer3D from '../components/AircraftViewer3D';
+import { SkeletonCard } from '../components/Skeleton';
 
 const AIRCRAFT_ZONES = [
   {
@@ -45,265 +46,95 @@ const AIRCRAFT_ZONES = [
     icon: <Triangle size={18} />,
     facts: ['Horizontal + vertical stabilizers', 'Contains elevator and rudder', 'Critical for stability'],
   },
-];
-
-// Interactive overlay zones — positioned over the aircraft image (percentages)
-const ZONE_OVERLAYS = {
-  fuselage: { top: '44%', left: '8%', width: '82%', height: '12%', borderRadius: '40px' },
-  wings:    { top: '5%',  left: '30%', width: '35%', height: '90%', borderRadius: '20px' },
-  tail:     { top: '25%', left: '80%', width: '15%', height: '50%', borderRadius: '12px' },
-};
-
-// Airfoil cross-section strips — placed directly on the main wings
-const AIRFOIL_STRIPS = [
-  // Upper wing
-  { id: 'airfoil-upper', top: '30%', left: '42%', width: '12%', height: '4%', rotate: '-30deg', origin: 'center center' },
-  // Lower wing
-  { id: 'airfoil-lower', top: '65%', left: '42%', width: '12%', height: '4%', rotate: '30deg', origin: 'center center' },
+  {
+    id: 'engines',
+    label: 'Engines',
+    description: 'High-bypass turbofan engines that produce thrust via the Brayton thermodynamic cycle.',
+    advancedDesc: 'Modern turbofans use a high bypass ratio (BPR 5–12) where most thrust comes from the cold bypass stream. Net thrust: F = ṁ_total·Ve − ṁ_intake·V∞. FADEC systems optimize fuel burn across the flight envelope.',
+    link: '/explore/engines',
+    color: '#fb923c',
+    icon: <Zap size={18} />,
+    facts: ['High-bypass turbofan', 'BPR 5:1 to 12:1', 'FADEC controlled'],
+  },
 ];
 
 const Explorer = () => {
   const navigate = useNavigate();
   const [hoveredZone, setHoveredZone] = useState(null);
+  const [selectedZone, setSelectedZone] = useState(null);
   const [isAdvanced, setIsAdvanced] = useState(false);
 
-  const activeZone = AIRCRAFT_ZONES.find(z => z.id === hoveredZone);
+  const activeZone = AIRCRAFT_ZONES.find(z => z.id === (hoveredZone || selectedZone));
 
   return (
-    <div className="min-h-full px-6 lg:px-10 py-8 max-w-7xl mx-auto">
-      <style>{`
-        @keyframes stripPulse {
-          0%, 100% {
-            box-shadow: 0 0 8px rgba(245,158,11,0.5), 0 0 2px rgba(245,158,11,0.3);
-            background: rgba(245,158,11,0.12);
-            border-color: rgba(245,158,11,0.7);
-          }
-          50% {
-            box-shadow: 0 0 20px rgba(245,158,11,0.85), 0 0 8px rgba(245,158,11,0.5);
-            background: rgba(245,158,11,0.22);
-            border-color: rgba(245,158,11,1);
-          }
-        }
-        @keyframes stripPulseHover {
-          0%, 100% { box-shadow: 0 0 28px rgba(245,158,11,1), 0 0 12px rgba(245,158,11,0.7); }
-          50% { box-shadow: 0 0 40px rgba(245,158,11,1), 0 0 20px rgba(245,158,11,0.9); }
-        }
-      `}</style>
-      
+    <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col justify-between">
+
       {/* ── Header ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8 edu-animate-in">
+      <div className="relative z-20 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 p-8 pointer-events-none edu-animate-in">
         <div>
-          <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+          <h1 className="text-4xl lg:text-5xl font-black text-white mb-2 drop-shadow-md">
             Aircraft Explorer
           </h1>
-          <p className="text-[var(--color-edu-text-muted)] text-sm lg:text-base max-w-lg">
-            Hover over and click any component to learn how it works. 
-            From structure to aerodynamics — discover the engineering behind flight.
+          <p className="text-[var(--color-edu-text-muted)] text-sm lg:text-base max-w-lg drop-shadow-sm font-medium">
+            Interact with the 3D model — drag to orbit, scroll to zoom, and click any component to learn how it works.
           </p>
         </div>
 
-        {/* Complexity Toggle */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-mono tracking-wider text-[var(--color-edu-text-muted)] uppercase">Level:</span>
-          <div className="complexity-toggle">
-            <button 
-              className={`complexity-toggle-btn ${!isAdvanced ? 'active' : ''}`}
-              onClick={() => setIsAdvanced(false)}
-            >
-              Beginner
-            </button>
-            <button 
-              className={`complexity-toggle-btn ${isAdvanced ? 'active' : ''}`}
-              onClick={() => setIsAdvanced(true)}
-            >
-              Advanced
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* ── Main Content Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 edu-animate-in edu-animate-in-delay-1">
-        
-        {/* ── Aircraft Image with Interactive Overlays ── */}
-        <div className="lg:col-span-2 relative">
-          <div className="relative bg-[var(--color-edu-surface)] border border-white/5 rounded-2xl p-6 lg:p-8 overflow-hidden">
-            {/* Decorative grid */}
-            <div className="absolute inset-0 edu-grid-bg opacity-40 pointer-events-none" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(56,189,248,0.03),transparent)] pointer-events-none" />
+      {/* ── 3D Aircraft Viewer (Absolute Background) ── */}
+      <div className="absolute inset-0 z-0">
+        {/* Decorative grid */}
+        <div className="absolute inset-0 edu-grid-bg opacity-10 pointer-events-none" />
+        <AircraftViewer3D 
+          onZoneHover={setHoveredZone}
+          onZoneClick={setSelectedZone}
+          externalHoveredZone={hoveredZone || selectedZone}
+        />
+      </div>
 
-            {/* Label */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-2 text-[10px] font-mono tracking-widest text-[var(--color-edu-text-muted)] uppercase">
-              <Plane size={12} /> Top View · Interactive Schematic
-            </div>
+      {/* ── Side Panel (Floating UI) ── */}
+      <div className="relative z-20 flex flex-col lg:flex-row gap-6 p-8 w-full justify-between items-end pointer-events-none">
 
-            {/* Aircraft Image + Overlay Container */}
-            <div className="relative mt-6" style={{ minHeight: 340 }}>
-              {/* The generated aircraft image */}
-              <img 
-                src={aircraftImg} 
-                alt="Aircraft top-down view" 
-                className="w-full h-auto relative z-0 select-none pointer-events-none"
-                draggable={false}
-                style={{ 
-                  filter: hoveredZone ? 'brightness(0.7)' : 'brightness(0.9)',
-                  transition: 'filter 0.4s ease'
-                }}
-              />
-
-              {/* Interactive zone overlays (excluding airfoil) */}
-              {AIRCRAFT_ZONES.filter(z => z.id !== 'airfoil').map((zone) => {
-                const pos = ZONE_OVERLAYS[zone.id];
-                const isHovered = hoveredZone === zone.id;
-                return (
-                  <div
-                    key={zone.id}
-                    className="absolute cursor-pointer transition-all duration-300"
-                    style={{
-                      ...pos,
-                      background: isHovered ? `${zone.color}18` : 'transparent',
-                      border: isHovered ? `2px solid ${zone.color}60` : '2px solid transparent',
-                      boxShadow: isHovered ? `0 0 30px ${zone.color}30, inset 0 0 20px ${zone.color}10` : 'none',
-                      zIndex: isHovered ? 15 : 10,
-                      borderRadius: pos.borderRadius,
-                    }}
-                    onMouseEnter={() => setHoveredZone(zone.id)}
-                    onClick={() => navigate(zone.link)}
-                  >
-                    {/* Zone label on hover */}
-                    <AnimatePresence>
-                      {isHovered && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 6 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap"
-                        >
-                          <div
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide backdrop-blur-sm"
-                            style={{
-                              background: `${zone.color}20`,
-                              border: `1px solid ${zone.color}40`,
-                              color: zone.color
-                            }}
-                          >
-                            {zone.label} — Click to explore
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-
-              {/* Airfoil Cross-Section Strips */}
-              {AIRFOIL_STRIPS.map((strip) => {
-                const isHovered = hoveredZone === 'airfoil';
-                const airfoilColor = '#f59e0b';
-                const counterRotate = strip.rotate.startsWith('-') ? strip.rotate.substring(1) : '-' + strip.rotate;
-
-                return (
-                  <div
-                    key={strip.id}
-                    className="absolute cursor-pointer transition-all duration-300"
-                    style={{
-                      top: strip.top,
-                      left: strip.left,
-                      width: strip.width,
-                      height: strip.height,
-                      transform: `rotate(${strip.rotate})`,
-                      transformOrigin: strip.origin,
-                      background: isHovered ? `rgba(245,158,11,0.3)` : `rgba(245,158,11,0.12)`,
-                      border: `1px solid ${isHovered ? '#f59e0b' : 'rgba(245,158,11,0.7)'}`,
-                      borderRadius: '10px',
-                      zIndex: 20,
-                      animation: isHovered ? 'stripPulseHover 1s ease-in-out infinite' : 'stripPulse 2.5s ease-in-out infinite',
-                    }}
-                    onMouseEnter={() => setHoveredZone('airfoil')}
-                    onClick={() => navigate('/explore/airfoil')}
-                  >
-                    {/* Airfoil always-visible label */}
-                    {strip.id === 'airfoil-upper' && (
-                      <span style={{
-                        position: 'absolute',
-                        bottom: '120%',
-                        left: '50%',
-                        transform: `translateX(-50%) rotate(${counterRotate})`,
-                        fontSize: 8,
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        letterSpacing: '0.18em',
-                        color: '#f59e0b',
-                        whiteSpace: 'nowrap',
-                        textShadow: '0 0 8px rgba(245,158,11,0.7)',
-                        pointerEvents: 'none',
-                        opacity: isHovered ? 0 : 1,
-                        transition: 'opacity 0.2s ease',
-                      }}>AIRFOIL</span>
-                    )}
-
-                    {/* Airfoil label on hover */}
-                    <AnimatePresence>
-                      {isHovered && strip.id === 'airfoil-upper' && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 6 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute whitespace-nowrap"
-                          style={{
-                            bottom: '160%',
-                            left: '50%',
-                            transform: `translateX(-50%) rotate(${counterRotate})`,
-                          }}
-                        >
-                          <div
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide backdrop-blur-sm"
-                            style={{
-                              background: `${airfoilColor}20`,
-                              border: `1px solid ${airfoilColor}40`,
-                              color: airfoilColor
-                            }}
-                          >
-                            Airfoil Profile — Click to explore
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Instruction hint */}
-            <div className="mt-3 text-center text-[11px] font-mono tracking-wider text-[var(--color-edu-text-muted)]/50">
-              HOVER · CLICK TO EXPLORE COMPONENT
+        {/* Info Panel Group */}
+        <div className="pointer-events-auto w-full lg:w-[360px] flex-shrink-0 flex flex-col gap-4" style={{ position: 'relative', minHeight: 280 }}>
+          
+          {/* Complexity Toggle */}
+          <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-xl w-fit">
+            <span className="text-[10px] font-mono tracking-wider text-[var(--color-edu-text-muted)] uppercase">Level:</span>
+            <div className="complexity-toggle">
+              <button
+                className={`complexity-toggle-btn ${!isAdvanced ? 'active' : ''}`}
+                onClick={() => setIsAdvanced(false)}
+              >
+                Beginner
+              </button>
+              <button
+                className={`complexity-toggle-btn ${isAdvanced ? 'active' : ''}`}
+                onClick={() => setIsAdvanced(true)}
+              >
+                Advanced
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* ── Side Panel ── */}
-        <div className="space-y-4 edu-animate-in edu-animate-in-delay-2">
-          {/* Info Panel */}
-          <div style={{ position: 'relative', minHeight: 320 }}>
-            <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
               {activeZone ? (
                 <motion.div
                   key={activeZone.id}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
-                  transition={{ duration: 0.25 }}
-                  className="explorer-card"
-                  style={{ '--card-glow': `${activeZone.color}15`, cursor: 'default' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="explorer-card shadow-2xl backdrop-blur-xl"
+                  style={{ '--card-glow': `${activeZone.color}15`, background: 'rgba(10,15,28,0.7)', border: `1px solid ${activeZone.color}40`, cursor: 'default' }}
                 >
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                    style={{ 
+                    style={{
                       background: `${activeZone.color}15`,
                       border: `1px solid ${activeZone.color}30`,
-                      color: activeZone.color 
+                      color: activeZone.color
                     }}
                   >
                     {activeZone.icon}
@@ -323,10 +154,10 @@ const Explorer = () => {
                   <button
                     onClick={() => navigate(activeZone.link)}
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                    style={{ 
+                    style={{
                       background: `${activeZone.color}12`,
                       border: `1px solid ${activeZone.color}30`,
-                      color: activeZone.color 
+                      color: activeZone.color
                     }}
                   >
                     Explore {activeZone.label} <ChevronRight size={16} />
@@ -338,39 +169,40 @@ const Explorer = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="explorer-card text-center"
-                  style={{ cursor: 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', padding: '3rem 1.5rem' }}
+                  className="explorer-card text-center shadow-xl backdrop-blur-md"
+                  style={{ cursor: 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', padding: '3rem 1.5rem', background: 'rgba(10,15,28,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}
                 >
                   <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
                     <Info size={20} className="text-[var(--color-edu-text-muted)]" />
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">Select a Component</h3>
+                  <h3 className="text-base font-bold text-white mb-2">Click a Part</h3>
                   <p className="text-sm text-[var(--color-edu-text-muted)]">
-                    Hover over any part of the aircraft to see details. Click to dive deeper.
+                    Drag to orbit · scroll to zoom · click any component for details.
                   </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Quick Navigation Cards */}
-          <div className="space-y-2">
-            {AIRCRAFT_ZONES.map((zone) => (
+        {/* Quick Navigation Cards */}
+        <div className="pointer-events-auto flex flex-col lg:flex-row gap-3 w-full lg:w-auto">
+          {AIRCRAFT_ZONES.map((zone) => (
               <button
                 key={zone.id}
-                onClick={() => navigate(zone.link)}
+                onClick={() => setSelectedZone(zone.id)}
                 onMouseEnter={() => setHoveredZone(zone.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300 text-left group
-                  ${hoveredZone === zone.id 
-                    ? 'bg-white/5 border-white/12' 
-                    : 'bg-transparent border-white/5 hover:bg-white/3'
+                onMouseLeave={() => setHoveredZone(null)}
+                className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-300 text-left group shadow-lg backdrop-blur-md
+                  ${(hoveredZone || selectedZone) === zone.id
+                    ? 'bg-white/10 border-white/25 scale-105'
+                    : 'bg-black/40 border-white/10 hover:bg-white/10'
                   }`}
               >
-                <div 
+                <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
-                  style={{ 
-                    background: hoveredZone === zone.id ? `${zone.color}20` : `${zone.color}08`,
-                    color: zone.color 
+                  style={{
+                    background: (hoveredZone || selectedZone) === zone.id ? `${zone.color}20` : `${zone.color}08`,
+                    color: zone.color
                   }}
                 >
                   {zone.icon}
@@ -386,17 +218,16 @@ const Explorer = () => {
 
           {/* Lab CTA */}
           <button
-            onClick={() => navigate('/dashboard')}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold
-              bg-gradient-to-r from-[var(--color-edu-sky)]/12 to-[var(--color-accent-purple)]/12
-              border border-[var(--color-edu-sky)]/20 text-[var(--color-edu-sky)]
-              hover:border-[var(--color-edu-sky)]/35 hover:from-[var(--color-edu-sky)]/18 hover:to-[var(--color-accent-purple)]/18
-              transition-all duration-300"
+            onClick={() => navigate('/lab')}
+            className="pointer-events-auto flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-lg
+              bg-gradient-to-r from-[var(--color-edu-sky)]/20 to-[var(--color-accent-purple)]/20
+              border border-[var(--color-edu-sky)]/40 text-white
+              hover:border-[var(--color-edu-sky)]/60 hover:from-[var(--color-edu-sky)]/30 hover:to-[var(--color-accent-purple)]/30
+              transition-all duration-300 transform hover:scale-105"
           >
             <FlaskConical size={16} />
-            Open Wind Tunnel Lab
+            Open Labs Hub
           </button>
-        </div>
       </div>
     </div>
   );

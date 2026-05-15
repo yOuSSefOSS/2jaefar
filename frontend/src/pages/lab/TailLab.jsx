@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, GitCommit, Wind, Activity, Ruler, Scaling } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, GitCommit, Wind, Activity, Ruler, Scaling, Layers } from 'lucide-react';
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
@@ -9,32 +9,41 @@ const Slider = ({ label, icon: Icon, value, min, max, step = 1, unit, onChange, 
   <div className="mb-6">
     <div className="flex justify-between items-center mb-3">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: `${color}15`, color }}>
+        <div className="w-6 h-6 rounded-md flex items-center justify-center border" style={{ background: `${color}15`, color, borderColor: `${color}30` }}>
           <Icon size={14} />
         </div>
         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
       </div>
-      <div className="text-sm font-mono font-bold" style={{ color }}>
+      <div className="text-sm font-mono font-bold" style={{ color, textShadow: `0 0 10px ${color}50` }}>
         {value}<span className="text-slate-500 ml-1">{unit}</span>
       </div>
     </div>
-    <div className="relative h-1.5 bg-white/5 rounded-full overflow-visible flex items-center group">
-      <div className="absolute left-0 h-full rounded-full pointer-events-none" style={{ width: `${((value - min) / (max - min)) * 100}%`, backgroundColor: color }} />
+    <div className="relative h-2 bg-black/50 border border-white/5 rounded-full overflow-visible flex items-center group">
+      <div className="absolute left-0 h-full rounded-full pointer-events-none transition-all duration-75" style={{ width: `${((value - min) / (max - min)) * 100}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}80` }} />
       <input 
         type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
         className="w-full absolute inset-0 opacity-0 cursor-pointer z-10"
         style={{ touchAction: 'none' }}
       />
-      {/* Custom thumb */}
       <div 
-        className="w-4 h-4 rounded-full bg-white border-2 shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-transform group-hover:scale-125 absolute pointer-events-none"
+        className="w-5 h-5 rounded-full bg-[#0b1221] border-2 shadow-[0_0_15px_rgba(0,0,0,0.8)] transition-transform group-hover:scale-125 absolute pointer-events-none"
         style={{ 
           borderColor: color,
-          left: `calc(${((value - min) / (max - min)) * 100}% - 8px)`
+          boxShadow: `0 0 10px ${color}, inset 0 0 4px ${color}`,
+          left: `calc(${((value - min) / (max - min)) * 100}% - 10px)`
         }}
-      />
+      >
+        <div className="absolute inset-1 rounded-full bg-white/20" />
+      </div>
     </div>
+  </div>
+);
+
+const TelemetryBox = ({ label, value, color }) => (
+  <div className="flex flex-col">
+    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-mono mb-1">{label}</span>
+    <span className="text-lg font-mono font-bold" style={{ color, textShadow: `0 0 10px ${color}50` }}>{value}</span>
   </div>
 );
 
@@ -43,6 +52,7 @@ const TailLab = () => {
   const [speed, setSpeed] = useState(250);
   const [tailArea, setTailArea] = useState(18);
   const [tailArm, setTailArm] = useState(14);
+  const [highFidelity, setHighFidelity] = useState(true);
 
   const NP_PCT = 38;
   const staticMargin = (NP_PCT - cgPct) / 100;
@@ -69,29 +79,56 @@ const TailLab = () => {
   
   const npX = macStart + (NP_PCT / 100) * macLen;
   const cgX = macStart + (cgPct / 100) * macLen;
+  
+  const tailCenter = fuseX2 - 40 + (tailArm - 15) * 5;
 
   // Pitching moment angle
   const pitchAngle = isStable ? clamp(staticMargin * 100, 0, 15) : clamp(staticMargin * 100, -15, 0);
 
+  // Aerodynamic force scaling
+  const dynamicForceScale = (speed / 250);
+  
+  // Forces: Lift is always up (at NP). Weight is always down (at CG). Tail force is restoring (depends on pitch).
+  const liftMagnitude = 80 * dynamicForceScale;
+  const weightMagnitude = 80;
+  const tailForceMagnitude = Math.abs(pitchAngle) * 3 * dynamicForceScale;
+
   return (
-    <div className="min-h-full bg-[var(--color-edu-navy)] p-6 lg:p-10 font-sans text-white">
+    <div className="min-h-full bg-gradient-to-br from-[#02050a] via-[#0b1221] to-[#040814] p-4 lg:p-8 font-sans text-white">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center text-[#22c55e]">
-              <Activity size={24} />
-            </div>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link to="/lab" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors backdrop-blur-md">
+              <ArrowLeft size={18} />
+            </Link>
             <div>
-              <h1 className="text-3xl font-bold">Tail Stability Simulator</h1>
-              <p className="text-slate-400 text-sm mt-1">Configure longitudinal stability parameters and visualize pitching moments.</p>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#22c55e]/20 text-[#22c55e] flex items-center justify-center border border-[#22c55e]/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                  <Activity size={18} />
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Stability Lab</h1>
+              </div>
+              <p className="text-slate-400 text-xs mt-1 font-mono uppercase tracking-widest">Aero-Structural Command Center</p>
             </div>
           </div>
+          
+          <button 
+            onClick={() => setHighFidelity(!highFidelity)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-xs uppercase tracking-widest ${
+              highFidelity 
+                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_20px_rgba(168,85,247,0.2)]' 
+                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            <Layers size={14} className={highFidelity ? "animate-pulse" : ""} />
+            {highFidelity ? 'High-Fi Active' : 'Low-Fi Mode'}
+          </button>
         </motion.div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)] min-h-[650px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[calc(100vh-160px)] min-h-[700px]">
           
           {/* Controls Panel */}
           <motion.div 
@@ -99,60 +136,55 @@ const TailLab = () => {
             className="lg:col-span-3 flex flex-col gap-4"
           >
             {/* Status Card */}
-            <div className="bg-[#0b1221] border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-50" />
-              <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: statusColor }} />
+              <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: statusColor, boxShadow: `0 0 20px ${statusColor}` }} />
               
               <div className="relative z-10">
-                <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-1">Flight State</div>
-                <div className="text-3xl font-black font-mono tracking-tight" style={{ color: statusColor }}>{statusLabel}</div>
-                <div className="flex justify-between items-end mt-4">
+                <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-1 flex items-center gap-2">
+                  <Activity size={12} style={{ color: statusColor }} className="animate-pulse"/> Flight State
+                </div>
+                <div className="text-3xl font-black font-mono tracking-tight" style={{ color: statusColor, textShadow: `0 0 15px ${statusColor}80` }}>{statusLabel}</div>
+                
+                <div className="flex justify-between items-end mt-6 pt-4 border-t border-white/10">
                   <div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest">Static Margin</div>
-                    <div className="text-xl font-mono text-white">{smPct}<span className="text-sm text-slate-400 ml-1">%</span></div>
+                    <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Static Margin</div>
+                    <div className="text-xl font-mono font-bold text-white tracking-wider">{smPct}<span className="text-xs text-slate-400 ml-1">%</span></div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest">Pitch Auth</div>
-                    <div className="text-xl font-mono text-white">{pitchAuth}<span className="text-sm text-slate-400 ml-1">kNm</span></div>
+                    <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Pitch Auth</div>
+                    <div className="text-xl font-mono font-bold text-white tracking-wider">{pitchAuth}<span className="text-xs text-slate-400 ml-1">kNm</span></div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Config Sliders */}
-            <div className="bg-[#0b1221] border border-white/5 rounded-2xl p-6 flex-1 flex flex-col justify-center">
+            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 flex-1 flex flex-col justify-center shadow-2xl relative overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
               <Slider label="CG Position" icon={GitCommit} value={cgPct} min={10} max={50} unit="%" onChange={setCgPct} color={statusColor} />
               <Slider label="Airspeed" icon={Wind} value={speed} min={100} max={450} step={5} unit=" kts" onChange={setSpeed} color="#38bdf8" />
               <Slider label="Tail Area" icon={Scaling} value={tailArea} min={10} max={40} unit=" m²" onChange={setTailArea} color="#a78bfa" />
               <Slider label="Tail Arm" icon={Ruler} value={tailArm} min={10} max={25} unit=" m" onChange={setTailArm} color="#f59e0b" />
             </div>
 
-            {/* Info Snippet */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-xs text-slate-400 leading-relaxed">
-              {isStable && "Aircraft exhibits positive static stability. A disturbance in pitch will naturally damp out without pilot input."}
-              {isMarginal && "Neutral stability. The aircraft will not actively return to its trimmed state if disturbed. Requires constant attention."}
-              {isUnstable && "Negative stability! The CG is behind the aerodynamic center. Pitch divergences will rapidly accelerate."}
-            </div>
           </motion.div>
 
           {/* Visualization Canvas */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}
-            className="lg:col-span-9 bg-[#0b1221] border border-white/5 rounded-2xl relative overflow-hidden flex flex-col"
+            className="lg:col-span-9 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl"
           >
             {/* HUD Overlay Top */}
             <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
               <div className="flex gap-4">
-                <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 font-mono text-[10px] text-[#38bdf8] tracking-widest uppercase flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8] animate-pulse" /> Live Telemetry
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 font-mono text-[10px] text-white tracking-widest">
-                  MACH {(speed / 661).toFixed(2)}
+                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-[#38bdf8]/30 shadow-[0_0_15px_rgba(56,189,248,0.2)] rounded-lg px-4 py-2 font-mono text-[10px] text-[#38bdf8] tracking-widest uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8] animate-pulse shadow-[0_0_5px_#38bdf8]" /> Live Telemetry
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-mono text-[10px] text-slate-500 tracking-widest uppercase mb-1">Tail Configuration</div>
-                <div className="font-mono text-sm text-white border-b border-white/10 pb-1">V_T = {tailVolume.toFixed(3)}</div>
+              <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 text-right shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                <div className="font-mono text-[9px] text-slate-500 tracking-widest uppercase mb-1">Tail Vol Ratio</div>
+                <div className="font-mono text-sm font-bold text-white">V_T = {tailVolume.toFixed(3)}</div>
               </div>
             </div>
 
@@ -160,134 +192,178 @@ const TailLab = () => {
             <div className="flex-1 w-full relative select-none">
               <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full absolute inset-0">
                 <defs>
-                  {/* Grid Pattern */}
                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                     <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
                   </pattern>
-                  <pattern id="gridLarge" width="200" height="200" patternUnits="userSpaceOnUse">
-                    <rect width="200" height="200" fill="url(#grid)" />
-                    <path d="M 200 0 L 0 0 0 200" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
-                  </pattern>
+                  <radialGradient id="fuseGrad" cx="50%" cy="40%" r="60%">
+                    <stop offset="0%" stopColor="rgba(148, 163, 184, 0.9)" />
+                    <stop offset="70%" stopColor="rgba(51, 65, 85, 0.9)" />
+                    <stop offset="100%" stopColor="rgba(15, 23, 42, 0.9)" />
+                  </radialGradient>
+                  <linearGradient id="canopyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(125, 211, 252, 0.6)" />
+                    <stop offset="100%" stopColor="rgba(14, 165, 233, 0.2)" />
+                  </linearGradient>
                   <radialGradient id="engineGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="rgba(56,189,248,0.4)" />
+                    <stop offset="0%" stopColor="rgba(56,189,248,0.6)" />
                     <stop offset="100%" stopColor="transparent" />
                   </radialGradient>
-                  <marker id="arrowMom" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6 Z" fill={statusColor} />
+                  
+                  {/* Arrow Markers for vectors */}
+                  <marker id="arrowLift" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#38bdf8" />
+                  </marker>
+                  <marker id="arrowWeight" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#f43f5e" />
+                  </marker>
+                  <marker id="arrowTail" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#22c55e" />
                   </marker>
                 </defs>
 
-                {/* Background Grid */}
-                <rect width="100%" height="100%" fill="url(#gridLarge)" />
+                {/* Background Grid with Vignette */}
+                <rect width="100%" height="100%" fill="url(#grid)" />
+                <rect width="100%" height="100%" fill="radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%)" pointerEvents="none" />
 
-                {/* Horizon Line */}
-                <line x1="0" y1={fuseY} x2={W} y2={fuseY} stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="10 10" />
+                {/* Wind Particles (High Fidelity) */}
+                {highFidelity && (
+                  <g className="wind-particles" opacity="0.3">
+                    <line x1="800" y1={fuseY - 80} x2="700" y2={fuseY - 80} stroke="#fff" strokeWidth="1" strokeDasharray="20 40">
+                      <animate attributeName="x1" from="1000" to="-200" dur={`${150/speed}s`} repeatCount="indefinite" />
+                      <animate attributeName="x2" from="900" to="-300" dur={`${150/speed}s`} repeatCount="indefinite" />
+                    </line>
+                    <line x1="800" y1={fuseY + 100} x2="700" y2={fuseY + 100} stroke="#fff" strokeWidth="1" strokeDasharray="10 60">
+                      <animate attributeName="x1" from="1200" to="-100" dur={`${120/speed}s`} repeatCount="indefinite" />
+                      <animate attributeName="x2" from="1100" to="-200" dur={`${120/speed}s`} repeatCount="indefinite" />
+                    </line>
+                    {/* Downwash interacting with tail */}
+                    <path d={`M${macStart+50},${fuseY-10} Q${tailCenter-50},${fuseY+10+(pitchAngle*2)} ${tailCenter+50},${fuseY+15+(pitchAngle*3)}`} fill="none" stroke="rgba(56,189,248,0.4)" strokeWidth="2" strokeDasharray="15 15">
+                      <animate attributeName="stroke-dashoffset" from="30" to="0" dur={`${100/speed}s`} repeatCount="indefinite" />
+                    </path>
+                  </g>
+                )}
 
                 <g transform={`rotate(${pitchAngle}, ${cgX}, ${fuseY})`} style={{ transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                   
                   {/* --- Fuselage --- */}
                   <path 
                     d={`M${fuseX1},${fuseY} Q${fuseX1+50},${fuseY-35} ${fuseX1+200},${fuseY-35} L${fuseX2-100},${fuseY-20} Q${fuseX2},${fuseY-15} ${fuseX2+20},${fuseY-5} L${fuseX2+20},${fuseY+5} Q${fuseX2},${fuseY+10} ${fuseX2-100},${fuseY+15} L${fuseX1+200},${fuseY+25} Q${fuseX1+50},${fuseY+25} ${fuseX1},${fuseY}`}
-                    fill="rgba(30, 41, 59, 0.8)" stroke="rgba(255,255,255,0.2)" strokeWidth="2" 
+                    fill="url(#fuseGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" 
                   />
-                  {/* Fuselage highlights */}
-                  <path d={`M${fuseX1+20},${fuseY-5} Q${fuseX1+100},${fuseY-25} ${fuseX1+250},${fuseY-25}`} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />
+                  {/* Specular highlight */}
+                  <path d={`M${fuseX1+30},${fuseY-15} Q${fuseX1+100},${fuseY-28} ${fuseX1+220},${fuseY-28}`} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" filter="blur(1px)" />
                   
                   {/* Cockpit */}
-                  <path d={`M${fuseX1+40},${fuseY-18} Q${fuseX1+80},${fuseY-32} ${fuseX1+120},${fuseY-30} Q${fuseX1+100},${fuseY-15} ${fuseX1+40},${fuseY-18}`} fill="rgba(56,189,248,0.2)" stroke="rgba(56,189,248,0.5)" strokeWidth="1" />
+                  <path d={`M${fuseX1+40},${fuseY-18} Q${fuseX1+80},${fuseY-34} ${fuseX1+120},${fuseY-30} Q${fuseX1+100},${fuseY-15} ${fuseX1+40},${fuseY-18}`} fill="url(#canopyGrad)" stroke="rgba(56,189,248,0.6)" strokeWidth="1.5" />
+                  <path d={`M${fuseX1+50},${fuseY-22} Q${fuseX1+80},${fuseY-30} ${fuseX1+110},${fuseY-27}`} fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1" opacity="0.7" />
 
-                  {/* --- Main Wing (Cross section representation) --- */}
+                  {/* --- Main Wing --- */}
                   <path 
-                    d={`M${macStart+20},${fuseY-5} Q${macStart+50},${fuseY-25} ${macStart+120},${fuseY-5} Q${macStart+80},${fuseY+10} ${macStart+20},${fuseY-5}`}
-                    fill="rgba(167, 139, 250, 0.15)" stroke="#a78bfa" strokeWidth="2"
+                    d={`M${macStart+10},${fuseY-2} Q${macStart+50},${fuseY-22} ${macStart+110},${fuseY-5} Q${macStart+80},${fuseY+8} ${macStart+10},${fuseY-2}`}
+                    fill="rgba(167, 139, 250, 0.4)" stroke="#c084fc" strokeWidth="1.5"
                   />
                   
                   {/* --- Engine --- */}
-                  <rect x={macStart+40} y={fuseY+10} width="60" height="20" rx="10" fill="#0f172a" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-                  <ellipse cx={macStart+40} cy={fuseY+20} rx="5" ry="10" fill="#38bdf8" opacity="0.8" />
+                  <rect x={macStart+40} y={fuseY+10} width="60" height="20" rx="10" fill="#0f172a" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                  <ellipse cx={macStart+40} cy={fuseY+20} rx="4" ry="8" fill="#38bdf8" />
                   <rect x={macStart-40} y={fuseY+5} width="80" height="30" fill="url(#engineGlow)" />
+                  <path d={`M${macStart+40},${fuseY+12} L${macStart+90},${fuseY+12}`} stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
 
                   {/* --- Tail Section --- */}
                   {/* Vertical Stab */}
                   <path 
                     d={`M${fuseX2-80},${fuseY-18} L${fuseX2-40},${fuseY-90} L${fuseX2+10},${fuseY-90} L${fuseX2+15},${fuseY-10} Z`}
-                    fill="rgba(34, 197, 94, 0.1)" stroke="#22c55e" strokeWidth="1.5"
+                    fill="rgba(34, 197, 94, 0.15)" stroke="#4ade80" strokeWidth="1.5"
                   />
-                  {/* Horizontal Stab (scales with tailArea, moves with tailArm) */}
-                  <g transform={`translate(${fuseX2 - 40 + (tailArm - 15) * 5}, 0) scale(${tailArea / 18})`}>
+                  {/* Horizontal Stab */}
+                  <g transform={`translate(${tailCenter}, ${fuseY - 5}) scale(${tailArea / 18})`}>
                     <path 
-                      d={`M-30,${fuseY-5} Q0,${fuseY-15} 30,${fuseY-5} Q15,${fuseY+5} -30,${fuseY-5}`}
-                      fill="rgba(34, 197, 94, 0.3)" stroke="#22c55e" strokeWidth="2"
+                      d={`M-30,0 Q0,-10 30,0 Q15,10 -30,0`}
+                      fill="rgba(34, 197, 94, 0.4)" stroke="#4ade80" strokeWidth="1.5"
                     />
-                    {/* Elevator deflection based on pitch angle */}
+                    {/* Elevator deflection */}
                     <path 
-                      d={`M15,${fuseY-8} L45,${fuseY - 8 + (pitchAngle * 1.5)} L30,${fuseY+2} Z`}
-                      fill="rgba(255, 255, 255, 0.2)" stroke="rgba(255,255,255,0.5)" strokeWidth="1"
+                      d={`M15,-3 L45,${-3 + (pitchAngle * 1.5)} L30,7 Z`}
+                      fill="rgba(255, 255, 255, 0.4)" stroke="#fff" strokeWidth="1"
                     />
                   </g>
-                  
                 </g>
 
-                {/* --- Annotations (Fixed to grid, not rotated with plane) --- */}
+                {/* --- Aerodynamic Forces & Reticles (Fixed to grid, not rotated to show Earth-relative/body forces effectively) --- */}
                 
                 {/* MAC Bar */}
-                <line x1={macStart} y1={fuseY + 80} x2={macStart + macLen} y2={fuseY + 80} stroke="rgba(255,255,255,0.3)" strokeWidth="4" />
-                <line x1={macStart} y1={fuseY + 75} x2={macStart} y2={fuseY + 85} stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
-                <line x1={macStart + macLen} y1={fuseY + 75} x2={macStart + macLen} y2={fuseY + 85} stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
-                <text x={macStart + macLen/2} y={fuseY + 95} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="10" fontFamily="monospace">MEAN AERODYNAMIC CHORD</text>
+                <line x1={macStart} y1={fuseY + 90} x2={macStart + macLen} y2={fuseY + 90} stroke="rgba(255,255,255,0.2)" strokeWidth="6" />
+                <text x={macStart + macLen/2} y={fuseY + 105} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="9" fontFamily="monospace" letterSpacing="1">MEAN AERODYNAMIC CHORD</text>
 
-                {/* NP Marker (Neutral Point) */}
-                <line x1={npX} y1={fuseY - 120} x2={npX} y2={fuseY + 70} stroke="#38bdf8" strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
-                <circle cx={npX} cy={fuseY} r="6" fill="#0b1221" stroke="#38bdf8" strokeWidth="2" />
-                <text x={npX} y={fuseY - 130} textAnchor="middle" fill="#38bdf8" fontSize="12" fontWeight="bold" fontFamily="monospace">NP</text>
+                {/* High-Fi Tactical Vectors */}
+                {highFidelity && (
+                  <>
+                    {/* Lift Vector (at NP) */}
+                    <g transform={`translate(${npX}, ${fuseY})`} style={{ transition: 'all 0.5s ease' }}>
+                      <line x1="0" y1="0" x2="0" y2={-liftMagnitude} stroke="#38bdf8" strokeWidth="3" markerEnd="url(#arrowLift)" />
+                      <text x="10" y={-liftMagnitude/2} fill="#38bdf8" fontSize="10" fontFamily="monospace" fontWeight="bold">LIFT</text>
+                    </g>
+                    
+                    {/* Weight Vector (at CG) */}
+                    <g transform={`translate(${cgX}, ${fuseY})`} style={{ transition: 'all 0.5s ease' }}>
+                      <line x1="0" y1="0" x2="0" y2={weightMagnitude} stroke="#f43f5e" strokeWidth="3" markerEnd="url(#arrowWeight)" />
+                      <text x="10" y={weightMagnitude/2} fill="#f43f5e" fontSize="10" fontFamily="monospace" fontWeight="bold">WGT</text>
+                    </g>
 
-                {/* CG Marker */}
+                    {/* Tail Force Vector (Restoring Force) */}
+                    {Math.abs(pitchAngle) > 0 && (
+                      <g transform={`translate(${tailCenter}, ${fuseY})`} style={{ transition: 'all 0.5s ease' }}>
+                        <line 
+                          x1="0" y1="0" 
+                          x2="0" y2={pitchAngle > 0 ? -tailForceMagnitude : tailForceMagnitude} 
+                          stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowTail)" 
+                        />
+                        <text x="-25" y={pitchAngle > 0 ? -tailForceMagnitude - 10 : tailForceMagnitude + 15} fill="#22c55e" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                          TRIM
+                        </text>
+                      </g>
+                    )}
+                  </>
+                )}
+
+                {/* Tactical Reticle: NP */}
+                <line x1={npX} y1={fuseY - 120} x2={npX} y2={fuseY + 70} stroke="#38bdf8" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+                <g transform={`translate(${npX}, ${fuseY})`}>
+                  <circle cx="0" cy="0" r="10" fill="none" stroke="#38bdf8" strokeWidth="1" />
+                  <circle cx="0" cy="0" r="3" fill="#38bdf8" />
+                  <line x1="-14" y1="0" x2="14" y2="0" stroke="#38bdf8" strokeWidth="1" />
+                  <line x1="0" y1="-14" x2="0" y2="14" stroke="#38bdf8" strokeWidth="1" />
+                  <text x="0" y="-130" textAnchor="middle" fill="#38bdf8" fontSize="12" fontWeight="bold" fontFamily="monospace">NP</text>
+                </g>
+
+                {/* Tactical Reticle: CG */}
                 <g style={{ transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                  <line x1={cgX} y1={fuseY - 120} x2={cgX} y2={fuseY + 70} stroke={statusColor} strokeWidth="1.5" />
-                  <circle cx={cgX} cy={fuseY} r="8" fill={statusColor} opacity="0.2" />
-                  <circle cx={cgX} cy={fuseY} r="4" fill={statusColor} />
-                  <rect x={cgX - 15} y={fuseY - 142} width="30" height="16" rx="4" fill={statusColor} opacity="0.1" stroke={statusColor} strokeWidth="1" />
-                  <text x={cgX} y={fuseY - 130} textAnchor="middle" fill={statusColor} fontSize="12" fontWeight="bold" fontFamily="monospace">CG</text>
+                  <line x1={cgX} y1={fuseY - 120} x2={cgX} y2={fuseY + 70} stroke={statusColor} strokeWidth="1.5" opacity="0.6"/>
+                  <g transform={`translate(${cgX}, ${fuseY})`}>
+                    <circle cx="0" cy="0" r="12" fill="none" stroke={statusColor} strokeWidth="2" strokeDasharray="6 4">
+                      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="0" cy="0" r="4" fill={statusColor} />
+                    <text x="0" y="-130" textAnchor="middle" fill={statusColor} fontSize="12" fontWeight="bold" fontFamily="monospace">CG</text>
+                  </g>
                 </g>
 
                 {/* Static Margin Visual Zone */}
                 {isStable ? (
-                  <rect x={cgX} y={fuseY + 60} width={npX - cgX} height="8" fill="url(#grid)" stroke={statusColor} strokeWidth="1" opacity="0.5" style={{ transition: 'all 0.5s ease' }} />
+                  <rect x={cgX} y={fuseY + 75} width={npX - cgX} height="6" fill="url(#grid)" stroke={statusColor} strokeWidth="1" opacity="0.8" style={{ transition: 'all 0.5s ease' }} />
                 ) : (
-                  <rect x={npX} y={fuseY + 60} width={cgX - npX} height="8" fill="rgba(251,113,133,0.2)" stroke="#fb7185" strokeWidth="1" style={{ transition: 'all 0.5s ease' }} />
+                  <rect x={npX} y={fuseY + 75} width={cgX - npX} height="6" fill="rgba(251,113,133,0.3)" stroke="#f43f5e" strokeWidth="1" style={{ transition: 'all 0.5s ease' }} />
                 )}
 
-                {/* Pitch Moment Arc */}
-                {pitchAngle !== 0 && (
-                  <g transform={`translate(${cgX}, ${fuseY})`} style={{ transition: 'all 0.5s ease' }}>
-                    <path 
-                      d={pitchAngle > 0 
-                        ? `M -40,-40 A 56 56 0 0 1 40,-40` 
-                        : `M 40,-40 A 56 56 0 0 0 -40,-40`}
-                      fill="none" stroke={statusColor} strokeWidth="2" strokeDasharray="4 4" markerEnd="url(#arrowMom)"
-                    />
-                    <text x="0" y="-60" textAnchor="middle" fill={statusColor} fontSize="10" fontFamily="monospace">
-                      {pitchAngle > 0 ? "RESTORING MOMENT" : "DIVERGING MOMENT"}
-                    </text>
-                  </g>
-                )}
-                
               </svg>
             </div>
 
             {/* Bottom Telemetry Bar */}
-            <div className="h-16 border-t border-white/5 bg-white/[0.02] flex items-center px-6 gap-8 z-10">
+            <div className="h-20 border-t border-white/10 bg-[#0b1221]/90 backdrop-blur-xl flex items-center px-8 gap-8 z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
               <div className="flex-1 flex justify-between">
-                {[
-                  { label: 'Lift Coefficient (CL)', val: '0.45', c: '#fff' },
-                  { label: 'Dynamic Pressure', val: `${(qDyn/1000).toFixed(2)} kPa`, c: '#38bdf8' },
-                  { label: 'Pitch Rate (q)', val: `${pitchAngle > 0 ? '-' : '+'}${(Math.abs(pitchAngle)*0.1).toFixed(2)}°/s`, c: statusColor },
-                ].map(m => (
-                  <div key={m.label} className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-mono">{m.label}</span>
-                    <span className="text-sm font-mono font-bold" style={{ color: m.c }}>{m.val}</span>
-                  </div>
-                ))}
+                <TelemetryBox label="Mach Number" value={(speed / 661).toFixed(2)} color="#fff" />
+                <TelemetryBox label="Dynamic Pressure (q)" value={`${(qDyn/1000).toFixed(2)} kPa`} color="#38bdf8" />
+                <TelemetryBox label="Pitch Rate" value={`${pitchAngle > 0 ? '-' : '+'}${(Math.abs(pitchAngle)*0.1).toFixed(2)}°/s`} color={statusColor} />
               </div>
             </div>
 

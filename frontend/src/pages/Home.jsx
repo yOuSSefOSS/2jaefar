@@ -273,6 +273,7 @@ const SettingsModal = ({ show, onClose, manualDensity, setManualDensity, density
 // ─── Home ─────────────────────────────────────────────────────────────────────
 const Home = () => {
   const [isSimulating,  setIsSimulating]  = useState(false);
+  const [isOptimistic,  setIsOptimistic]  = useState(false);
   const [chartData,     setChartData]     = useState([]);
   const [compareChartData, setCompareChartData] = useState([]);
   
@@ -752,6 +753,22 @@ const Home = () => {
     const isCompareCustom = compareActive ? !['naca4412', 'naca0012'].includes(compareShapeId) : false;
     const isCompareSymmetric = compareActive ? (compareShape.type.toLowerCase().includes('symmetric') || compareShape.name.includes('00')) : false;
 
+    // ── OPTIMISTIC UI: instantly show empirical ghost chart in red ────────────
+    if (useNeuralFoil) {
+      const ghostData = [];
+      for (let a = graphBounds.min; a <= graphBounds.max; a++) {
+        const { cl, cd } = calculateAerodynamics(activeShapeId, isCustomAirfoil, a);
+        ghostData.push({
+          aoa: a,
+          cl: (isSymmetric && Math.abs(a) < 0.01) ? 0 : Number((cl || 0).toFixed(3)),
+          cd: Number((cd || 0).toFixed(3)),
+        });
+      }
+      setChartData(ghostData);
+      setIsOptimistic(true);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (!useNeuralFoil) {
       setTimeout(() => {
         if (isMounted) {
@@ -793,6 +810,7 @@ const Home = () => {
 
           setChartData(newData);
           setLastSimulationData(newData);
+          setIsOptimistic(false);
           
           if (compareActive) {
             let compareRawData = [];
@@ -871,6 +889,7 @@ const Home = () => {
       if (isMounted) {
         setChartData(results[0]);
         setLastSimulationData(results[0]);
+        setIsOptimistic(false);
         if (results.length > 1) {
           setCompareChartData(results[1]);
         } else {
@@ -1344,16 +1363,8 @@ const Home = () => {
            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
            className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[280px] flex-shrink-0 relative"
         >
-          {isSimulating && (
-             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-md rounded-xl">
-               <div className="text-[var(--color-edu-sky)] font-mono animate-pulse tracking-widest text-xs flex gap-3 items-center">
-                 <div className="w-4 h-4 border-2 border-[var(--color-edu-sky)] border-t-transparent rounded-full animate-spin"></div>
-                 PROCESSING CFD EQUATIONS...
-               </div>
-             </div>
-          )}
-          <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" />
-          <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" />
+          <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" isOptimistic={isOptimistic} />
+          <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" isOptimistic={isOptimistic} />
           <PolarChart
             data={chartData}
             currentCd={currentAeroItem.cd}
@@ -1361,6 +1372,7 @@ const Home = () => {
             stallCd={stallPoint.cd}
             stallCl={stallPoint.cl}
             isStalling={isStalling}
+            isOptimistic={isOptimistic}
           />
         </motion.div>
       ) : (
@@ -1368,21 +1380,12 @@ const Home = () => {
            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
            className="flex flex-col gap-8 flex-shrink-0 relative"
         >
-          {isSimulating && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
-              <div className="text-[var(--color-brand-100)] font-mono animate-pulse tracking-widest text-sm flex gap-3 items-center">
-                <div className="w-4 h-4 border-2 border-[var(--color-accent-neon)] border-t-transparent rounded-full animate-spin"></div>
-                COMPUTING NEURALFOIL CFD...
-              </div>
-            </div>
-          )}
-          
           <div className="flex flex-col gap-3">
              <h3 className="text-xs font-mono font-bold text-[var(--color-accent-neon)] uppercase tracking-widest">{activeShape?.name} - Primary</h3>
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[250px]">
-               <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" />
-               <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" />
-               <PolarChart data={chartData} currentCd={currentAeroItem.cd} currentCl={currentAeroItem.cl} stallCd={stallPoint.cd} stallCl={stallPoint.cl} isStalling={isStalling} />
+               <DataChart data={chartData} title="Drag Coefficient (Cd vs AoA)" dataKey="cd" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-pink)" isOptimistic={isOptimistic} />
+               <DataChart data={chartData} title="Lift Coefficient (Cl vs AoA)" dataKey="cl" xKey="aoa" activeX={pitchAngle} stallAngleX={positiveStallAngle} negativeStallAngleX={negativeStallAngle} isStalling={isStalling} strokeColor="var(--color-accent-neon)" isOptimistic={isOptimistic} />
+               <PolarChart data={chartData} currentCd={currentAeroItem.cd} currentCl={currentAeroItem.cl} stallCd={stallPoint.cd} stallCl={stallPoint.cl} isStalling={isStalling} isOptimistic={isOptimistic} />
              </div>
           </div>
 
