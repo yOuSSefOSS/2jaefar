@@ -6,6 +6,7 @@ const { spawn } = require('child_process');
 const readline = require('readline');
 const { createClient } = require('@supabase/supabase-js');
 const WebSocket = require('ws');
+global.WebSocket = WebSocket;
 let stripe;
 try {
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here') {
@@ -76,6 +77,7 @@ const supabase = createClient(
     auth: { persistSession: false },
     realtime: {
       websocket: WebSocket,
+      transport: WebSocket,
     }
   }
 );
