@@ -5,6 +5,7 @@ const cors = require('cors');
 const { spawn } = require('child_process');
 const readline = require('readline');
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 let stripe;
 try {
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here') {
@@ -70,7 +71,13 @@ const PORT = process.env.PORT || 5000;
 
 const supabase = createClient(
   process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder',
+  {
+    auth: { persistSession: false },
+    realtime: {
+      websocket: WebSocket,
+    }
+  }
 );
 
 // Stripe webhook requires raw body
