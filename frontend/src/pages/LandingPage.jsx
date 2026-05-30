@@ -344,14 +344,52 @@ const LandingPage = () => {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="py-10 px-6 border-t border-white/5 text-center">
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <img src={logoUrl} alt="Vortex-Gen" className="h-6 w-auto opacity-60" />
-          <span className="text-sm font-semibold text-[var(--color-edu-text-muted)]">Vortex-Gen Academy</span>
+      <footer className="py-10 px-6 border-t border-white/5">
+        <div className="max-w-5xl mx-auto">
+          {/* Top row: logo + nav links */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6">
+            <div className="flex items-center gap-3">
+              <img src={logoUrl} alt="Vortex-Gen" className="h-6 w-auto opacity-60" />
+              <span className="text-sm font-semibold text-[var(--color-edu-text-muted)]">Vortex-Gen</span>
+            </div>
+            <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+              <Link to="/explore" className="text-xs text-[var(--color-edu-text-muted)]/70 hover:text-white transition-colors">
+                Explorer
+              </Link>
+              <Link to="/lab" className="text-xs text-[var(--color-edu-text-muted)]/70 hover:text-white transition-colors">
+                Labs
+              </Link>
+              <Link to="/login" className="text-xs text-[var(--color-edu-text-muted)]/70 hover:text-white transition-colors">
+                Sign In
+              </Link>
+              <span className="w-px h-3 bg-white/10" />
+              <Link
+                to="/privacy"
+                id="footer-privacy-link"
+                className="text-xs text-[var(--color-edu-text-muted)]/70 hover:text-[var(--color-edu-sky)] transition-colors underline-offset-2 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                to="/terms"
+                id="footer-terms-link"
+                className="text-xs text-[var(--color-edu-text-muted)]/70 hover:text-[var(--color-edu-sky)] transition-colors underline-offset-2 hover:underline"
+              >
+                Terms of Use
+              </Link>
+            </nav>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-white/5 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-[var(--color-edu-text-muted)]/50">
+              © {new Date().getFullYear()} Vortex-Gen · Academic Aviation Explorer &amp; Wind Tunnel Lab
+            </p>
+            <p className="text-xs text-[var(--color-edu-text-muted)]/40">
+              Built for students and educators · Cairo, Egypt
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-[var(--color-edu-text-muted)]/60">
-          Academic Aviation Explorer & Wind Tunnel Lab · Built for students and educators
-        </p>
       </footer>
       <style>{`
         @keyframes airfoilPulse {

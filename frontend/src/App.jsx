@@ -11,6 +11,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
 import Explorer from './pages/Explorer';
 import FuselageSection from './pages/explore/FuselageSection';
 import WingsSection from './pages/explore/WingsSection';
@@ -69,6 +71,8 @@ function App() {
         <Routes>
           {/* ── Public Routes ── */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfUse />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
