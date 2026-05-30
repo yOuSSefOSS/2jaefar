@@ -50,7 +50,7 @@ const LandingPage = () => {
   const { user, displayName } = useAppContext();
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] overflow-x-hidden">
+    <div className="h-screen overflow-y-auto bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] overflow-x-hidden">
       
       {/* ── Navbar ── */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 lg:px-10 bg-[var(--color-edu-navy)]/80 backdrop-blur-xl border-b border-white/5">
