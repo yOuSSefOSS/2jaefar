@@ -1,0 +1,11 @@
+Model Information:
+* title:	Airplane
+* source:	https://sketchfab.com/3d-models/airplane-c93fcd7042e3451bb82e03f6cda0ea81
+* author:	gompirulo (https://sketchfab.com/gompirulo)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Airplane" (https://sketchfab.com/3d-models/airplane-c93fcd7042e3451bb82e03f6cda0ea81) by gompirulo (https://sketchfab.com/gompirulo) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

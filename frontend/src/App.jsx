@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import Admin from './pages/Admin';
 import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
+import Pitch from './pages/Pitch';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
 import Explorer from './pages/Explorer';
@@ -72,6 +73,7 @@ function App() {
         <Routes>
           {/* ── Public Routes ── */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/pitch" element={<Pitch />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfUse />} />
           <Route path="/login" element={<Login />} />
