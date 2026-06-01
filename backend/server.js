@@ -95,15 +95,17 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const userId = session.client_reference_id;
-    const tier = session.metadata.tier;
+    const userId   = session.client_reference_id;
+    const tier     = session.metadata.tier;
+    const workspaceId = session.metadata.workspace_id;
 
-    if (userId && tier) {
-      await supabase
-        .from('users')
-        .upsert({ user_id: userId, subscription_tier: tier });
+    if (userId && tier && workspaceId) {
+      await supabase.from('workspaces').update({
+        plan: tier,
+        stripe_customer_id: session.customer,
+        stripe_subscription_id: session.subscription
+      }).eq('id', workspaceId);
 
-      // Send welcome email via Resend
       const { data: { user } } = await supabase.auth.admin.getUserById(userId);
       if (user?.email) await sendSubscriptionEmail(user.email, tier);
     }
@@ -119,11 +121,14 @@ app.use(express.json());
 
 // ─── AUTH MIDDLEWARE ──────────────────────────────────────────────────────
 const authMiddleware = async (req, res, next) => {
+  req.supabase = supabase;
+
   // DEV BYPASS: If running locally in development mode, mock user and bypass Supabase
   if (process.env.NODE_ENV !== 'production') {
     req.user = { id: 'dev-mock-user', email: 'dev@localhost' };
+    req.workspaceId = 'dev-mock-workspace';
     req.userTier = 'pro_max';
-    req.importsCount = 0;
+    req.userRole = 'owner';
     return next();
   }
 
@@ -131,18 +136,32 @@ const authMiddleware = async (req, res, next) => {
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return res.status(401).json({ error: 'Invalid token' });
+  if (error || !user) return res.status(401).json({ error: 'Invalid or expired token' });
 
   req.user = user;
   
-  const { data: userData } = await supabase
-    .from('users')
-    .select('subscription_tier, imports_count')
-    .eq('user_id', user.id)
+  // Fetch profile to get active_workspace_id
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('active_workspace_id')
+    .eq('id', user.id)
     .single();
-    
-  req.userTier = userData?.subscription_tier || 'free';
-  req.importsCount = userData?.imports_count || 0;
+
+  if (!profile || !profile.active_workspace_id) {
+    return res.status(403).json({ error: 'User does not have an active workspace.' });
+  }
+
+  // Fetch workspace plan and user's role in that workspace
+  const { data: memberData } = await supabase
+    .from('workspace_members')
+    .select('role, workspaces(plan)')
+    .eq('user_id', user.id)
+    .eq('workspace_id', profile.active_workspace_id)
+    .single();
+
+  req.workspaceId = profile.active_workspace_id;
+  req.userTier = memberData?.workspaces?.plan || 'free';
+  req.userRole = memberData?.role || 'member';
 
   next();
 };
@@ -236,18 +255,21 @@ app.post('/api/analyze', authMiddleware, (req, res) => {
 });
 
 app.post('/api/increment-import', authMiddleware, async (req, res) => {
-  if (req.userTier === 'free' && req.importsCount >= 1) {
+  const { count } = await supabase
+    .from('custom_airfoils')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', req.workspaceId);
+
+  const importsCount = count || 0;
+
+  if (req.userTier === 'free' && importsCount >= 1) {
     return res.status(403).json({ error: 'Limit reached for Free tier' });
   }
-  if (req.userTier === 'pro' && req.importsCount >= 10) {
+  if (req.userTier === 'pro' && importsCount >= 10) {
     return res.status(403).json({ error: 'Limit reached for Pro tier' });
   }
 
-  await supabase
-    .from('users')
-    .upsert({ user_id: req.user.id, imports_count: req.importsCount + 1 });
-
-  res.json({ success: true, newCount: req.importsCount + 1 });
+  res.json({ success: true, newCount: importsCount + 1 });
 });
 
 app.post('/api/create-checkout-session', authMiddleware, async (req, res) => {
@@ -275,7 +297,10 @@ app.post('/api/create-checkout-session', authMiddleware, async (req, res) => {
       success_url: `${req.headers.origin}/dashboard?success=true`,
       cancel_url: `${req.headers.origin}/pricing?canceled=true`,
       client_reference_id: req.user.id,
-      metadata: { tier }
+      metadata: { 
+        tier,
+        workspace_id: req.workspaceId 
+      }
     });
 
     res.json({ url: session.url });

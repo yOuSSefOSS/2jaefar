@@ -30,6 +30,7 @@ export const useSimulation = (customAirfoils: any[] = []) => {
   const compareShape = allShapes.find((s) => s.id === compareShapeId);
 
   const [isSimulating,      setIsSimulating]      = useState(false);
+  const [isWarmingUp,       setIsWarmingUp]       = useState(false);
   const [chartData,         setChartData]          = useState<ChartPoint[]>([]);
   const [compareChartData,  setCompareChartData]   = useState<ChartPoint[]>([]);
 
@@ -97,41 +98,71 @@ export const useSimulation = (customAirfoils: any[] = []) => {
       (_, i) => i + graphBounds.min
     );
 
-    const fetchShape = async (shape: any, isSym: boolean): Promise<ChartPoint[]> => {
+    const fetchShape = async (shape: any, isSym: boolean, retries = 0): Promise<ChartPoint[]> => {
       const { data: { session } } = await supabase.auth.getSession();
-      return fetch(`${API_URL}/api/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
-        },
-        body: JSON.stringify({
-          name: shape.name,
-          alpha: alphaRange,
-          Re: reynolds,
-          mach: 0,
-          points: shape.airfoilData,
-          modelSize: 'xlarge',
-        }),
-      })
-        .then((r) => r.json())
-        .then((data: ChartPoint[]) => {
-          if (!Array.isArray(data)) throw new Error('Invalid response');
-          let maxCl = -Infinity, minCl = Infinity;
-          let stallPos: number | null = null, stallNeg: number | null = null;
-          data.forEach((d) => {
-            if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; stallPos = d.aoa; }
-            if (d.cl !== null && d.cl < minCl) { minCl = d.cl; stallNeg = d.aoa; }
-          });
-          return data.map((d) => {
-            let { cl, cd } = d;
-            if (isSym && Math.abs(d.aoa) < 0.01) cl = 0;
-            const limitPos = stallPos !== null ? stallPos + 5 : 999;
-            const limitNeg = stallNeg !== null && minCl < -0.1 ? stallNeg - 5 : -999;
-            if (d.aoa > limitPos || d.aoa < limitNeg) return { aoa: d.aoa, cl: null, cd: null };
-            return { aoa: d.aoa, cl, cd };
-          });
+      const activeWorkspaceId = useAuthStore.getState().activeWorkspaceId;
+      
+      try {
+        const response = await fetch(`${API_URL}/api/analyze`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            ...(activeWorkspaceId ? { 'X-Workspace-Id': activeWorkspaceId } : {})
+          },
+          body: JSON.stringify({
+            airfoil: shape.name, // match AnalyzeSchema
+            alpha: alphaRange,
+            reynolds: reynolds,
+            mach: 0,
+            coordinates: shape.airfoilData,
+            modelSize: 'xlarge',
+          }),
         });
+
+        if (response.status === 503) {
+          const data = await response.json();
+          if (data.retry && retries < 2) {
+            setIsWarmingUp(true);
+            await new Promise(r => setTimeout(r, 8000));
+            return fetchShape(shape, isSym, retries + 1);
+          }
+          throw new Error('Simulation engine unavailable');
+        }
+
+        const data = await response.json();
+        
+        // Handle failure where JSON still returns an error 
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        if (!Array.isArray(data) && !data.cl && !Array.isArray(data.cl_values)) {
+            // Neuralfoil might return a different structure via the backend
+            // For now, assume data is an array or contains arrays of cl/cd.
+            // Adjust based on actual payload. Assuming array based on previous code.
+            throw new Error('Invalid response');
+        }
+        
+        let resultData = Array.isArray(data) ? data : data.data || [];
+        
+        let maxCl = -Infinity, minCl = Infinity;
+        let stallPos: number | null = null, stallNeg: number | null = null;
+        resultData.forEach((d: any) => {
+          if (d.cl !== null && d.cl > maxCl) { maxCl = d.cl; stallPos = d.aoa; }
+          if (d.cl !== null && d.cl < minCl) { minCl = d.cl; stallNeg = d.aoa; }
+        });
+        return resultData.map((d: any) => {
+          let { cl, cd } = d;
+          if (isSym && Math.abs(d.aoa) < 0.01) cl = 0;
+          const limitPos = stallPos !== null ? stallPos + 5 : 999;
+          const limitNeg = stallNeg !== null && minCl < -0.1 ? stallNeg - 5 : -999;
+          if (d.aoa > limitPos || d.aoa < limitNeg) return { aoa: d.aoa, cl: null, cd: null };
+          return { aoa: d.aoa, cl, cd };
+        });
+      } catch (err) {
+         throw err;
+      }
     };
 
     const promises = [fetchShape(activeShape, isSymmetric)];
@@ -144,9 +175,10 @@ export const useSimulation = (customAirfoils: any[] = []) => {
         setLastSimulationData(results[0]);
         setCompareChartData(results.length > 1 ? results[1] : []);
         setIsSimulating(false);
+        setIsWarmingUp(false);
       })
       .catch((err) => {
-        if (isMounted) { setIsSimulating(false); console.error('Fetch Error:', err); }
+        if (isMounted) { setIsSimulating(false); setIsWarmingUp(false); console.error('Fetch Error:', err); }
       });
 
     return () => { isMounted = false; };
@@ -220,6 +252,7 @@ export const useSimulation = (customAirfoils: any[] = []) => {
     activeShape,
     compareShape,
     isSimulating,
+    isWarmingUp,
     chartData,
     compareChartData,
     positiveStallAngle,

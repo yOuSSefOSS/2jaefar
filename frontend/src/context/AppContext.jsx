@@ -16,6 +16,7 @@ export const useAppContext = () => useContext(AppContext);
 export const AppProvider = ({ children }) => {
   // Auth & Subscription State
   const [user, setUser] = useState(null);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
   const [subscriptionTier, setSubscriptionTier] = useState('free'); // 'free', 'pro', 'pro_max'
   const [importsCount, setImportsCount] = useState(0);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -89,6 +90,7 @@ export const AppProvider = ({ children }) => {
     // DEV BYPASS: If running locally in development mode, mock a user session
     if (import.meta.env.MODE === 'development') {
       setUser({ id: 'dev-mock-user', email: 'dev@localhost' });
+      setActiveWorkspaceId('dev-mock-workspace');
       setSubscriptionTier('pro_max'); // Give dev user all features
       setIsAuthLoading(false);
       return;
@@ -122,15 +124,32 @@ export const AppProvider = ({ children }) => {
 
   const fetchUserData = async (userId) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('subscription_tier, imports_count')
-        .eq('user_id', userId)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('active_workspace_id')
+        .eq('id', userId)
         .single();
         
-      if (!error && data) {
-        setSubscriptionTier(data.subscription_tier || 'free');
-        setImportsCount(data.imports_count || 0);
+      if (!profileError && profileData) {
+        setActiveWorkspaceId(profileData.active_workspace_id);
+        
+        // Fetch workspace plan
+        const { data: memberData } = await supabase
+          .from('workspace_members')
+          .select('workspaces(plan)')
+          .eq('user_id', userId)
+          .eq('workspace_id', profileData.active_workspace_id)
+          .single();
+          
+        setSubscriptionTier(memberData?.workspaces?.plan || 'free');
+        
+        // Fetch custom airfoils count for imports limit
+        const { count } = await supabase
+          .from('custom_airfoils')
+          .select('id', { count: 'exact', head: true })
+          .eq('workspace_id', profileData.active_workspace_id);
+          
+        setImportsCount(count || 0);
       }
     } catch (err) {
       console.error('Error fetching user data:', err);
@@ -150,6 +169,7 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     user, setUser,
+    activeWorkspaceId, setActiveWorkspaceId,
     displayName: user?.user_metadata?.display_name || user?.email || 'Guest',
     subscriptionTier, setSubscriptionTier,
     importsCount, setImportsCount,

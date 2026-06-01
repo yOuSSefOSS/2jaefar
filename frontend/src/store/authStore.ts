@@ -4,6 +4,7 @@ import type { SubscriptionTier } from '@/config/constants';
 
 interface AuthState {
   user: null | { id: string; email: string };
+  activeWorkspaceId: string | null;
   subscriptionTier: SubscriptionTier;
   importsCount: number;
   isAuthLoading: boolean;
@@ -14,6 +15,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
+  activeWorkspaceId: null,
   subscriptionTier: 'free',
   importsCount: 0,
   isAuthLoading: true,
@@ -21,7 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   initAuth: () => {
     // DEV BYPASS
     if (import.meta.env.MODE === 'development') {
-      set({ user: { id: 'dev-mock-user', email: 'dev@localhost' }, subscriptionTier: 'pro_max', isAuthLoading: false });
+      set({ user: { id: 'dev-mock-user', email: 'dev@localhost' }, activeWorkspaceId: 'dev-mock-workspace', subscriptionTier: 'pro_max', isAuthLoading: false });
       return () => {};
     }
 
@@ -36,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = session?.user ?? null;
       set({ user: user ? { id: user.id, email: user.email ?? '' } : null });
       if (user) useAuthStore.getState().fetchUserData(user.id);
-      else set({ subscriptionTier: 'free', importsCount: 0, isAuthLoading: false });
+      else set({ activeWorkspaceId: null, subscriptionTier: 'free', importsCount: 0, isAuthLoading: false });
     });
 
     return () => subscription.unsubscribe();
@@ -44,13 +46,32 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   fetchUserData: async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('subscription_tier, imports_count')
-        .eq('user_id', userId)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('active_workspace_id')
+        .eq('id', userId)
         .single();
-      if (!error && data) {
-        set({ subscriptionTier: (data.subscription_tier as SubscriptionTier) || 'free', importsCount: data.imports_count || 0 });
+        
+      if (!profileError && profileData) {
+        const workspaceId = profileData.active_workspace_id;
+        
+        const { data: memberData } = await supabase
+          .from('workspace_members')
+          .select('workspaces(plan)')
+          .eq('user_id', userId)
+          .eq('workspace_id', workspaceId)
+          .single();
+
+        const { count } = await supabase
+          .from('custom_airfoils')
+          .select('id', { count: 'exact', head: true })
+          .eq('workspace_id', workspaceId);
+
+        set({ 
+          activeWorkspaceId: workspaceId,
+          subscriptionTier: (memberData?.workspaces?.plan as SubscriptionTier) || 'free', 
+          importsCount: count || 0 
+        });
       }
     } catch (err) {
       console.error('Error fetching user data:', err);
@@ -61,6 +82,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ user: null, subscriptionTier: 'free' });
+    set({ user: null, activeWorkspaceId: null, subscriptionTier: 'free' });
   },
 }));

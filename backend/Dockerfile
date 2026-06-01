@@ -25,5 +25,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Expose Hugging Face Port
+EXPOSE 7860
+ENV PORT=7860
+
 # Ensure the server starts correctly
 CMD ["npm", "start"]
