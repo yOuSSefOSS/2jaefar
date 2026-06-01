@@ -329,12 +329,13 @@ app.get('/api/workspaces/members', authMiddleware, async (req, res) => {
     .in('id', userIds);
 
   // 3. Fetch emails for these members via auth admin
-  const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+  const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+  const authUsers = authData?.users || [];
 
   // 4. Combine data
   const members = membersData.map(m => {
     const prof = profiles?.find(p => p.id === m.user_id);
-    const authU = authUsers?.find(u => u.id === m.user_id);
+    const authU = authUsers.find(u => u.id === m.user_id);
     return {
       role: m.role,
       user_id: m.user_id,
@@ -365,10 +366,10 @@ app.post('/api/workspaces/invite', authMiddleware, async (req, res) => {
   }
 
   // Look up the user in auth.users by email using the admin API
-  const { data: { users }, error: lookupError } = await supabase.auth.admin.listUsers();
-  if (lookupError) return res.status(500).json({ error: 'Could not search for user.' });
+  const { data: authData, error: lookupError } = await supabase.auth.admin.listUsers();
+  if (lookupError || !authData?.users) return res.status(500).json({ error: 'Could not search for user. Make sure SUPABASE_SERVICE_ROLE_KEY is set.' });
 
-  const targetUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  const targetUser = authData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
   if (!targetUser) {
     return res.status(404).json({ error: 'No Vortex-Gen account found with that email address.' });
   }
@@ -445,12 +446,13 @@ app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res) =>
     .select('id, display_name');
 
   // 3. Fetch all emails
-  const { data: { users: authUsers } } = await supabase.auth.admin.listUsers();
+  const { data: authData } = await supabase.auth.admin.listUsers();
+  const authUsers = authData?.users || [];
 
   // 4. Combine into an easy format
   const users = membersData.map(m => {
     const prof = profiles?.find(p => p.id === m.user_id);
-    const authU = authUsers?.find(u => u.id === m.user_id);
+    const authU = authUsers.find(u => u.id === m.user_id);
     return {
       user_id: m.user_id,
       email: authU?.email || 'Unknown',
