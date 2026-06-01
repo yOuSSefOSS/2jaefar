@@ -313,21 +313,44 @@ app.post('/api/create-checkout-session', authMiddleware, async (req, res) => {
 
 // GET /api/workspaces/members — list all members of the active workspace
 app.get('/api/workspaces/members', authMiddleware, async (req, res) => {
-  const { data, error } = await supabase
+  // 1. Fetch workspace members
+  const { data: membersData, error } = await supabase
     .from('workspace_members')
-    .select('role, user_id, profiles(display_name), auth_users:user_id(email)')
+    .select('role, user_id')
     .eq('workspace_id', req.workspaceId);
 
   if (error) return res.status(500).json({ error: error.message });
 
-  // Also fetch the workspace name and plan
+  // 2. Fetch profiles for these members manually
+  const userIds = membersData.map(m => m.user_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .in('id', userIds);
+
+  // 3. Fetch emails for these members via auth admin
+  const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+
+  // 4. Combine data
+  const members = membersData.map(m => {
+    const prof = profiles?.find(p => p.id === m.user_id);
+    const authU = authUsers?.find(u => u.id === m.user_id);
+    return {
+      role: m.role,
+      user_id: m.user_id,
+      profiles: { display_name: prof?.display_name },
+      auth_users: { email: authU?.email }
+    };
+  });
+
+  // 5. Fetch the workspace name and plan
   const { data: ws } = await supabase
     .from('workspaces')
     .select('name, plan')
     .eq('id', req.workspaceId)
     .single();
 
-  res.json({ workspace: ws, members: data || [] });
+  res.json({ workspace: ws, members: members });
 });
 
 // POST /api/workspaces/invite — invite an existing Vortex-Gen user by email
