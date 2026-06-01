@@ -1,8 +1,9 @@
 import React from 'react';
 import { useAppContext, FLOW_VISUAL_OPTIONS } from '@/store';
-import { Lock } from 'lucide-react';
+import { Lock, Users, UserPlus, Crown, Trash2, SlidersHorizontal } from 'lucide-react';
 import SimulationView from '@/features/lab/components/simulation/SimulationView';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 
 const PREVIEW_AIRFOIL = {
   name: "Preview Profile",
@@ -12,6 +13,193 @@ const PREVIEW_AIRFOIL = {
     [0.2, -0.02], [0.5, -0.01], [0.8, -0.005], [1, 0]
   ]
 };
+
+// ─── Workspace Tab ────────────────────────────────────────────────────────
+const TIER_LABELS: Record<string, { label: string; color: string }> = {
+  free:    { label: 'Free',     color: '#64748b' },
+  pro:     { label: 'Pro',      color: '#38bdf8' },
+  pro_max: { label: 'Pro Max',  color: '#818cf8' },
+};
+
+const WorkspaceTab = () => {
+  const { subscriptionTier } = useAppContext();
+  const [wsInfo, setWsInfo]       = React.useState<{ name: string; plan: string } | null>(null);
+  const [members, setMembers]     = React.useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = React.useState('');
+  const [loading, setLoading]     = React.useState(true);
+  const [inviting, setInviting]   = React.useState(false);
+  const [feedback, setFeedback]   = React.useState<{ type: 'ok' | 'err'; msg: string } | null>(null);
+
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+  const getToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || '';
+  };
+
+  const fetchMembers = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${apiBase}/api/workspaces/members`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok) { setWsInfo(json.workspace); setMembers(json.members); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiBase]);
+
+  React.useEffect(() => { fetchMembers(); }, [fetchMembers]);
+
+  const handleInvite = async () => {
+    if (!inviteEmail.includes('@')) return;
+    setInviting(true);
+    setFeedback(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${apiBase}/api/workspaces/invite`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail })
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setFeedback({ type: 'ok', msg: json.message });
+        setInviteEmail('');
+        fetchMembers();
+      } else {
+        setFeedback({ type: 'err', msg: json.error });
+      }
+    } catch (e) {
+      setFeedback({ type: 'err', msg: 'Network error.' });
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRemove = async (userId: string) => {
+    const token = await getToken();
+    await fetch(`${apiBase}/api/workspaces/remove`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+    fetchMembers();
+  };
+
+  const tier = wsInfo?.plan || 'free';
+  const tierMeta = TIER_LABELS[tier] || TIER_LABELS.free;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Workspace Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 backdrop-blur-md shadow-xl"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-mono text-brand-400 uppercase tracking-widest mb-1">Active Workspace</p>
+            <h3 className="text-white font-bold text-xl">{wsInfo?.name ?? '—'}</h3>
+          </div>
+          <span
+            className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border"
+            style={{ color: tierMeta.color, borderColor: tierMeta.color, background: tierMeta.color + '18' }}
+          >
+            {tierMeta.label}
+          </span>
+        </div>
+      </motion.div>
+
+      {/* Members List */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 backdrop-blur-md shadow-xl"
+      >
+        <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+          <Users size={16} className="text-[var(--color-accent-blue)]" /> Team Members
+        </h3>
+        {loading ? (
+          <p className="text-brand-400 text-sm">Loading…</p>
+        ) : members.length === 0 ? (
+          <p className="text-brand-400 text-sm">No members found.</p>
+        ) : (
+          <ul className="space-y-2">
+            {members.map((m) => {
+              const name = m.profiles?.display_name || m.user_id?.slice(0, 8) + '…';
+              const isOwner = m.role === 'owner';
+              return (
+                <li key={m.user_id} className="flex items-center justify-between py-2 px-3 rounded-xl bg-black/20 border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-[var(--color-accent-blue)]/20 flex items-center justify-center text-xs font-bold text-[var(--color-accent-blue)]">
+                      {name[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-white text-sm">{name}</span>
+                    {isOwner && <Crown size={12} className="text-yellow-400" />}
+                  </div>
+                  {!isOwner && (
+                    <button
+                      onClick={() => handleRemove(m.user_id)}
+                      className="text-brand-400 hover:text-red-400 transition-colors"
+                      title="Remove member"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </motion.div>
+
+      {/* Invite Member */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 backdrop-blur-md shadow-xl"
+      >
+        <h3 className="text-white font-semibold flex items-center gap-2 mb-1">
+          <UserPlus size={16} className="text-[var(--color-accent-neon)]" /> Invite Member
+        </h3>
+        <p className="text-sm text-brand-400 mb-4">The person must already have a Vortex-Gen account.</p>
+        <div className="flex gap-2">
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleInvite()}
+            placeholder="colleague@email.com"
+            className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-brand-500 focus:outline-none focus:border-[var(--color-accent-blue)] transition-colors"
+          />
+          <button
+            onClick={handleInvite}
+            disabled={inviting || !inviteEmail.includes('@')}
+            className="px-5 py-2 rounded-xl bg-[var(--color-accent-blue)] text-white text-sm font-semibold hover:brightness-110 transition disabled:opacity-40"
+          >
+            {inviting ? '…' : 'Invite'}
+          </button>
+        </div>
+        <AnimatePresence>
+          {feedback && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className={`text-xs mt-3 font-mono ${
+                feedback.type === 'ok' ? 'text-green-400' : 'text-red-400'
+              }`}
+            >
+              {feedback.type === 'ok' ? '✓ ' : '✗ '}{feedback.msg}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
+};
+// ─── End Workspace Tab ────────────────────────────────────────────────────
 
 const Settings = () => {
   const { 
@@ -24,6 +212,7 @@ const Settings = () => {
     graphBounds, setGraphBounds,
     subscriptionTier
   } = useAppContext();
+  const [activeTab, setActiveTab] = React.useState<'system' | 'workspace'>('system');
   const previewTimeoutRef = React.useRef(null);
   const audioCtxRef = React.useRef(null);
 
@@ -108,16 +297,36 @@ const Settings = () => {
       
       {/* Left side: Settings Container */}
       <div className="flex-[0_0_100%] xl:flex-[0_0_55%] flex flex-col p-8 overflow-y-auto custom-scrollbar pb-16">
-         <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-2xl font-bold text-white tracking-widest uppercase mb-8 border-b border-white/10 pb-4 shrink-0"
-         >
-            System Preferences
-         </motion.h1>
-         
-         <motion.div 
+
+         {/* Tab switcher */}
+         <div className="flex gap-2 mb-8 shrink-0 border-b border-white/10 pb-4">
+           <button
+             onClick={() => setActiveTab('system')}
+             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+               activeTab === 'system'
+                 ? 'bg-[var(--color-accent-blue)]/15 text-white border border-[var(--color-accent-blue)]/50'
+                 : 'text-brand-400 hover:text-white'
+             }`}
+           >
+             <SlidersHorizontal size={14} /> System
+           </button>
+           <button
+             onClick={() => setActiveTab('workspace')}
+             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+               activeTab === 'workspace'
+                 ? 'bg-[var(--color-accent-neon)]/15 text-white border border-[var(--color-accent-neon)]/50'
+                 : 'text-brand-400 hover:text-white'
+             }`}
+           >
+             <Users size={14} /> Workspace
+           </button>
+         </div>
+
+         {/* Workspace Tab */}
+         {activeTab === 'workspace' && <WorkspaceTab />}
+
+         {/* System Preferences Tab */}
+         {activeTab === 'system' && <motion.div 
             initial="hidden"
             animate="visible"
             variants={{
@@ -312,7 +521,7 @@ const Settings = () => {
                  <span className="w-8 font-mono text-[var(--color-accent-blue)] font-bold">{graphBounds.max}°</span>
                </div>
             </motion.div>
-         </motion.div>
+         </motion.div>}
       </div>
 
       {/* Right side: 3D Live View */}

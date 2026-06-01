@@ -309,6 +309,94 @@ app.post('/api/create-checkout-session', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── WORKSPACE MANAGEMENT ─────────────────────────────────────────────────
+
+// GET /api/workspaces/members — list all members of the active workspace
+app.get('/api/workspaces/members', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase
+    .from('workspace_members')
+    .select('role, user_id, profiles(display_name), auth_users:user_id(email)')
+    .eq('workspace_id', req.workspaceId);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  // Also fetch the workspace name and plan
+  const { data: ws } = await supabase
+    .from('workspaces')
+    .select('name, plan')
+    .eq('id', req.workspaceId)
+    .single();
+
+  res.json({ workspace: ws, members: data || [] });
+});
+
+// POST /api/workspaces/invite — invite an existing Vortex-Gen user by email
+app.post('/api/workspaces/invite', authMiddleware, async (req, res) => {
+  if (req.userRole !== 'owner') {
+    return res.status(403).json({ error: 'Only the workspace owner can invite members.' });
+  }
+
+  const { email } = req.body;
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  }
+
+  // Look up the user in auth.users by email using the admin API
+  const { data: { users }, error: lookupError } = await supabase.auth.admin.listUsers();
+  if (lookupError) return res.status(500).json({ error: 'Could not search for user.' });
+
+  const targetUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  if (!targetUser) {
+    return res.status(404).json({ error: 'No Vortex-Gen account found with that email address.' });
+  }
+
+  // Check if user is already a member
+  const { data: existing } = await supabase
+    .from('workspace_members')
+    .select('user_id')
+    .eq('workspace_id', req.workspaceId)
+    .eq('user_id', targetUser.id)
+    .single();
+
+  if (existing) {
+    return res.status(409).json({ error: 'This user is already a member of your workspace.' });
+  }
+
+  // Add them as a member
+  const { error: insertError } = await supabase
+    .from('workspace_members')
+    .insert({ workspace_id: req.workspaceId, user_id: targetUser.id, role: 'member' });
+
+  if (insertError) return res.status(500).json({ error: insertError.message });
+
+  // Also update their active_workspace_id in profiles so they switch context
+  await supabase
+    .from('profiles')
+    .update({ active_workspace_id: req.workspaceId })
+    .eq('id', targetUser.id);
+
+  res.json({ success: true, message: `${email} has been added to your workspace.` });
+});
+
+// POST /api/workspaces/remove — remove a member from the workspace
+app.post('/api/workspaces/remove', authMiddleware, async (req, res) => {
+  if (req.userRole !== 'owner') {
+    return res.status(403).json({ error: 'Only the workspace owner can remove members.' });
+  }
+
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId is required.' });
+  if (userId === req.user.id) return res.status(400).json({ error: 'You cannot remove yourself.' });
+
+  await supabase
+    .from('workspace_members')
+    .delete()
+    .eq('workspace_id', req.workspaceId)
+    .eq('user_id', userId);
+
+  res.json({ success: true });
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
   console.log(`Firing up persistent Python Neuralfoil Daemon in the background...`);
