@@ -425,7 +425,7 @@ app.post('/api/workspaces/remove', authMiddleware, async (req, res) => {
 // Extremely strict middleware that only allows the owner of the specific workspace
 const adminMiddleware = async (req, res, next) => {
   if (req.workspaceId !== '7baec122-9241-4aaf-9f07-7147acd6b10b') {
-    return res.status(403).json({ error: 'Access denied: Admin panel is restricted.' });
+    return res.status(403).json({ error: `Access denied: Your active workspace is ${req.workspaceId}, not the admin workspace.` });
   }
   next();
 };
