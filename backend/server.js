@@ -147,24 +147,55 @@ const authMiddleware = async (req, res, next) => {
     .eq('id', user.id)
     .single();
 
-  if (!profile || !profile.active_workspace_id) {
-    return res.status(403).json({ error: 'User does not have an active workspace.' });
+  // Fetch ALL workspaces this user is a member of (to self-heal stale data)
+  const { data: allMemberships } = await supabase
+    .from('workspace_members')
+    .select('role, workspace_id, workspaces(plan)')
+    .eq('user_id', user.id);
+
+  if (!allMemberships || allMemberships.length === 0) {
+    return res.status(403).json({ error: 'User is not a member of any workspace.' });
   }
 
-  // Fetch workspace plan and user's role in that workspace
-  const { data: memberData } = await supabase
-    .from('workspace_members')
-    .select('role, workspaces(plan)')
-    .eq('user_id', user.id)
-    .eq('workspace_id', profile.active_workspace_id)
-    .single();
+  // Check if the stored active_workspace_id is valid (user is still a member of it)
+  const activeMembership = allMemberships.find(
+    m => m.workspace_id === profile?.active_workspace_id
+  );
 
-  req.workspaceId = profile.active_workspace_id;
-  req.userTier = memberData?.workspaces?.plan || 'free';
-  req.userRole = memberData?.role || 'member';
+  let resolvedMembership;
+  let resolvedWorkspaceId;
+
+  if (activeMembership) {
+    // Happy path: active_workspace_id is valid
+    resolvedMembership = activeMembership;
+    resolvedWorkspaceId = profile.active_workspace_id;
+  } else {
+    // Self-heal: active_workspace_id is stale. Pick the best workspace:
+    // Priority: owner role > highest plan > first found
+    const planOrder = { pro_max: 3, pro: 2, free: 1 };
+    resolvedMembership = allMemberships.sort((a, b) => {
+      if (a.role === 'owner' && b.role !== 'owner') return -1;
+      if (b.role === 'owner' && a.role !== 'owner') return 1;
+      return (planOrder[b.workspaces?.plan] || 0) - (planOrder[a.workspaces?.plan] || 0);
+    })[0];
+
+    resolvedWorkspaceId = resolvedMembership.workspace_id;
+
+    // Auto-update the stale profile in the background (don't await, don't block)
+    supabase.from('profiles')
+      .update({ active_workspace_id: resolvedWorkspaceId })
+      .eq('id', user.id)
+      .then(() => console.log(`[Auth] Auto-healed workspace for user ${user.id} → ${resolvedWorkspaceId}`))
+      .catch(e => console.error('[Auth] Failed to auto-heal workspace:', e.message));
+  }
+
+  req.workspaceId = resolvedWorkspaceId;
+  req.userTier = resolvedMembership?.workspaces?.plan || 'free';
+  req.userRole = resolvedMembership?.role || 'member';
 
   next();
 };
+
 
 // ─── START PYTHON DAEMON ──────────────────────────────────────────────────
 const fs = require('fs');
