@@ -4,11 +4,11 @@
 
 # 🌀 Vortex-Gen — Aerodynamic Simulation Platform
 
-> **Live:** [vortex-gen.vercel.app](https://vortex-gen.vercel.app) · **API:** [2jaefar-production.up.railway.app](https://2jaefar-production.up.railway.app/api/status)
+> **Live:** [vortex-gen.vercel.app](https://vortex-gen.vercel.app) · **API:** [youssev-vortex-gen-backend.hf.space](https://youssev-vortex-gen-backend.hf.space/api/status)
 
 **Vortex-Gen** is a full-stack, production-grade aerodynamic simulation platform designed for aerospace engineering students, researchers, and hobbyists. It combines an interactive WebGL-based visualization with a powerful Python neural-network backend (**NeuralFoil**) to deliver real-time fluid dynamics predictions. 
 
-With the latest transition into a **Feature-Based Architecture**, Vortex-Gen now offers dedicated pedagogical modules (Academy), interactive Lab Manuals, dual-geometry Compare modes, and robust 3D STL & multi-page PDF generation features.
+With the latest transition into a **Feature-Based Architecture**, Vortex-Gen now offers dedicated pedagogical modules (Academy), interactive Lab Manuals, dual-geometry Compare modes, robust 3D STL & multi-page PDF generation features, and a fully-fledged **Team Workspace** system for collaboration.
 
 ---
 
@@ -18,7 +18,7 @@ With the latest transition into a **Feature-Based Architecture**, Vortex-Gen now
 |---|---|---|
 | **GitHub** | `github.com/yOuSSefOSS/2jaefar` | Source of truth & CI/CD trigger |
 | **Vercel** | `vortex-gen.vercel.app` | Frontend hosting (React SPA) |
-| **Railway** | `2jaefar-production.up.railway.app` | Backend (Node.js + Python daemon) |
+| **Hugging Face** | `youssev-vortex-gen-backend.hf.space` | Backend (Node.js + Python daemon) |
 | **Supabase** | `dashboard.supabase.com` | Authentication + PostgreSQL database |
 | **Stripe** | `dashboard.stripe.com` | Payments & subscription webhooks |
 | **Resend** | `resend.com` | Transactional email on upgrade |
@@ -76,6 +76,12 @@ Every push to `main` auto-deploys to both Vercel and Railway. No manual deploy s
 - 🏆 **Golden Lift Mode** — Highlights the optimal lift-to-drag angle with a visual golden glow.
 - 🔊 **Stall Audio Alarm** — Configurable audio alert when pitch crosses the stall threshold.
 
+### 🏢 Team Workspaces & Collaboration
+- **Shared Context** — All users operate within a Workspace, allowing data sharing and collaboration.
+- **Member Invites** — Owners can seamlessly invite colleagues to their Pro or Pro Max workspace.
+- **Tier Inheritance** — Invited members automatically inherit the premium capabilities (NeuralFoil, extra imports) of the workspace owner.
+- **Secure Admin Panel** — A strictly protected, invisible route (`/admin`) for super-admins to manage and move users across workspaces.
+
 ### 🔐 Subscription & Auth
 - 🔐 **Supabase Authentication** — Email/password login and one-click Google OAuth.
 - 💳 **Stripe Subscriptions** — Tiered billing (Free / Pro / Pro Max) seamlessly synced to user profiles.
@@ -110,6 +116,11 @@ Recharts & Three.js consume data for Live UI updates
 | `GET` | `/api/status` | None | Service health check & Python Daemon status |
 | `POST` | `/api/analyze` | Yes (Pro+) | Proxies requests to NeuralFoil engine |
 | `POST` | `/api/increment-import` | Yes | Tracks user imports, enforces tier limits |
+| `GET` | `/api/workspaces/members` | Yes | Lists all members within the user's active workspace |
+| `POST` | `/api/workspaces/invite` | Yes (Owner) | Invites a user via email to the current workspace |
+| `POST` | `/api/workspaces/remove` | Yes (Owner) | Removes a user from the current workspace |
+| `GET` | `/api/admin/users` | Yes (Admin) | Lists all registered users and their current workspaces |
+| `POST` | `/api/admin/move-user` | Yes (Admin) | Moves a specific user to a new workspace |
 | `POST` | `/api/create-checkout-session` | Yes | Initializes Stripe Hosted Checkout |
 | `POST` | `/api/webhooks/stripe` | Stripe Sig | Handles Stripe events (checkout completed) |
 | `POST` | `/api/log` | None | Browser error relay for remote debugging |

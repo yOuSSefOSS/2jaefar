@@ -150,7 +150,8 @@ const TermsOfUse = () => {
               'Real-time Cl/Cd coefficient prediction, drag polars, and stall analysis.',
               'Custom airfoil import (.dat / .csv) and Autotune optimization tools.',
               '3D STL export and multi-page analytical PDF report generation.',
-              'An AI-powered aerodynamic simulation backend running on Railway.',
+              'Team Workspaces for collaboration and premium feature sharing.',
+              'An AI-powered aerodynamic simulation backend running on Hugging Face.',
             ].map((item, i) => (
               <Bullet key={i} color="#a78bfa">{item}</Bullet>
             ))}
@@ -191,8 +192,21 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 4. Subscriptions ── */}
-        <Section icon={CreditCard} title="4. Subscriptions, Billing & Payments" color="#fb923c" delay={0.2}>
+        {/* ── 4. Team Workspaces ── */}
+        <Section icon={User} title="4. Team Workspaces & Collaboration" color="#38bdf8" delay={0.18}>
+          <p>
+            Vortex-Gen provides a Team Workspace feature allowing users to collaborate and share premium tier benefits.
+          </p>
+          <div className="space-y-1 mt-3">
+            <Bullet color="#38bdf8"><strong>Workspace Creation:</strong> Every user is automatically assigned a personal workspace upon registration.</Bullet>
+            <Bullet color="#38bdf8"><strong>Inviting Members:</strong> Workspace owners can invite other users to their workspace. By inviting a user, you agree to share your subscription benefits (e.g., Pro or Pro Max tier limits) with them.</Bullet>
+            <Bullet color="#38bdf8"><strong>Accepting Invites:</strong> If you accept an invite to a workspace, you acknowledge that the workspace owner can view your membership status and remove you from the workspace at any time.</Bullet>
+            <Bullet color="#38bdf8"><strong>Data Visibility:</strong> Users within the same workspace may have visibility into shared resources, basic profile information (like email and role), and simulation activities conducted within the workspace context.</Bullet>
+          </div>
+        </Section>
+
+        {/* ── 5. Subscriptions ── */}
+        <Section icon={CreditCard} title="5. Subscriptions, Billing & Payments" color="#fb923c" delay={0.2}>
           <p>
             Vortex-Gen offers a tiered subscription model. Access to premium features is governed by
             your active subscription tier:
@@ -257,8 +271,8 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 5. Acceptable Use ── */}
-        <Section icon={Ban} title="5. Acceptable Use Policy" color="#fb7185" delay={0.25}>
+        {/* ── 6. Acceptable Use ── */}
+        <Section icon={Ban} title="6. Acceptable Use Policy" color="#fb7185" delay={0.25}>
           <p>
             You agree to use the Service in a lawful and respectful manner. The following activities
             are strictly prohibited:
@@ -283,8 +297,8 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 6. Intellectual Property ── */}
-        <Section icon={Scale} title="6. Intellectual Property" color="#38bdf8" delay={0.3}>
+        {/* ── 7. Intellectual Property ── */}
+        <Section icon={Scale} title="7. Intellectual Property" color="#38bdf8" delay={0.3}>
           <p>
             <strong className="text-white">Vortex-Gen's IP:</strong> All content, design, code, graphics,
             branding, and the educational content of the Vortex-Gen platform are the intellectual property
@@ -314,8 +328,8 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 7. Disclaimer ── */}
-        <Section icon={AlertTriangle} title="7. Disclaimers of Warranty" color="#f59e0b" delay={0.35}>
+        {/* ── 8. Disclaimer ── */}
+        <Section icon={AlertTriangle} title="8. Disclaimers of Warranty" color="#f59e0b" delay={0.35}>
           <Callout icon={AlertTriangle} color="#f59e0b">
             The Service is provided <strong className="text-white">"AS IS"</strong> and{' '}
             <strong className="text-white">"AS AVAILABLE"</strong> without any warranties, express or implied,
@@ -330,8 +344,8 @@ const TermsOfUse = () => {
           </div>
         </Section>
 
-        {/* ── 8. Limitation of Liability ── */}
-        <Section icon={Scale} title="8. Limitation of Liability" color="#a78bfa" delay={0.4}>
+        {/* ── 9. Limitation of Liability ── */}
+        <Section icon={Scale} title="9. Limitation of Liability" color="#a78bfa" delay={0.4}>
           <p>
             To the fullest extent permitted by law, Vortex-Gen shall not be liable for any indirect,
             incidental, special, consequential, or punitive damages arising from:
@@ -349,8 +363,8 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 9. Changes ── */}
-        <Section icon={Edit} title="9. Changes to These Terms" color="#22c55e" delay={0.45}>
+        {/* ── 10. Changes ── */}
+        <Section icon={Edit} title="10. Changes to These Terms" color="#22c55e" delay={0.45}>
           <p>
             We reserve the right to update or modify these Terms at any time. Changes will be posted
             on this page with an updated "Last updated" date. Continued use of the Service after changes
@@ -362,8 +376,8 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 10. Governing Law ── */}
-        <Section icon={Scale} title="10. Governing Law & Dispute Resolution" color="#38bdf8" delay={0.5}>
+        {/* ── 11. Governing Law ── */}
+        <Section icon={Scale} title="11. Governing Law & Dispute Resolution" color="#38bdf8" delay={0.5}>
           <p>
             These Terms are governed by and construed in accordance with the laws of the Arab Republic
             of Egypt, without regard to its conflict of law principles.
@@ -379,8 +393,8 @@ const TermsOfUse = () => {
           </p>
         </Section>
 
-        {/* ── 11. Contact ── */}
-        <Section icon={Mail} title="11. Contact Us" color="#fb923c" delay={0.55}>
+        {/* ── 12. Contact ── */}
+        <Section icon={Mail} title="12. Contact Us" color="#fb923c" delay={0.55}>
           <p>
             If you have any questions about these Terms of Use, please contact us:
           </p>

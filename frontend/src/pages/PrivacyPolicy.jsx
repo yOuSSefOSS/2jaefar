@@ -149,6 +149,7 @@ const PrivacyPolicy = () => {
             <DataRow label="Email address" detail="Collected during sign-up via email/password or Google OAuth. Used to identify your account and send transactional notifications." />
             <DataRow label="Display name" detail="Your name or username as provided during registration or via your Google profile." />
             <DataRow label="Password (hashed)" detail="Stored securely by Supabase using bcrypt hashing. We never see or store your plain-text password." />
+            <DataRow label="Workspace Roles" detail="Information about the workspaces you belong to and your roles (owner, member) within them." />
           </div>
 
           <div className="mt-3 space-y-1 rounded-xl bg-white/2 border border-white/5 p-4">
@@ -177,6 +178,7 @@ const PrivacyPolicy = () => {
             {[
               { title: 'Authentication', desc: 'To verify your identity and maintain your login session across visits.' },
               { title: 'Feature gating', desc: 'To determine which simulation features (NeuralFoil, Autotune, high-fidelity WebGL) are available to you based on your subscription tier.' },
+              { title: 'Workspace Collaboration', desc: 'To allow users within the same workspace to share data and grant premium tier benefits to invited members. Basic profile information (such as email and role) may be visible to other members of your workspace.' },
               { title: 'Billing & payments', desc: 'To create Stripe checkout sessions, process subscription upgrades, and send payment confirmation emails via Resend.' },
               { title: 'Usage enforcement', desc: 'To track your monthly airfoil import count and enforce the limits defined in your tier.' },
               { title: 'Transactional email', desc: 'To send you account confirmation and subscription upgrade notifications. We do not send marketing emails.' },
