@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Loader2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabaseClient';
 
 const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -15,7 +16,8 @@ const Admin = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('vortex_session');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       if (!token) throw new Error('Not logged in');
 
       const [usersRes, wsRes] = await Promise.all([
@@ -51,7 +53,8 @@ const Admin = () => {
     
     setMovingUserId(userId);
     try {
-      const token = localStorage.getItem('vortex_session');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const res = await fetch(`${apiBase}/api/admin/move-user`, {
         method: 'POST',
         headers: {
