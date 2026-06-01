@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Admin from './pages/Admin';
 import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -120,6 +121,7 @@ function App() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/admin" element={<Admin />} />
                   </Routes>
                 </DashboardLayout>
               </AuthGuard>
