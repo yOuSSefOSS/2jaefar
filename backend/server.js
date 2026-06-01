@@ -420,6 +420,86 @@ app.post('/api/workspaces/remove', authMiddleware, async (req, res) => {
   res.json({ success: true });
 });
 
+// ─── ADMIN DASHBOARD ENDPOINTS ──────────────────────────────────────────────
+
+// Extremely strict middleware that only allows the owner of the specific workspace
+const adminMiddleware = async (req, res, next) => {
+  if (req.workspaceId !== '7baec122-9241-4aaf-9f07-7147acd6b10b') {
+    return res.status(403).json({ error: 'Access denied: Admin panel is restricted.' });
+  }
+  next();
+};
+
+// GET /api/admin/users — fetch all users across the entire system
+app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res) => {
+  // 1. Fetch all workspace_members
+  const { data: membersData, error } = await supabase
+    .from('workspace_members')
+    .select('role, user_id, workspace_id');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  // 2. Fetch all profiles
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, display_name');
+
+  // 3. Fetch all emails
+  const { data: { users: authUsers } } = await supabase.auth.admin.listUsers();
+
+  // 4. Combine into an easy format
+  const users = membersData.map(m => {
+    const prof = profiles?.find(p => p.id === m.user_id);
+    const authU = authUsers?.find(u => u.id === m.user_id);
+    return {
+      user_id: m.user_id,
+      email: authU?.email || 'Unknown',
+      display_name: prof?.display_name || 'No Name',
+      role: m.role,
+      workspace_id: m.workspace_id
+    };
+  });
+
+  res.json({ users });
+});
+
+// GET /api/admin/workspaces — fetch all available workspaces
+app.get('/api/admin/workspaces', authMiddleware, adminMiddleware, async (req, res) => {
+  const { data: workspaces, error } = await supabase
+    .from('workspaces')
+    .select('id, name, plan');
+    
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ workspaces });
+});
+
+// POST /api/admin/move-user — move a user to a different workspace
+app.post('/api/admin/move-user', authMiddleware, adminMiddleware, async (req, res) => {
+  const { userId, newWorkspaceId } = req.body;
+  if (!userId || !newWorkspaceId) return res.status(400).json({ error: 'Missing parameters' });
+
+  // 1. Delete their existing workspace membership
+  await supabase
+    .from('workspace_members')
+    .delete()
+    .eq('user_id', userId);
+
+  // 2. Insert into new workspace
+  const { error: insertError } = await supabase
+    .from('workspace_members')
+    .insert({ workspace_id: newWorkspaceId, user_id: userId, role: 'member' });
+
+  if (insertError) return res.status(500).json({ error: insertError.message });
+
+  // 3. Update their active_workspace_id
+  await supabase
+    .from('profiles')
+    .update({ active_workspace_id: newWorkspaceId })
+    .eq('id', userId);
+
+  res.json({ success: true });
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
   console.log(`Firing up persistent Python Neuralfoil Daemon in the background...`);
