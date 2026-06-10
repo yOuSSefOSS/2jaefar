@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAcademy } from '../../../context/AcademyContext';
+import ThreeDPlane from '../components/ThreeDPlane';
 
 const ModernSlider = ({ value, min, max, onChange, label, unit, color }) => {
   const trackRef = useRef(null);
@@ -115,35 +116,31 @@ export default function ControlsTab() {
             </h2>
 
             {/* 3D Visualizer */}
-            <div className="w-full h-[250px] bg-slate-950/80 rounded-2xl border border-white/5 mb-8 relative flex items-center justify-center overflow-hidden shadow-inner" style={{ perspective: '800px' }}>
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
+            <div className="w-full h-[250px] bg-slate-950/80 rounded-2xl border border-white/5 mb-8 relative flex items-center justify-center overflow-hidden shadow-inner">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent pointer-events-none" />
               
-              <div 
-                className="relative w-48 h-48 transition-transform duration-300 ease-out"
-                style={{ 
-                  transformStyle: 'preserve-3d',
-                  transform: `rotateX(${-pitch}deg) rotateZ(${-effectiveYaw}deg) rotateY(${roll}deg)` 
-                }}
-              >
-                {/* Neon Airplane Skeleton */}
-                {/* Fuselage */}
-                <div className="absolute top-1/2 left-1/2 w-4 h-48 bg-slate-800 rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-slate-600" />
-                {/* Wings */}
-                <div className="absolute top-1/2 left-1/2 w-56 h-6 bg-slate-800 rounded-full transform -translate-x-1/2 -mt-4 shadow-[0_0_15px_rgba(16,185,129,0.4)] border border-emerald-500/50">
-                   {/* Left Aileron (up if roll > 0) */}
-                   <div className="absolute bottom-0 left-2 w-16 h-2 bg-emerald-500 origin-top transition-transform" style={{ transform: `rotateX(${roll > 0 ? -30 : roll < 0 ? 30 : 0}deg)`}} />
-                   {/* Right Aileron */}
-                   <div className="absolute bottom-0 right-2 w-16 h-2 bg-emerald-500 origin-top transition-transform" style={{ transform: `rotateX(${roll > 0 ? 30 : roll < 0 ? -30 : 0}deg)`}} />
+              <div className="w-full h-full relative z-10">
+                <ThreeDPlane 
+                  pitch={pitch} 
+                  roll={roll} 
+                  yaw={effectiveYaw} 
+                  controlForces={{ pitch, roll, yaw: effectiveYaw }}
+                />
+              </div>
+
+              {/* Force Legend */}
+              <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none z-20">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-sky-500 shadow-[0_0_10px_#0ea5e9]"></div>
+                  <span className="text-[10px] text-slate-300 font-bold tracking-wider uppercase">Elevator Force</span>
                 </div>
-                {/* Horizontal Tail */}
-                <div className="absolute bottom-4 left-1/2 w-20 h-4 bg-slate-800 rounded-full transform -translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-500/50">
-                   {/* Elevator */}
-                   <div className="absolute bottom-0 left-1 right-1 h-2 bg-sky-500 origin-top transition-transform" style={{ transform: `rotateX(${pitch * 1.5}deg)`}} />
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></div>
+                  <span className="text-[10px] text-slate-300 font-bold tracking-wider uppercase">Aileron Force</span>
                 </div>
-                {/* Vertical Tail */}
-                <div className="absolute bottom-4 left-1/2 w-1 h-12 bg-slate-800 rounded-t transform -translate-x-1/2 origin-bottom rotate-x-90 border border-fuchsia-500/50" style={{ transform: 'translateX(-50%) rotateX(-90deg) translateY(-12px)' }}>
-                   {/* Rudder */}
-                   <div className="absolute top-1 bottom-0 right-0 w-4 bg-fuchsia-500 origin-left transition-transform" style={{ transform: `rotateY(${-yaw * 1.5}deg)`}} />
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-fuchsia-500 shadow-[0_0_10px_#d946ef]"></div>
+                  <span className="text-[10px] text-slate-300 font-bold tracking-wider uppercase">Rudder Force</span>
                 </div>
               </div>
             </div>
@@ -166,7 +163,7 @@ export default function ControlsTab() {
                 color="#d946ef"
               />
 
-              {Math.abs(adverseYaw) > 5 && (
+              {Math.abs(effectiveYaw) > 2 && Math.abs(roll) > 15 && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -174,7 +171,7 @@ export default function ControlsTab() {
                 >
                   <div className="text-xs text-red-400">
                     <span className="font-bold uppercase tracking-widest mb-1 block">⚠️ {isAr ? 'الانعراج العكسي!' : 'Adverse Yaw Detected!'}</span> 
-                    {isAr ? 'مقاومة الجنيحات تسحب مقدمة الطائرة خارج المسار.' : 'Aileron drag is pulling the nose off course.'}
+                    {isAr ? 'مقاومة الجنيحات تسحب مقدمة الطائرة خارج المسار.' : 'Aileron drag is pulling the nose off course. Coordinate your turn!'}
                   </div>
                   <button 
                     onClick={() => setYaw(Math.round(-adverseYaw))} 
@@ -182,6 +179,15 @@ export default function ControlsTab() {
                   >
                     {isAr ? 'تطبيق الدفة' : 'Apply Rudder'}
                   </button>
+                </motion.div>
+              )}
+              {Math.abs(effectiveYaw) <= 2 && Math.abs(roll) > 15 && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl mt-4 flex items-center justify-center gap-2"
+                >
+                  <span className="font-bold text-emerald-400 text-xs uppercase tracking-widest">✅ {isAr ? 'منعطف منسق!' : 'Coordinated Turn!'}</span>
                 </motion.div>
               )}
             </div>

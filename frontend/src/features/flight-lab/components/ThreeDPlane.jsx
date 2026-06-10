@@ -19,7 +19,7 @@ function Loader() {
   )
 }
 
-function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition, cpPosition }) {
+function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition, cpPosition, controlForces }) {
   const { scene } = useGLTF('/assets/airplane_a380.glb');
   const group = useRef();
 
@@ -54,6 +54,56 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition
           <meshStandardMaterial color="#f59e0b" emissive="#b45309" emissiveIntensity={0.5} />
         </mesh>
       )}
+      {/* Control Surface Forces */}
+      {controlForces && (
+        <>
+          {/* Elevator Force (Pitch) */}
+          {Math.abs(controlForces.pitch) > 0 && (
+            <arrowHelper 
+              args={[
+                new THREE.Vector3(0, controlForces.pitch > 0 ? -1 : 1, 0), 
+                new THREE.Vector3(0, 0.5, -4), 
+                Math.max(2, Math.abs(controlForces.pitch) * 0.2), 
+                0x0ea5e9, 0.5, 0.3
+              ]} 
+            />
+          )}
+          {/* Aileron Forces (Roll) */}
+          {Math.abs(controlForces.roll) > 0 && (
+            <>
+              {/* Left Wing */}
+              <arrowHelper 
+                args={[
+                  new THREE.Vector3(0, controlForces.roll > 0 ? 1 : -1, 0), 
+                  new THREE.Vector3(3, 0, 0), 
+                  Math.max(2, Math.abs(controlForces.roll) * 0.1), 
+                  0x10b981, 0.5, 0.3
+                ]} 
+              />
+              {/* Right Wing */}
+              <arrowHelper 
+                args={[
+                  new THREE.Vector3(0, controlForces.roll > 0 ? -1 : 1, 0), 
+                  new THREE.Vector3(-3, 0, 0), 
+                  Math.max(2, Math.abs(controlForces.roll) * 0.1), 
+                  0x10b981, 0.5, 0.3
+                ]} 
+              />
+            </>
+          )}
+          {/* Rudder Force (Yaw) */}
+          {Math.abs(controlForces.yaw) > 0 && (
+            <arrowHelper 
+              args={[
+                new THREE.Vector3(controlForces.yaw > 0 ? -1 : 1, 0, 0), 
+                new THREE.Vector3(0, 1.5, -4), 
+                Math.max(2, Math.abs(controlForces.yaw) * 0.2), 
+                0xd946ef, 0.5, 0.3
+              ]} 
+            />
+          )}
+        </>
+      )}
     </group>
   );
 }
@@ -61,7 +111,7 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition
 // Preload the model
 useGLTF.preload('/assets/airplane_a380.glb');
 
-export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition, cpPosition }) {
+export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition, cpPosition, controlForces }) {
   const controlsRef = useRef();
 
   return (
@@ -85,7 +135,7 @@ export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces =
           
           <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
             <React.Suspense fallback={<Loader />}>
-              <Airplane pitch={pitch} roll={roll} yaw={yaw} showForces={showForces} cgPosition={cgPosition} cpPosition={cpPosition} />
+              <Airplane pitch={pitch} roll={roll} yaw={yaw} showForces={showForces} cgPosition={cgPosition} cpPosition={cpPosition} controlForces={controlForces} />
             </React.Suspense>
           </Float>
 
