@@ -26,6 +26,15 @@ import WingsLab from './pages/lab/WingsLab';
 import TailLab from './pages/lab/TailLab';
 import FuselageLab from './pages/lab/FuselageLab';
 import EnginesLab from './pages/lab/EnginesLab';
+
+// New Principles of Flight Lab
+import FlightLabLayout from './features/flight-lab/pages/FlightLabLayout';
+import AerodynamicsTab from './features/flight-lab/pages/AerodynamicsTab';
+import LiftEquationTab from './features/flight-lab/pages/LiftEquationTab';
+import HighLiftDevicesTab from './features/flight-lab/pages/HighLiftDevicesTab';
+import StabilityTab from './features/flight-lab/pages/StabilityTab';
+import ControlsTab from './features/flight-lab/pages/ControlsTab';
+import { AcademyProvider } from './context/AcademyContext';
 import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
@@ -97,6 +106,17 @@ function App() {
             <Route path="fuselage" element={<FuselageLab />} />
             <Route path="engines" element={<EnginesLab />} />
           </Route>
+
+          {/* ── Principles of Flight Lab (Interactive Module) ── */}
+          <Route path="/principles-of-flight" element={<AcademyProvider><FlightLabLayout /></AcademyProvider>}>
+            <Route index element={<Navigate to="aerodynamics" replace />} />
+            <Route path="aerodynamics" element={<AerodynamicsTab />} />
+            <Route path="lift-equation" element={<LiftEquationTab />} />
+            <Route path="high-lift-devices" element={<HighLiftDevicesTab />} />
+            <Route path="stability" element={<StabilityTab />} />
+            <Route path="controls" element={<ControlsTab />} />
+          </Route>
+          
           <Route
             path="/lab/airfoil"
             element={

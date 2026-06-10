@@ -91,6 +91,19 @@ const ExplorerLayout = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
+          {/* Flight Lab CTA */}
+          <Link
+            to="/principles-of-flight"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold tracking-wider uppercase
+              bg-gradient-to-r from-emerald-500/15 to-emerald-600/15
+              border border-emerald-500/25 text-emerald-400
+              hover:border-emerald-500/40 hover:bg-emerald-500/20
+              transition-all duration-300 mr-2"
+          >
+            <GraduationCap size={14} />
+            Flight Academy
+          </Link>
+
           {/* Labs CTA */}
           <Link
             to="/lab"
@@ -150,6 +163,13 @@ const ExplorerLayout = () => {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                to="/principles-of-flight"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-2 px-4 py-3 rounded-lg text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2"
+              >
+                <GraduationCap size={16} /> Flight Academy
+              </Link>
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}

@@ -1,241 +1,111 @@
-<p align="center">
-  <img src="frontend/public/banner.png" alt="Vortex-Gen Banner" width="100%">
-</p>
+<div align="center">
+  <img src="frontend/public/banner.png" alt="Vortex-Gen Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px;">
 
-# 🌀 Vortex-Gen — Aerodynamic Simulation Platform
+  # 🌀 Vortex-Gen
+  ### The Next-Generation Aerodynamic Simulation Platform
+  
+  [![Vercel Deployment](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://vortex-gen.vercel.app)
+  [![Hugging Face Backend](https://img.shields.io/badge/AI_Engine-Hugging_Face-yellow?style=for-the-badge&logo=huggingface)](https://youssev-vortex-gen-backend.hf.space/api/status)
+  [![React 19](https://img.shields.io/badge/Frontend-React_19-blue?style=for-the-badge&logo=react)](https://react.dev/)
+  [![PyTorch ML](https://img.shields.io/badge/Backend-PyTorch-ee4c2c?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
 
-> **Live:** [vortex-gen.vercel.app](https://vortex-gen.vercel.app) · **API:** [youssev-vortex-gen-backend.hf.space](https://youssev-vortex-gen-backend.hf.space/api/status)
-
-**Vortex-Gen** is a full-stack, production-grade aerodynamic simulation platform designed for aerospace engineering students, researchers, and hobbyists. It combines an interactive WebGL-based visualization with a powerful Python neural-network backend (**NeuralFoil**) to deliver real-time fluid dynamics predictions. 
-
-With the latest transition into a **Feature-Based Architecture**, Vortex-Gen now offers dedicated pedagogical modules (Academy), interactive Lab Manuals, dual-geometry Compare modes, robust 3D STL & multi-page PDF generation features, and a fully-fledged **Team Workspace** system for collaboration.
-
----
-
-## 🏗️ Infrastructure Overview
-
-| Service | URL | Role |
-|---|---|---|
-| **GitHub** | `github.com/yOuSSefOSS/2jaefar` | Source of truth & CI/CD trigger |
-| **Vercel** | `vortex-gen.vercel.app` | Frontend hosting (React SPA) |
-| **Hugging Face** | `youssev-vortex-gen-backend.hf.space` | Backend (Node.js + Python daemon) |
-| **Supabase** | `dashboard.supabase.com` | Authentication + PostgreSQL database |
-| **Stripe** | `dashboard.stripe.com` | Payments & subscription webhooks |
-| **Resend** | `resend.com` | Transactional email on upgrade |
-
-Every push to `main` auto-deploys to both Vercel and Railway. No manual deploy steps required.
+  <p align="center">
+    <strong>Vortex-Gen</strong> brings enterprise-grade Computational Fluid Dynamics (CFD) right into your browser. Combining breathtaking <strong>WebGL visualizations</strong> with a millisecond-latency <strong>PyTorch Neural Network</strong>, we've built the ultimate sandbox for aerospace students, researchers, and hobbyists.
+  </p>
+</div>
 
 ---
 
-## 💻 Tech Stack
+## 🔥 Why Vortex-Gen?
 
-### Frontend (`frontend/`)
-- **React 19 + Vite + TypeScript/JSX** — UI framework and lightning-fast build tool.
-- **Tailwind CSS v4** — Utility-first, heavily customized glassmorphism design system.
-- **Framer Motion** — Spring-physics micro-animations, layout transitions, and interactive Modals.
-- **Recharts** — SVG charts for Lift (Cl vs AoA), Drag (Cd vs AoA), and Drag Polars.
-- **Three.js / React-Three-Fiber** — WebGL particle flow engine for 3D aerodynamic visualization.
-- **jsPDF + html2canvas** — Client-side multi-page PDF analytical report generation.
-- **Supabase JS SDK** — Client-side JWT-based authentication.
+Traditional CFD is incredibly computationally expensive and mathematically dense. **Vortex-Gen democratization aerodynamics.** By swapping heavy Navier-Stokes solvers for a trained Neural Surrogate Model (**NeuralFoil**), you get instant feedback. 
 
-### Backend (`backend/`)
-- **Node.js + Express** — REST API gateway and authorization middleware.
-- **Python 3 + NeuralFoil (PyTorch)** — Deep-learning surrogate model for millisecond aerodynamic coefficient prediction.
-- **IPC Protocol** — High-performance JSON communication over `stdin`/`stdout` between Node.js and the Python Daemon.
-- **Supabase Admin SDK** — Server-side profile & subscription management.
-- **Stripe SDK** — Hosted checkout session creation and webhook signature verification.
-- **Resend API** — Dynamic Welcome/Upgrade email delivery.
+- **⚡ Instant Telemetry:** Real-time $C_L$, $C_D$, and Drag Polars.
+- **💨 Analytical CFD Smoke:** Mathematically accurate Von Kármán vortex streets and streaklines natively rendered in your browser.
+- **👥 Collaborative Workspaces:** Secure, isolated team environments for sharing custom geometries.
 
 ---
 
-## ✨ Features
+## 🏗️ Production Architecture
 
-### 🏫 Academy & Explorer
-- **Interactive Aircraft Map** — Clickable 3D-styled aircraft mapping to Fuselage, Wings, and Airfoil subsystems.
-- **Pedagogical Walkthroughs** — Dedicated learning sections detailing engineering specifications (e.g., Hoop stress for Fuselage, Sweep angles for Wings).
+Vortex-Gen operates on a highly distributed, hybrid architecture built for maximum availability and performance.
 
-### 🌬️ Wind Tunnel Lab & Simulation Engine
-- 🚀 **Real-Time 3D CFD Visualization** — Interactive WebGL particle flow engine highlighting dynamic pressure heatmaps.
-- 🧠 **NeuralFoil AI Backend** — Accurately predicts Cl/Cd coefficients in milliseconds using a PyTorch surrogate model.
-- 📊 **Interactive Charts** — Live Lift Coefficient, Drag Coefficient, and Drag Polar with integrated stall zone markers.
-- 📖 **Interactive Lab Manual** — Step-by-step animated walkthrough guiding users through Geometry Selection, Flight Controls, and Environment Setup.
+| Domain | Service | Technology / Role |
+| :--- | :--- | :--- |
+| **🌐 Frontend** | [Vercel](https://vortex-gen.vercel.app) | React 19, Tailwind v4, Three.js, Zustand |
+| **🧠 ML Backend** | [Hugging Face](https://youssev-vortex-gen-backend.hf.space/api/status) | Node.js (Express) + Python Daemon (IPC) |
+| **🔐 Auth & DB** | Supabase | JWT Sessions, PostgreSQL, Row-Level Security |
+| **💳 Payments** | Stripe | Hosted Checkout, Webhooks for auto-tier upgrades |
+| **✉️ Emails** | Resend | Dynamic HTML Welcome and Subscription alerts |
 
-### ⚖️ Compare Mode & Analytics
-- **Side-by-Side Comparison** — Load a second geometry (Airfoil B) alongside the primary shape.
-- **Dual Chart Sets** — Distinct Cl, Cd, and force metrics for both geometries plotted simultaneously.
-- **Overlay Comparison Charts** — Superimposed dual-line charts with labeled legends for rigorous A/B testing.
-
-### 🛠️ Airfoil Tools & Artifacts
-- 📥 **Custom Airfoil Import** — Upload standard Selig `.dat` or `.csv` coordinate files directly into the Wind Tunnel.
-- 📦 **3D STL Export** — Extract any airfoil as a 3D-printable STL with dynamic span/chord presets (Drone, Plane Section, Custom).
-- 📄 **Multi-Page PDF Reports** — High-fidelity branded analytical PDFs including airfoil geometry, environment parameters, and Cl/Cd charts. (Expands to 3 pages during Compare Mode).
-
-### 🤖 Autotune & Intelligence
-- ⚡ **Fast Tune** — Sweeps NACA 4-digit candidates to find the highest-Cl airfoil for a target AoA range (Pro).
-- 🔬 **Deep Tune** — Exhaustive large-model sweep for maximum precision (Pro Max).
-- 🏆 **Golden Lift Mode** — Highlights the optimal lift-to-drag angle with a visual golden glow.
-- 🔊 **Stall Audio Alarm** — Configurable audio alert when pitch crosses the stall threshold.
-
-### 🏢 Team Workspaces & Collaboration
-- **Shared Context** — All users operate within a Workspace, allowing data sharing and collaboration.
-- **Member Invites** — Owners can seamlessly invite colleagues to their Pro or Pro Max workspace.
-- **Tier Inheritance** — Invited members automatically inherit the premium capabilities (NeuralFoil, extra imports) of the workspace owner.
-- **Secure Admin Panel** — A strictly protected, invisible route (`/admin`) for super-admins to manage and move users across workspaces.
-
-### 🔐 Subscription & Auth
-- 🔐 **Supabase Authentication** — Email/password login and one-click Google OAuth.
-- 💳 **Stripe Subscriptions** — Tiered billing (Free / Pro / Pro Max) seamlessly synced to user profiles.
-- 🛡️ **Backend Auth Middleware** — All API routes validate Supabase JWTs server-side via RLS and Gateway checks.
+> **💡 Architecture Note:** The Node.js API acts as a gateway, validating Supabase JWTs before piping requests to a **Persistent Python Daemon** via IPC (`stdin/stdout`), completely eliminating cold-starts for AI inferences.
 
 ---
 
-## 🔄 Data Flow Architecture
+## ✨ Core Features
 
-```text
-User visits Vercel → React App (Vite) loads
-         ↓
-Supabase Auth → JWT issued → AppContext loads user tier
-         ↓
-User selects Airfoil & configures Wind Speed / Density
-         ↓
-POST /api/analyze → Railway (Express) validates JWT
-         ↓
-Node.js converts req to JSON → pipes to Python NeuralFoil Daemon (stdin)
-         ↓
-Python calculates pyTorch inferences → writes result array to stdout
-         ↓
-Recharts & Three.js consume data for Live UI updates
-```
+### 🌪️ The Wind Tunnel Lab
+- **Real-Time 3D CFD Visualization:** Interactive particle flow engine mapping pressure differentials and velocity heatmaps.
+- **Live Interactive Charts:** Track Lift, Drag, and Stall Zones over shifting Angles of Attack dynamically.
+- **Dual Compare Mode:** Rigorously test two airfoils (e.g., NACA 0012 vs custom `.dat`) side-by-side with overlaid analytics.
 
----
+### 🤖 AI-Powered Autotune
+- **Fast Tune:** Rapid automated sweep to identify the highest-$C_L$ geometry across hundreds of NACA parameters.
+- **Deep Tune:** Exhaustive optimization for enterprise-grade precision (Pro Max exclusively).
+- **Golden Lift Mode:** Visually targets and glows at the absolute best Lift-to-Drag ratio.
 
-## 🔑 API Endpoints
+### 🛠️ Export Artifacts
+- **3D STL Generator:** Convert any optimized 2D airfoil into a physical 3D-printable solid (Drone span, Plane Section).
+- **Multi-Page Analytical PDFs:** Professional, branded PDF reports stitched client-side with `jsPDF` outlining your exact telemetry.
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/status` | None | Service health check & Python Daemon status |
-| `POST` | `/api/analyze` | Yes (Pro+) | Proxies requests to NeuralFoil engine |
-| `POST` | `/api/increment-import` | Yes | Tracks user imports, enforces tier limits |
-| `GET` | `/api/workspaces/members` | Yes | Lists all members within the user's active workspace |
-| `POST` | `/api/workspaces/invite` | Yes (Owner) | Invites a user via email to the current workspace |
-| `POST` | `/api/workspaces/remove` | Yes (Owner) | Removes a user from the current workspace |
-| `GET` | `/api/admin/users` | Yes (Admin) | Lists all registered users and their current workspaces |
-| `POST` | `/api/admin/move-user` | Yes (Admin) | Moves a specific user to a new workspace |
-| `POST` | `/api/create-checkout-session` | Yes | Initializes Stripe Hosted Checkout |
-| `POST` | `/api/webhooks/stripe` | Stripe Sig | Handles Stripe events (checkout completed) |
-| `POST` | `/api/log` | None | Browser error relay for remote debugging |
+### 🏢 Team Workspaces
+- **Hierarchical Access:** All users operate within workspaces. Owners can invite colleagues.
+- **Tier Inheritance:** Team members inherit the premium processing power (NeuralFoil limits) of the workspace owner.
 
 ---
 
-## 💎 Subscription Tiers
+## 🛠️ Local Development Guide
 
-| Feature | Free | Pro | Pro Max |
-|---|---|---|---|
-| Basic simulation (local analytic model) | ✅ | ✅ | ✅ |
-| NeuralFoil PyTorch solver | ❌ | ✅ | ✅ |
-| Custom Airfoil `.dat` Imports | 1 / month | 10 / month | Unlimited |
-| Particle flow (High Fidelity WebGL) | ❌ | ❌ | ✅ |
-| Fast Tune Optimizer | ❌ | ✅ | ✅ |
-| Deep Tune Optimizer | ❌ | ❌ | ✅ |
-| Side-by-Side Compare Mode | ✅ | ✅ | ✅ |
-| PDF Report & 3D STL Export | ✅ | ✅ | ✅ |
-
----
-
-## 📁 Folder Structure (Feature-Based Architecture)
-
-The application has transitioned to a highly scalable, domain-driven structure mapping UI, logic, and state into distinct feature folders (`src/features/*`).
-
-```
-├── backend/
-│   ├── run_nf.py              # Python NeuralFoil daemon (stdin/stdout protocol)
-│   ├── server.js              # Express API, auth middleware, Stripe & Resend logic
-│   ├── Dockerfile             # Docker config for Railway deployment
-│   ├── requirements.txt       # Python dependencies
-│   ├── .env.example           # Backend env variable reference
-│   └── package.json
-│
-├── frontend/
-│   ├── public/                # Static assets (banner, icons, favicon)
-│   └── src/
-│       ├── assets/            # Images, SVGs, and branding assets
-│       ├── components/        # Shared UI components and global modals
-│       ├── config/            # Constants and configuration
-│       ├── context/           # AppContext (global state for Auth/Tier)
-│       ├── features/          # New Feature-Based Architecture (Next-Gen TS)
-│       │   ├── academy/       # Educational modules (Airfoil, Fuselage, Wings)
-│       │   ├── auth/          # Authentication flows
-│       │   ├── lab/           # Aerodynamic simulation lab core
-│       │   ├── landing/       # Landing page module
-│       │   ├── pricing/       # Subscription plans
-│       │   ├── profile/       # User profile and hangar
-│       │   └── settings/      # App settings
-│       ├── hooks/             # Custom React hooks
-│       ├── i18n/              # Internationalization (en, ar)
-│       ├── layouts/           # Page wrappers (DashboardLayout, ExplorerLayout)
-│       ├── lib/               # Utility functions, API and Supabase clients
-│       ├── pages/             # Legacy JSX pages (Home, Login, Signup, Explorer)
-│       ├── services/          # API Services
-│       ├── store/             # State management stores
-│       ├── styles/            # CSS Modules, Themes, Animations
-│       ├── App.jsx / App.tsx
-│       ├── main.jsx / main.tsx
-│       └── index.css
-│
-├── vercel.json                # Vercel deployment config
-├── start_servers.bat          # Windows: starts frontend + backend together
-└── README.md
-```
-
----
-
-## 🚀 Local Development Setup
+Want to run the full stack locally? Vortex-Gen uses a **Dev Bypass** protocol locally, meaning you don't even need Supabase configured to start hacking.
 
 ### Prerequisites
 - Node.js v18+
-- Python 3.9+
+- Python 3.9+ (with PyTorch and NeuralFoil installed)
 
-### 1. Clone & Install
-```bash
-git clone https://github.com/yOuSSefOSS/2jaefar.git
-cd 2jaefar
-```
-
-### 2. Backend
+### 1. Launch the ML Backend
 ```bash
 cd backend
 npm install
 
-# Python virtual environment
+# Setup Python Virtual Environment
 python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
-
-pip install neuralfoil numpy
+# Windows: venv\Scripts\activate | Unix: source venv/bin/activate
+pip install neuralfoil numpy torch
 
 cp .env.example .env
 node server.js
 ```
 
-### 3. Frontend
+### 2. Launch the React UI
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Navigate to `http://localhost:5173` — you are **automatically logged in** as a `pro_max` dev user. No Supabase credentials required locally.
+🚀 Open `http://localhost:5173`. You are **automatically logged in** as a `pro_max` dev user!
 
-### Windows Shortcut
-```bash
-start_servers.bat   # Launches both servers from project root
-```
+*(Windows Users: Simply double click `start_servers.bat` from the root folder to boot both instantly!)*
 
 ---
 
-## 🔮 Roadmap
+## 📚 Project Resources
+For a deeper dive into the system's design and our business model, check out the generated artifacts in the root directory:
+- 📄 **`Vortex-Gen — Full Project Architecture.pdf`**
+- 📄 **`vortex_gen_pitch.pdf`**
 
-- [ ] **Multiple Choice Questionnaires (MCQs):** Integration of 6 interactive MCQ sets per lab module for enhanced pedagogical assessment.
-- [ ] **Volumetric Smoke Trails:** Implementation of turbulence wake visualization in Three.js.
-- [ ] **Multi-Wing Assembly:** Simulating full wing configurations beyond standard 2D airfoils.
-- [ ] **Testing Suite:** Vitest + React Testing Library coverage.
+---
+
+<div align="center">
+  <p>Built with ❤️ for the future of Aerospace Engineering.</p>
+</div>
