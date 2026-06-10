@@ -211,13 +211,14 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
     let n = lowPowerMode ? 1750 : 3500;
     // Fewer advected markers + stride drawing keeps streak view readable (no dense X grid).
     if (flowVisualMode === 'streaklines') n = Math.floor(n * 0.14);
+    if (flowVisualMode === 'smoke') n = Math.floor(n * 0.5);
     if (flowVisualMode === 'clean_vectors') n = Math.floor(n * 0.34);
     return Math.max(400, n);
   }, [lowPowerMode, flowVisualMode]);
 
   const geo = useMemo(() => buildPolyModel(airfoilPts), [airfoilPts]);
   const surfaceFn = useMemo(() => buildSurfaceFn(airfoilPts), [airfoilPts]);
-  const isStreak = flowVisualMode === 'streaklines';
+  const isStreak = flowVisualMode === 'streaklines' || flowVisualMode === 'smoke';
 
   const positions = useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
@@ -261,8 +262,9 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
   const linePositions = useMemo(() => new Float32Array(lineVertexCount * 3), [lineVertexCount]);
   const lineColors = useMemo(() => new Float32Array(lineVertexCount * 3), [lineVertexCount]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!isActive || !meshRef.current) return;
+    const time = state.clock.elapsedTime;
     const pos = meshRef.current.geometry.attributes.position.array;
     const col = colors.current;
     const trail = trailRef.current;
@@ -280,6 +282,7 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
     for (let i = 0; i < COUNT; i++) {
       let x = pos[i * 3], y = pos[i * 3 + 1];
       let vx = Uinf, vy = 0;
+      let localVorticity = 0;
       const lx = x * cosP - y * sinP;
       const ly = x * sinP + y * cosP;
 
@@ -322,8 +325,24 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
             const wvx = slx * cosP + sly * sinP;
             const wvy = -slx * sinP + sly * cosP;
             const tinf = Math.pow(1 - dist / inflGeo, 1.22);
-            vx = Uinf * (1 - tinf) + wvx * tinf;
-            vy = vy * (1 - tinf) + wvy * tinf;
+            
+            // Stagnation splitting enhancement
+            let stagVx = Uinf;
+            let stagVy = 0;
+            const dxLE = lx - geo.minX;
+            if (dxLE < 0.15 && Math.abs(ly) < 0.4) {
+               const r = Math.hypot(dxLE, ly);
+               if (r < 0.4) {
+                 const rep = Math.pow(1 - r / 0.4, 2);
+                 stagVy = (ly > 0 ? 1 : -1) * Uinf * 0.8 * rep;
+                 stagVx = Uinf * (1 - 0.6 * rep);
+               }
+            }
+            const wStagVx = stagVx * cosP + stagVy * sinP;
+            const wStagVy = -stagVx * sinP + stagVy * cosP;
+            
+            vx = wStagVx * (1 - tinf) + wvx * tinf;
+            vy = wStagVy * (1 - tinf) + wvy * tinf;
             const sf = surfaceFn(lx);
             const mid = 0.5 * (sf.upper + sf.lower);
             const isUpper = ly > mid;
@@ -372,20 +391,86 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
             if (isUpper) speedBoost = 1 + 0.5 * Math.sin(Math.max(0, pRad)) * influence;
             else speedBoost = 1 - 0.3 * Math.sin(Math.max(0, pRad)) * influence;
           }
-          vx = vx * (1 - influence) + (wtvx * Uinf * speedBoost) * influence;
-          vy = vy * (1 - influence) + (wtvy * Uinf * speedBoost) * influence;
+          
+          let stagVx = Uinf;
+          let stagVy = 0;
+          const dxLE = lx + halfC;
+          if (dxLE < 0.15 && Math.abs(ly) < 0.4) {
+             const r = Math.hypot(dxLE, ly);
+             if (r < 0.4) {
+               const rep = Math.pow(1 - r / 0.4, 2);
+               stagVy = (isUpper ? 1 : -1) * Uinf * 0.8 * rep;
+               stagVx = Uinf * (1 - 0.6 * rep);
+             }
+          }
+          const wStagVx = stagVx * cosP + stagVy * sinP;
+          const wStagVy = -stagVx * sinP + stagVy * cosP;
+          
+          vx = wStagVx * (1 - influence) + (wtvx * Uinf * speedBoost) * influence;
+          vy = wStagVy * (1 - influence) + (wtvy * Uinf * speedBoost) * influence;
         }
       }
 
-      if (lx > teX - 0.02 && x < 3.5) {
+      if (lx > teX - 0.05 && x < 4.0) {
         const downwashAngle = pRad * 0.7;
-        if (Math.abs(ly) < 0.85) {
-          const wakeInf = Math.max(0, 1 - Math.abs(ly) / 0.85);
-          const decay = Math.max(0, 1 - (lx - teX + 0.02) / 2.5);
+        if (Math.abs(ly) < 1.2) {
+          const wakeInf = Math.max(0, 1 - Math.abs(ly) / 1.2);
+          const decay = Math.max(0, 1 - Math.max(0, lx - teX) / 3.0);
           const effectiveDW = downwashAngle * wakeInf * decay;
-          const dwVx = Uinf * Math.cos(-effectiveDW);
-          const dwVy = Uinf * Math.sin(-effectiveDW);
-          const trans = Math.min((lx - teX + 0.02) / 0.28, 1);
+          
+          // Analytical Von Kármán vortex street (Continuous Non-Teleporting)
+          const absA = Math.abs(pitchAngle);
+          const driftSpeed = Uinf * 0.75;
+          const spacing = 0.45;
+          const rowSpacing = 0.08 + absA * 0.02; // Wake width
+          const gamma = (1.8 + absA * 0.15) * Uinf * spacing; // Much stronger vortex pull!
+          const coreRadius = 0.08; // Tighter core for sharp loops
+          
+          const v0_x = teX + time * driftSpeed;
+          const nearestJ = Math.round((lx - v0_x) / spacing);
+          
+          let indVx = 0;
+          let indVy = 0;
+          let vorticityProxy = 0;
+          
+          const spawnX = teX + 0.1;
+          
+          // Sum influence from nearest 7 vortices to ensure smooth continuous lines
+          for (let j = nearestJ - 3; j <= nearestJ + 3; j++) {
+            // Upper row (clockwise, negative circulation)
+            const vx_u = v0_x + j * spacing;
+            if (vx_u > spawnX) {
+              const fade_u = Math.max(0, Math.min(1, (vx_u - spawnX) / 0.2));
+              const vy_u = rowSpacing / 2;
+              const dx_u = lx - vx_u;
+              const dy_u = ly - vy_u;
+              const r2_u = dx_u * dx_u + dy_u * dy_u;
+              const factor_u = -gamma * fade_u / (2 * Math.PI * (r2_u + coreRadius * coreRadius));
+              indVx += factor_u * dy_u;
+              indVy += -factor_u * dx_u;
+              vorticityProxy += (gamma * fade_u) / (r2_u + 0.05);
+            }
+            
+            // Lower row (counter-clockwise, positive circulation)
+            const vx_l = v0_x + j * spacing + spacing / 2;
+            if (vx_l > spawnX) {
+              const fade_l = Math.max(0, Math.min(1, (vx_l - spawnX) / 0.2));
+              const vy_l = -rowSpacing / 2;
+              const dx_l = lx - vx_l;
+              const dy_l = ly - vy_l;
+              const r2_l = dx_l * dx_l + dy_l * dy_l;
+              const factor_l = gamma * fade_l / (2 * Math.PI * (r2_l + coreRadius * coreRadius));
+              indVx += factor_l * dy_l;
+              indVy += -factor_l * dx_l;
+              vorticityProxy += (gamma * fade_l) / (r2_l + 0.05);
+            }
+          }
+          
+          const dwVx = Uinf * Math.cos(-effectiveDW) + indVx * wakeInf * decay;
+          const dwVy = Uinf * Math.sin(-effectiveDW) + indVy * wakeInf * decay;
+          localVorticity += vorticityProxy * wakeInf * decay;
+          
+          const trans = Math.min(Math.max(0, lx - teX + 0.05) / 0.2, 1);
           vx = vx * (1 - trans * wakeInf) + dwVx * trans * wakeInf;
           vy = vy * (1 - trans * wakeInf) + dwVy * trans * wakeInf;
         }
@@ -395,14 +480,29 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
       if (absA > 14 && lx > -0.1 && lx < 1.8 && ly > 0 && ly < 0.72) {
         const stallIntensity = Math.min((absA - 14) / 10, 1);
         vx *= 1 - 0.4 * stallIntensity;
-        vy += (Math.random() - 0.5) * Uinf * stallIntensity * 1.8;
-        if (Math.random() > 0.9) vx -= Uinf * stallIntensity * 0.5;
+        
+        // Large chaotic swirls rather than pure white noise
+        const stallSwirl = Math.sin(lx * 4.0 - time * 8.0 + ly * 8.0) * Uinf * stallIntensity * 0.9;
+        vy += stallSwirl + (Math.random() - 0.5) * Uinf * stallIntensity * 0.3;
+        if (Math.random() > 0.9) vx -= Uinf * stallIntensity * 0.4;
+        localVorticity += stallIntensity * 4.0;
       }
 
       const spd = Math.hypot(vx, vy);
       const sr = Math.max(0, Math.min((spd - Uinf * 0.5) / (Uinf * 1.2), 1));
       if (col) {
-        if (flowVisualMode === 'wind_tunnel') {
+        if (flowVisualMode === 'smoke') {
+          const t = sr;
+          const vortHeat = Math.min(localVorticity * 0.15, 1.0);
+          
+          const baseR = 0.15 + t * 0.55;
+          const baseG = 0.55 + t * 0.35;
+          const baseB = 0.75 + t * 0.2;
+          
+          col[i * 3]     = baseR * (1 - vortHeat) + 1.0 * vortHeat;  // Red
+          col[i * 3 + 1] = baseG * (1 - vortHeat) + 0.3 * vortHeat;  // Orange tint
+          col[i * 3 + 2] = baseB * (1 - vortHeat) + 0.0 * vortHeat;
+        } else if (flowVisualMode === 'wind_tunnel') {
           const t = sr;
           col[i * 3] = 0.15 + t * 0.55;
           col[i * 3 + 1] = 0.55 + t * 0.35;
@@ -444,8 +544,9 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
       const lc = lineRef.current.geometry.attributes.color.array;
       let w = 0;
       const invTrail = 1 / Math.max(1, FLOW_TRAIL_LEN - 1);
+      const isSmoke = flowVisualMode === 'smoke';
       for (let i = 0; i < COUNT; i++) {
-        const drawStreak = i % STREAK_DRAW_STRIDE === 0;
+        const drawStreak = isSmoke ? true : (i % STREAK_DRAW_STRIDE === 0);
         for (let k = 0; k < FLOW_TRAIL_LEN - 1; k++) {
           const k0 = (i * FLOW_TRAIL_LEN + k) * 3;
           const k1 = (i * FLOW_TRAIL_LEN + k + 1) * 3;
@@ -462,8 +563,14 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
             lp[w] = ax; lp[w + 1] = ay; lp[w + 2] = az;
             lp[w + 3] = bx; lp[w + 4] = by; lp[w + 5] = bz;
             const f0 = fade * 0.85, f1 = fade;
-            lc[w] = 0.12 * f0; lc[w + 1] = 0.55 * f0; lc[w + 2] = 0.95 * f0;
-            lc[w + 3] = 0.2 * f1; lc[w + 4] = 0.72 * f1; lc[w + 5] = 1 * f1;
+            if (isSmoke) {
+               const r = col[i * 3], g = col[i * 3 + 1], b = col[i * 3 + 2];
+               lc[w] = r * f0; lc[w + 1] = g * f0; lc[w + 2] = b * f0;
+               lc[w + 3] = r * f1; lc[w + 4] = g * f1; lc[w + 5] = b * f1;
+            } else {
+               lc[w] = 0.12 * f0; lc[w + 1] = 0.55 * f0; lc[w + 2] = 0.95 * f0;
+               lc[w + 3] = 0.2 * f1; lc[w + 4] = 0.72 * f1; lc[w + 5] = 1 * f1;
+            }
           }
           w += 6;
         }
@@ -473,19 +580,22 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
     }
   });
 
+  const smokeMode = flowVisualMode === 'smoke';
   const windTunnel = flowVisualMode === 'wind_tunnel';
   const cleanVec = flowVisualMode === 'clean_vectors';
   const ptOpacity = isActive
-    ? windTunnel
-      ? 0.55
-      : cleanVec
-        ? 0.5
-        : isStreak
-          ? 0.22
-          : 0.75
+    ? smokeMode
+      ? 0.0
+      : windTunnel
+        ? 0.55
+        : cleanVec
+          ? 0.5
+          : isStreak
+            ? 0.22
+            : 0.75
     : 0;
-  const ptSize = windTunnel ? 0.032 : cleanVec ? 1.15 : isStreak ? 1.35 : 2;
-  const lineOpacity = isActive && isStreak ? 0.52 : 0;
+  const ptSize = smokeMode ? 0.045 : windTunnel ? 0.032 : cleanVec ? 1.15 : isStreak ? 1.35 : 2;
+  const lineOpacity = isActive && isStreak ? (smokeMode ? 0.9 : 0.52) : 0;
 
   return (
     <>
@@ -499,10 +609,10 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
           vertexColors
           transparent
           opacity={ptOpacity}
-          blending={windTunnel || cleanVec ? THREE.NormalBlending : THREE.AdditiveBlending}
+          blending={smokeMode || windTunnel || cleanVec ? THREE.NormalBlending : THREE.AdditiveBlending}
           depthWrite={false}
           depthTest
-          sizeAttenuation={windTunnel}
+          sizeAttenuation={smokeMode || windTunnel}
         />
       </points>
       {isStreak && (
@@ -511,7 +621,7 @@ const FlowParticles = ({ isActive, windSpeed, pitchAngle, airfoilPts }) => {
             <bufferAttribute attach="attributes-position" count={lineVertexCount} array={linePositions} itemSize={3} />
             <bufferAttribute attach="attributes-color" count={lineVertexCount} array={lineColors} itemSize={3} />
           </bufferGeometry>
-          <lineBasicMaterial vertexColors transparent opacity={lineOpacity} blending={THREE.AdditiveBlending} />
+          <lineBasicMaterial vertexColors transparent opacity={lineOpacity} blending={smokeMode ? THREE.NormalBlending : THREE.AdditiveBlending} linewidth={smokeMode ? 2 : 1} />
         </lineSegments>
       )}
     </>

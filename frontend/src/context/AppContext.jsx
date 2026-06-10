@@ -7,6 +7,7 @@ export const FLOW_VISUAL_OPTIONS = [
   { id: 'wind_tunnel', label: 'Wind tunnel', description: 'Softer, depth-aware smoke-like traces.' },
   { id: 'streaklines', label: 'Streaklines', description: 'Short, sparse trails (teleports culled; calmer than dense line fields).' },
   { id: 'clean_vectors', label: 'Clean vectors', description: 'Sparse minimal highlights — good for stills.' },
+  { id: 'smoke', label: 'Smoke (CFD)', description: 'Analytical vortices with red smoke CFD colormapping.' },
 ];
 
 const AppContext = createContext();
