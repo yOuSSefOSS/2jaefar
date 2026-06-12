@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, Environment, ContactShadows, Float, OrbitControls, Html, useProgress, Sparkles } from '@react-three/drei';
+import { useGLTF, Environment, ContactShadows, Float, OrbitControls, Html, useProgress, Sparkles, Clone } from '@react-three/drei';
 import * as THREE from 'three';
 import { RefreshCw } from 'lucide-react';
 
@@ -38,7 +38,7 @@ function AirflowParticles() {
   );
 }
 
-function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflow = false, cgPosition, cpPosition, controlForces }) {
+function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflow = false, cgPosition, cpPosition, controlForces, tailScale = 1 }) {
   const { scene } = useGLTF('/assets/airplane_a380.glb');
   const group = useRef();
 
@@ -52,7 +52,7 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflo
 
   return (
     <group ref={group} scale={0.5}>
-      <primitive object={scene} />
+      <Clone object={scene} />
       {showAirflow && <AirflowParticles />}
       {showForces && (
         <>
@@ -82,7 +82,7 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflo
             <arrowHelper 
               args={[
                 new THREE.Vector3(0, controlForces.pitch > 0 ? -1 : 1, 0), 
-                new THREE.Vector3(0, 0.5, -4), 
+                new THREE.Vector3(0, 0.5, 4), 
                 Math.max(2, Math.abs(controlForces.pitch) * 0.2), 
                 0x0ea5e9, 0.5, 0.3
               ]} 
@@ -116,13 +116,26 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflo
             <arrowHelper 
               args={[
                 new THREE.Vector3(controlForces.yaw > 0 ? -1 : 1, 0, 0), 
-                new THREE.Vector3(0, 1.5, -4), 
+                new THREE.Vector3(0, 1.5, 4), 
                 Math.max(2, Math.abs(controlForces.yaw) * 0.2), 
                 0xd946ef, 0.5, 0.3
               ]} 
             />
           )}
         </>
+      )}
+      {/* Tail Scale Visual Indicator for Dynamic Stability Lab */}
+      {tailScale !== 1 && (
+        <group position={[0, 0.5, 4.5]}>
+          <mesh scale={[tailScale * 5, 0.1, tailScale * 2]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#8b5cf6" emissive="#8b5cf6" emissiveIntensity={0.8} transparent opacity={0.6} depthWrite={false} />
+          </mesh>
+          <mesh scale={[tailScale * 5.2, 0.12, tailScale * 2.2]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshBasicMaterial color="#a78bfa" wireframe />
+          </mesh>
+        </group>
       )}
     </group>
   );
@@ -131,7 +144,7 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflo
 // Preload the model
 useGLTF.preload('/assets/airplane_a380.glb');
 
-export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflow = false, showRunway = false, cgPosition, cpPosition, controlForces }) {
+export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflow = false, showRunway = false, cgPosition, cpPosition, controlForces, tailScale = 1 }) {
   const controlsRef = useRef();
 
   return (
@@ -155,8 +168,17 @@ export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces =
           
           <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
             <React.Suspense fallback={<Loader />}>
-              <Airplane pitch={pitch} roll={roll} yaw={yaw} showForces={showForces} showAirflow={showAirflow} cgPosition={cgPosition} cpPosition={cpPosition} controlForces={controlForces} />
-            </React.Suspense>
+              <Airplane 
+            pitch={pitch} 
+            roll={roll} 
+            yaw={yaw} 
+            showForces={showForces} 
+            showAirflow={showAirflow}
+            cgPosition={cgPosition}
+            cpPosition={cpPosition}
+            controlForces={controlForces}
+            tailScale={tailScale}
+          />  </React.Suspense>
           </Float>
 
           {showRunway && (

@@ -77,6 +77,13 @@ export default function FlightLabLayout() {
               </NavLink>
             ))}
           </nav>
+
+          {/* Credits */}
+          <div className="mt-auto p-4 border-t border-white/5 text-sm font-bold font-mono tracking-wider bg-slate-900/50">
+            <div className="mb-1 text-slate-300 text-xs uppercase">{language === 'en' ? 'Created by:' : 'صنع بواسطة:'}</div>
+            <div className="text-emerald-400 drop-shadow-md">Youssef Usama Hegazy</div>
+            <div className="text-sky-400 drop-shadow-md mt-1">Eman Elsayed Abdelhamed</div>
+          </div>
         </aside>
 
         {/* Main Content Area (Scrollytelling Container) */}

@@ -106,6 +106,177 @@ const StabilityDeepDive = ({ isAr }) => {
   );
 };
 
+const InteractiveStabilityLab = ({ isAr }) => {
+  const [cgPosition, setCgPosition] = useState(25); // 10 to 60. NP = 40.
+  const [tailScaleInt, setTailScaleInt] = useState(100); // 50 to 200
+  const [speed, setSpeed] = useState(100); // 50 to 200
+  const [history, setHistory] = useState([]);
+  
+  const [currentPitch, setCurrentPitch] = useState(0);
+  const [isDiverged, setIsDiverged] = useState(false);
+  
+  const tailScale = tailScaleInt / 100;
+  
+  const physicsRef = useRef({ pitch: 0, pitchVel: 0, time: 0 });
+  const animRef = useRef();
+
+  const reset = () => {
+    physicsRef.current = { pitch: 0, pitchVel: 0, time: 0 };
+    setHistory([]);
+    setCurrentPitch(0);
+    setIsDiverged(false);
+  };
+
+  const triggerGust = () => {
+    if (isDiverged) reset();
+    physicsRef.current.pitchVel += 60; // instantaneous impulse
+  };
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    
+    const loop = (now) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.05); // cap dt
+      lastTime = now;
+      
+      const staticMargin = (40 - cgPosition) / 100; // -0.2 to +0.3
+      const stiffness = staticMargin * speed * 0.2; 
+      const damping = tailScale * 1.5 + (speed * 0.01); 
+      
+      let { pitch, pitchVel, time } = physicsRef.current;
+      
+      if (Math.abs(pitch) > 90) {
+         if (!isDiverged) setIsDiverged(true);
+      } else {
+         const m = 1.0;
+         const acc = -(damping * pitchVel + stiffness * pitch) / m;
+         
+         pitchVel += acc * dt;
+         pitch += pitchVel * dt;
+         time += dt;
+         
+         physicsRef.current = { pitch, pitchVel, time };
+         setCurrentPitch(pitch);
+         
+         setHistory(prev => {
+            const last = prev[prev.length - 1];
+            if (!last || time - last.time > 0.05) {
+               const newHist = [...prev, { time: parseFloat(time.toFixed(2)), pitch: parseFloat(pitch.toFixed(2)) }];
+               if (newHist.length > 100) newHist.shift(); // keep last 100 points for sliding window
+               return newHist;
+            }
+            return prev;
+         });
+      }
+      
+      animRef.current = requestAnimationFrame(loop);
+    };
+    
+    if (!isDiverged) {
+      animRef.current = requestAnimationFrame(loop);
+    }
+    return () => cancelAnimationFrame(animRef.current);
+  }, [cgPosition, tailScale, speed, isDiverged]);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12"
+    >
+      {/* 3D Visualization */}
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col relative overflow-hidden">
+        {isDiverged && (
+          <div className="absolute inset-0 bg-red-950/80 z-20 flex items-center justify-center backdrop-blur-sm">
+            <h2 className="text-4xl font-black text-red-500 drop-shadow-2xl text-center animate-pulse">
+              {isAr ? 'تحذير: فقدان السيطرة' : 'WARNING: LOSS OF CONTROL'}<br/>
+              <span className="text-xl text-red-300">{isAr ? 'الطائرة غير مستقرة' : 'AIRCRAFT DIVERGED'}</span>
+            </h2>
+          </div>
+        )}
+        <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-sm flex justify-between items-center z-10">
+          {isAr ? 'محاكاة فيزيائية حية' : 'Live Physics Simulation'}
+          <button 
+            onClick={triggerGust}
+            className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold px-4 py-2 rounded-lg text-sm shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-all active:scale-95"
+          >
+            {isAr ? 'توليد هبة ريح' : 'Trigger Gust'}
+          </button>
+        </h2>
+        
+        <div className="relative min-h-[350px] mb-6 bg-black/40 rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-inner z-10">
+          <ThreeDPlane 
+            pitch={currentPitch} 
+            showForces={false} 
+            cgPosition={(cgPosition - 35) * 0.15} 
+            tailScale={tailScale}
+          />
+        </div>
+      </div>
+      
+      {/* Telemetry and Controls */}
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col z-10">
+        <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-sm flex justify-between items-center">
+          {isAr ? 'لوحة القياسات الحية' : 'Live Telemetry & Controls'}
+          <button onClick={reset} className="text-xs font-bold text-slate-400 hover:text-white px-3 py-1 bg-white/5 rounded-md border border-white/10 transition-colors">
+            {isAr ? 'إعادة ضبط' : 'Reset Physics'}
+          </button>
+        </h2>
+
+        {/* Sliders */}
+        <div className="space-y-6 mb-8 p-6 bg-slate-950/50 rounded-2xl border border-white/5 shadow-inner">
+          <ModernSlider 
+            label={isAr ? 'موقع مركز الثقل (Stiffness)' : 'Center of Gravity (Stiffness)'}
+            unit="% MAC" min={10} max={60} value={cgPosition} onChange={setCgPosition}
+            color={40 - cgPosition > 0 ? '#10b981' : '#ef4444'}
+          />
+          <ModernSlider 
+            label={isAr ? 'حجم الذيل الأفقي (Damping)' : 'Horizontal Tail Size (Damping)'}
+            unit="%" min={50} max={200} value={tailScaleInt} onChange={setTailScaleInt}
+            color="#8b5cf6"
+          />
+          <ModernSlider 
+            label={isAr ? 'سرعة الهواء (Stiffness + Damping)' : 'Airspeed (Dynamic Pressure)'}
+            unit="kts" min={50} max={200} value={speed} onChange={setSpeed}
+            color="#38bdf8"
+          />
+        </div>
+        
+        {/* Graph */}
+        <div className="flex-1 w-full min-h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+              <XAxis 
+                dataKey="time" 
+                type="number" 
+                domain={['dataMin', 'dataMax']} 
+                stroke="#64748b" 
+                tick={false}
+                label={{ value: 'Time (Auto-Scrolling)', position: 'bottom', fill: '#94a3b8', fontSize: 12 }} 
+              />
+              <YAxis 
+                domain={[-45, 45]} 
+                stroke="#64748b" 
+                label={{ value: 'Pitch Angle (deg)', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 12 }} 
+              />
+              <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} opacity={0.5} />
+              <Line 
+                type="monotone" 
+                dataKey="pitch" 
+                stroke={isDiverged ? '#ef4444' : '#38bdf8'} 
+                strokeWidth={3} 
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export default function StabilityTab() {
   const { language } = useAcademy();
   const isAr = language === 'ar';
@@ -214,18 +385,24 @@ export default function StabilityTab() {
         </header>
 
         <div className="flex justify-center mb-12">
-          <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/10 max-w-fit shadow-2xl">
+          <div className="flex flex-wrap justify-center gap-2 bg-slate-900/50 p-1.5 rounded-2xl border border-white/10 max-w-fit shadow-2xl">
             <button 
               onClick={() => setActiveStabilityTab('static')}
-              className={`px-8 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'static' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'static' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
             >
               {isAr ? 'الاستقرار الاستاتيكي' : 'Static Stability'}
             </button>
             <button 
               onClick={() => setActiveStabilityTab('dynamic')}
-              className={`px-8 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'dynamic' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'dynamic' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
             >
               {isAr ? 'الاستقرار الديناميكي' : 'Dynamic Stability'}
+            </button>
+            <button 
+              onClick={() => setActiveStabilityTab('lab')}
+              className={`px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'lab' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
+            >
+              {isAr ? 'مختبر تفاعلي' : 'Interactive Lab'}
             </button>
           </div>
         </div>
@@ -424,6 +601,11 @@ export default function StabilityTab() {
             </div>
 
           </motion.div>
+        )}
+
+        {/* INTERACTIVE LAB SECTION */}
+        {activeStabilityTab === 'lab' && (
+          <InteractiveStabilityLab isAr={isAr} />
         )}
 
         <StabilityDeepDive isAr={isAr} />
