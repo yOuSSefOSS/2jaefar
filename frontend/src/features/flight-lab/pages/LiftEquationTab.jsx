@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAcademy } from '../../../context/AcademyContext';
 import EducationalWindTunnel from '../components/EducationalWindTunnel';
+import BernoulliLab from '../components/BernoulliLab';
 
 const ModernSlider = ({ value, min, max, onChange, label, unit, color }) => {
   const trackRef = useRef(null);
@@ -53,6 +54,94 @@ const FlightStatusBox = ({ aoa, speed, isAr }) => {
               <div key={i} className={`w-1.5 rounded-t-sm transition-all duration-300 ${isStall ? 'bg-red-500' : isOptimal ? 'bg-emerald-400' : 'bg-sky-400'}`} style={{ height: `${20 + Math.random() * (isStall ? 80 : 40)}%`, opacity: isStall ? 1 : 0.6 }} />
            ))}
         </div>
+      </div>
+    </div>
+  );
+};
+
+const CenterOfPressureLab = ({ isAr }) => {
+  const [aoa, setAoa] = useState(5);
+  // CP moves forward as AoA increases. 50% at 0 AoA, 25% at 15 AoA
+  const cpPercent = Math.max(20, 50 - (aoa * 1.5));
+  
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 relative overflow-hidden group">
+      <h3 className="text-2xl font-bold text-white mb-4">{isAr ? 'مركز الضغط التفاعلي (Center of Pressure)' : 'Interactive Center of Pressure (CP)'}</h3>
+      <p className="text-slate-400 leading-relaxed mb-6">
+        {isAr 
+          ? 'غير زاوية الهجوم لترى كيف يتحرك مركز الضغط للأمام! إذا زادت الزاوية جداً، ينفصل تدفق الهواء.' 
+          : 'Change the Angle of Attack to see how the CP moves forward on a cambered wing!'}
+      </p>
+      
+      <div className="relative h-48 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden mb-6">
+        <motion.div 
+          animate={{ rotate: -aoa }} 
+          className="relative w-64 h-16"
+        >
+          {/* Simple Airfoil Shape */}
+          <div className="absolute inset-0 bg-sky-500/20 border border-sky-500 rounded-[100%_20%_20%_100%/50%_50%_50%_50%]" />
+          
+          {/* CP Arrow */}
+          <motion.div 
+            className="absolute top-full mt-2 flex flex-col items-center"
+            animate={{ left: `${cpPercent}%` }}
+            transition={{ type: 'spring', bounce: 0.4 }}
+          >
+            <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[12px] border-b-purple-500" />
+            <div className="text-purple-400 font-bold mt-1 text-xs whitespace-nowrap">
+              CP ({cpPercent.toFixed(0)}%)
+            </div>
+            <div className="w-0.5 h-10 bg-purple-500/50 absolute bottom-full mb-3" />
+          </motion.div>
+        </motion.div>
+      </div>
+
+      <ModernSlider 
+        label={isAr ? 'زاوية الهجوم (AoA)' : 'Angle of Attack'}
+        unit="°" min={0} max={20} value={aoa} onChange={setAoa} color="#c084fc" 
+      />
+    </div>
+  );
+};
+
+const WingAreaLab = ({ isAr }) => {
+  const [span, setSpan] = useState(10);
+  const [chord, setChord] = useState(2);
+  const area = span * chord;
+
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 relative overflow-hidden group">
+      <h3 className="text-2xl font-bold text-white mb-4">{isAr ? 'مساحة الجناح التفاعلية (Wing Area)' : 'Interactive Wing Area (S)'}</h3>
+      <p className="text-slate-400 leading-relaxed mb-6">
+        {isAr 
+          ? 'المساحة = طول الجناح × عرض الوتر. جرب تغيير الأبعاد لترى كيف تتغير المساحة (S).' 
+          : 'Area = Span × Chord. See how changing dimensions affects the total Wing Area (S).'}
+      </p>
+
+      <div className="relative h-48 bg-black/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center mb-6 overflow-hidden">
+        <div className="absolute left-4 top-4 text-emerald-400 font-mono text-xl">
+          Area (S) = {area} m²
+        </div>
+        
+        <motion.div 
+          className="bg-emerald-500/20 border border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+          animate={{ 
+            width: `${span * 20}px`,
+            height: `${chord * 20}px` 
+          }}
+          transition={{ type: 'spring', bounce: 0.3 }}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <ModernSlider 
+          label={isAr ? 'طول الجناح (Span)' : 'Wingspan'}
+          unit="m" min={5} max={20} value={span} onChange={setSpan} color="#10b981" 
+        />
+        <ModernSlider 
+          label={isAr ? 'عرض الوتر (Chord)' : 'Chord'}
+          unit="m" min={1} max={5} value={chord} onChange={setChord} color="#34d399" 
+        />
       </div>
     </div>
   );
@@ -193,10 +282,11 @@ const AirfoilAnatomy = ({ isAr }) => {
             {/* Airfoil Body */}
             <path 
               d={pathD} 
-              fill="rgba(148, 163, 184, 0.2)" 
-              stroke="rgba(148, 163, 184, 0.8)" 
+              fill={camber === 0 ? "rgba(56, 189, 248, 0.3)" : "rgba(148, 163, 184, 0.2)"} 
+              stroke={camber === 0 ? "rgba(56, 189, 248, 1)" : "rgba(148, 163, 184, 0.8)"} 
               strokeWidth="0.5" 
               className="transition-all duration-300"
+              style={{ filter: camber === 0 ? 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.8))' : 'none' }}
             />
             
             {/* Chord Line */}
@@ -233,7 +323,26 @@ const AirfoilAnatomy = ({ isAr }) => {
           </svg>
         </div>
 
-        <div className="lg:col-span-1 flex flex-col justify-center space-y-6 bg-black/40 p-6 rounded-2xl border border-white/5">
+        <div className="lg:col-span-1 flex flex-col justify-center space-y-6 bg-black/40 p-6 rounded-2xl border border-white/5 relative overflow-hidden">
+          {camber === 0 && (
+            <div className="absolute inset-0 bg-sky-500/10 animate-pulse pointer-events-none" />
+          )}
+          
+          <div className="flex justify-between items-center bg-slate-950 p-2 rounded-xl mb-2">
+            <button 
+              onClick={() => { setCamber(0); setThickness(12); }}
+              className={`flex-1 text-xs py-2 rounded-lg font-bold transition-all ${camber === 0 ? 'bg-sky-500 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              {isAr ? 'متماثل' : 'Symmetrical'}
+            </button>
+            <button 
+              onClick={() => { setCamber(4); setThickness(12); }}
+              className={`flex-1 text-xs py-2 rounded-lg font-bold transition-all ${camber > 0 ? 'bg-purple-500 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              {isAr ? 'متقوس' : 'Cambered'}
+            </button>
+          </div>
+
           <ModernSlider 
             label={isAr ? 'السمك (Thickness)' : 'Thickness'}
             unit="%"
@@ -250,8 +359,13 @@ const AirfoilAnatomy = ({ isAr }) => {
             max={10}
             value={camber}
             onChange={setCamber}
-            color="#c084fc"
+            color={camber === 0 ? "#38bdf8" : "#c084fc"}
           />
+          {camber === 0 && (
+            <div className="text-center text-sky-400 text-xs font-bold uppercase tracking-widest animate-bounce">
+              {isAr ? 'يولد رفعاً فقط عند وجود زاوية هجوم!' : 'Generates lift ONLY at an Angle of Attack!'}
+            </div>
+          )}
         </div>
       </div>
 
@@ -275,11 +389,30 @@ const AirfoilAnatomy = ({ isAr }) => {
 export default function HighLiftTab() {
   const { language } = useAcademy();
   const [aoa, setAoa] = useState(5);
-  const [speed, setSpeed] = useState(100);
-  const [flowActive, setFlowActive] = useState(true);
-  
-  const isAr = language === 'ar';
-  const airfoilData = NACA4412_POINTS;
+  const [activeEqParam, setActiveEqParam] = useState('V');
+
+  const eqDetails = {
+    CL: {
+      title: isAr ? 'معامل الرفع' : 'Coefficient of Lift (CL)',
+      desc: isAr ? 'يعتمد على شكل الجناح (التقوس) وزاوية الهجوم (AoA). إذا زادت زاوية الهجوم، يزداد معامل الرفع حتى نقطة الانهيار.' : 'Depends on the airfoil shape (camber) and the Angle of Attack. As AoA increases, CL increases until it stalls.',
+      color: 'text-emerald-400', border: 'border-emerald-500'
+    },
+    RHO: {
+      title: isAr ? 'كثافة الهواء' : 'Air Density (ρ)',
+      desc: isAr ? 'تتأثر بالارتفاع والحرارة والضغط. في الأيام الحارة أو الارتفاعات العالية، يكون الهواء أقل كثافة مما يقلل الرفع.' : 'Affected by altitude, temperature, and pressure. Hot or high days mean less dense air, producing less lift.',
+      color: 'text-amber-400', border: 'border-amber-500'
+    },
+    V: {
+      title: isAr ? 'السرعة تربيع' : 'Velocity Squared (v²)',
+      desc: isAr ? 'العامل الأهم! لأن السرعة مربعة، فإن مضاعفة السرعة يضاعف الرفع 4 مرات.' : 'The most powerful factor! Because it is squared, doubling your speed gives you 4 TIMES the lift.',
+      color: 'text-rose-400', border: 'border-rose-500'
+    },
+    S: {
+      title: isAr ? 'مساحة الجناح' : 'Wing Area (S)',
+      desc: isAr ? 'المساحة السطحية للجناح. الطائرات الكبيرة تحتاج لأجنحة كبيرة. فرد القلابات (Flaps) يمكن أن يزيد المساحة ومعامل الرفع معاً.' : 'Total surface area. Big planes need big wings. Extending flaps can increase the effective wing area.',
+      color: 'text-indigo-400', border: 'border-indigo-500'
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden relative bg-[#020617]">
@@ -305,21 +438,11 @@ export default function HighLiftTab() {
           <div className="space-y-4">
             <ModernSlider 
               label={isAr ? 'زاوية الهجوم' : 'Angle of Attack'}
-              unit="°"
-              min={-10}
-              max={25}
-              value={aoa}
-              onChange={setAoa}
-              color="#0ea5e9"
+              unit="°" min={-10} max={25} value={aoa} onChange={setAoa} color="#0ea5e9"
             />
             <ModernSlider 
               label={isAr ? 'سرعة الهواء' : 'Airspeed'}
-              unit="kts"
-              min={30}
-              max={250}
-              value={speed}
-              onChange={setSpeed}
-              color="#10b981"
+              unit="kts" min={30} max={250} value={speed} onChange={setSpeed} color="#10b981"
             />
             <FlightStatusBox aoa={aoa} speed={speed} isAr={isAr} />
             
@@ -344,7 +467,7 @@ export default function HighLiftTab() {
         <AirfoilAnatomy isAr={isAr} />
       </div>
 
-      {/* 2. THE LIFT EQUATION (MEMORIZED) */}
+      {/* 2. THE LIFT EQUATION (INTERACTIVE) */}
       <div className="max-w-6xl mx-auto px-8 py-8">
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
@@ -356,95 +479,107 @@ export default function HighLiftTab() {
             <span className="text-9xl font-serif italic">L</span>
           </div>
           
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">
-            {isAr ? 'معادلة الرفع (The Lift Equation)' : 'The Lift Equation'}
+          <h2 className="text-3xl font-bold text-white mb-4 text-center">
+            {isAr ? 'معادلة الرفع التفاعلية' : 'Interactive Lift Equation'}
           </h2>
+          <p className="text-center text-slate-400 mb-8 max-w-2xl mx-auto">
+            {isAr ? 'انقر على أي عامل في المعادلة لتفهم تأثيره وكيف يعتمد عليه الرفع.' : 'Click on any parameter in the equation below to understand its effect and what it depends on.'}
+          </p>
           
-          {/* Equation Display */}
-          <div className="flex justify-center items-center py-8 mb-8 bg-black/40 rounded-2xl border border-white/5">
-            <div className="text-4xl md:text-6xl font-serif text-white flex items-center gap-4 tracking-wider">
+          {/* Equation Display (Clickable) */}
+          <div className="flex justify-center items-center py-8 mb-8 bg-black/40 rounded-2xl border border-white/5 flex-wrap gap-y-4">
+            <div className="text-4xl md:text-6xl font-serif text-white flex items-center gap-2 md:gap-4 tracking-wider">
               <span className="text-sky-400 font-bold">L</span>
               <span className="text-slate-500">=</span>
-              <span className="text-emerald-400">C<sub>L</sub></span>
+              
+              <button 
+                onClick={() => setActiveEqParam('CL')}
+                className={`transition-all p-2 rounded-xl border-b-4 ${activeEqParam === 'CL' ? 'bg-emerald-500/20 border-emerald-500 scale-110' : 'border-transparent hover:bg-white/5'}`}
+              >
+                <span className="text-emerald-400">C<sub>L</sub></span>
+              </button>
+              
               <span className="text-slate-400">·</span>
               <span className="text-purple-400 text-3xl md:text-5xl">½</span>
-              <span className="text-amber-400">ρ</span>
-              <span className="text-rose-400">v²</span>
+              
+              <button 
+                onClick={() => setActiveEqParam('RHO')}
+                className={`transition-all p-2 rounded-xl border-b-4 ${activeEqParam === 'RHO' ? 'bg-amber-500/20 border-amber-500 scale-110' : 'border-transparent hover:bg-white/5'}`}
+              >
+                <span className="text-amber-400">ρ</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveEqParam('V')}
+                className={`transition-all p-2 rounded-xl border-b-4 ${activeEqParam === 'V' ? 'bg-rose-500/20 border-rose-500 scale-110' : 'border-transparent hover:bg-white/5'}`}
+              >
+                <span className="text-rose-400">v²</span>
+              </button>
+              
               <span className="text-slate-400">·</span>
-              <span className="text-indigo-400">S</span>
+              
+              <button 
+                onClick={() => setActiveEqParam('S')}
+                className={`transition-all p-2 rounded-xl border-b-4 ${activeEqParam === 'S' ? 'bg-indigo-500/20 border-indigo-500 scale-110' : 'border-transparent hover:bg-white/5'}`}
+              >
+                <span className="text-indigo-400">S</span>
+              </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-slate-800/50 p-5 rounded-xl border border-emerald-500/20">
-              <div className="text-2xl font-bold text-emerald-400 mb-2">C<sub>L</sub></div>
-              <h4 className="font-semibold text-slate-200 mb-1">{isAr ? 'معامل الرفع' : 'Coefficient of Lift'}</h4>
-              <p className="text-sm text-slate-400">{isAr ? 'يعتمد على شكل الجناح (Camber) وزاوية الهجوم.' : 'Depends on the airfoil shape (camber) and the Angle of Attack.'}</p>
-            </div>
-            <div className="bg-slate-800/50 p-5 rounded-xl border border-amber-500/20">
-              <div className="text-2xl font-bold text-amber-400 mb-2">½ ρ</div>
-              <h4 className="font-semibold text-slate-200 mb-1">{isAr ? 'كثافة الهواء' : 'Air Density'}</h4>
-              <p className="text-sm text-slate-400">{isAr ? 'تتأثر بالارتفاع ودرجة الحرارة. كلما ارتفعنا، قل الرفع.' : 'Affected by altitude and temperature. Higher altitude means less lift.'}</p>
-            </div>
-            <div className="bg-slate-800/50 p-5 rounded-xl border border-rose-500/20">
-              <div className="text-2xl font-bold text-rose-400 mb-2">v²</div>
-              <h4 className="font-semibold text-slate-200 mb-1">{isAr ? 'سرعة الهواء' : 'Airspeed Squared'}</h4>
-              <p className="text-sm text-slate-400">{isAr ? 'أهم عامل! مضاعفة السرعة تضاعف الرفع 4 مرات.' : 'The most critical factor! Doubling speed quadruples the lift.'}</p>
-            </div>
-            <div className="bg-slate-800/50 p-5 rounded-xl border border-indigo-500/20">
-              <div className="text-2xl font-bold text-indigo-400 mb-2">S</div>
-              <h4 className="font-semibold text-slate-200 mb-1">{isAr ? 'مساحة الجناح' : 'Wing Area'}</h4>
-              <p className="text-sm text-slate-400">{isAr ? 'المساحة السطحية الكلية. الأجنحة الأكبر تولد رفعاً أكبر.' : 'Total surface area. Larger wings generate more lift at the same speed.'}</p>
-            </div>
-          </div>
+          {/* Dynamic Details Box */}
+          <motion.div 
+            key={activeEqParam}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-6 md:p-8 rounded-2xl border bg-slate-950/80 backdrop-blur-md ${eqDetails[activeEqParam].border}`}
+          >
+            <h3 className={`text-2xl font-bold mb-3 ${eqDetails[activeEqParam].color}`}>
+              {eqDetails[activeEqParam].title}
+            </h3>
+            <p className="text-slate-300 text-lg leading-relaxed">
+              {eqDetails[activeEqParam].desc}
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* 3. BERNOULLI & CONTINUITY */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <motion.div initial={{ x: -20, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}>
-            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 text-sm">1</span>
-              {isAr ? 'مبدأ الاستمرارية (Continuity)' : 'Principle of Continuity'}
-            </h3>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div className="text-xl font-serif text-sky-400 text-center mb-6 py-3 bg-slate-800/50 rounded-lg">
-                A × V × ρ = Constant
-              </div>
-              <p className="text-slate-300 leading-relaxed mb-4">
-                {isAr 
-                  ? 'بما أن الهواء عند السرعات الأقل من ماخ 0.4 لا ينضغط، فإن الكثافة (ρ) تعتبر ثابتة. لذا تتبسط المعادلة إلى المساحة × السرعة = ثابت.'
-                  : 'At low subsonic speeds (< M 0.4), air is incompressible so density (ρ) is constant. The equation simplifies to Area × Velocity = Constant.'}
-              </p>
-              <p className="text-slate-400 text-sm border-l-2 border-sky-500 pl-4">
-                {isAr 
-                  ? 'عندما يضيق المجرى (المساحة تقل)، يجب أن تتسارع جزيئات الهواء (السرعة تزيد) للحفاظ على نفس كمية التدفق.'
-                  : 'When the cross-sectional area decreases, the air MUST accelerate to maintain the mass flow rate.'}
-              </p>
-            </div>
-          </motion.div>
+        <BernoulliLab language={language} />
 
-          <motion.div initial={{ x: 20, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}>
-            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">2</span>
-              {isAr ? 'نظرية برنولي (Bernoulli)' : 'Bernoulli\'s Theorem'}
-            </h3>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div className="text-xl font-serif text-emerald-400 text-center mb-6 py-3 bg-slate-800/50 rounded-lg">
-                P + ½ ρ V² = Constant
-              </div>
-              <p className="text-slate-300 leading-relaxed mb-4">
-                {isAr 
-                  ? 'في التدفق المستقر، مجموع الضغط الساكن والضغط الديناميكي (الطاقة الحركية) يظل ثابتاً.'
-                  : 'In steady flow, the sum of static pressure and dynamic pressure remains constant.'}
-              </p>
-              <p className="text-slate-400 text-sm border-l-2 border-emerald-500 pl-4">
-                {isAr 
-                  ? 'التقوس العلوي للجناح (Camber) يجبر الهواء على التسارع. وبحسب برنولي، هذا التسارع يؤدي لانخفاض الضغط الساكن أعلى الجناح، مما يولد قوة الرفع!'
-                  : 'The upper camber forces air to accelerate. According to Bernoulli, higher velocity means lower static pressure on top, creating LIFT!'}
-              </p>
-            </div>
-          </motion.div>
+        {/* 4. CENTER OF PRESSURE & WING AREA (INTERACTIVE LABS) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <CenterOfPressureLab isAr={isAr} />
+          <WingAreaLab isAr={isAr} />
         </div>
+
+        {/* SUMMARY */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}
+          className="bg-gradient-to-r from-sky-900/40 to-emerald-900/40 border border-sky-500/20 rounded-3xl p-8 mb-16 shadow-2xl"
+        >
+          <h3 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">
+            {isAr ? 'ملخص الفصل الثاني' : 'Chapter 2 Quick Summary'}
+          </h3>
+          <ul className="space-y-3 text-slate-300">
+            <li className="flex gap-3">
+              <span className="text-sky-400">❖</span>
+              {isAr ? 'الرفع يتولد بفضل انحناء الهواء وتغيرات الضغط حول المقطع الانسيابي للجناح.' : 'Lift is generated by turning airflow and pressure changes around the airfoil.'}
+            </li>
+            <li className="flex gap-3">
+              <span className="text-emerald-400">❖</span>
+              {isAr ? 'نظرية برنولي ومبدأ الاستمرارية تشرحان تسارع الهواء وانخفاض ضغطه فوق الجناح.' : 'Bernoulli and Continuity explain airflow acceleration and pressure drop over the wing.'}
+            </li>
+            <li className="flex gap-3">
+              <span className="text-amber-400">❖</span>
+              {isAr ? 'السرعة هي العامل الأهم في معادلة الرفع (التأثير تربيعي).' : 'Airspeed is the most critical factor in the Lift Equation (squared effect).'}
+            </li>
+            <li className="flex gap-3">
+              <span className="text-rose-400">❖</span>
+              {isAr ? 'يتغير مركز الضغط (CP) مكاناً بتغير زاوية الهجوم على الأجنحة المتقوسة.' : 'Center of Pressure (CP) shifts dynamically with Angle of Attack on cambered wings.'}
+            </li>
+          </ul>
+        </motion.div>
+
       </div>
     </div>
   );

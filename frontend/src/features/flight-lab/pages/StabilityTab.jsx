@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Tooltip } from 'recharts';
 import { useAcademy } from '../../../context/AcademyContext';
@@ -150,7 +150,47 @@ export default function StabilityTab() {
   };
 
   const [activeMode, setActiveMode] = useState('phugoid');
-  const dynamicData = generateDynamicData(!isStable ? 'unstable' : activeMode);
+  const activeModeActual = !isStable ? 'unstable' : activeMode;
+  const dynamicData = generateDynamicData(activeModeActual);
+  
+  const [activeStabilityTab, setActiveStabilityTab] = useState('static'); // 'static' | 'dynamic'
+
+  // Animate the 3D plane continuously based on the dynamic mode if in dynamic tab
+  const [animatedPitch, setAnimatedPitch] = useState(0);
+  const animTimeRef = useRef(0);
+  const animFrameRef = useRef(null);
+
+  useEffect(() => {
+    if (activeStabilityTab !== 'dynamic') {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      setAnimatedPitch(isStable ? 0 : isNeutral ? 0 : 20);
+      return;
+    }
+
+    animTimeRef.current = 0;
+    const animate = () => {
+      animTimeRef.current += 0.05;
+      const t = animTimeRef.current;
+      
+      let displacement = 0;
+      if (activeModeActual === 'phugoid') {
+        displacement = 15 * Math.cos(1.5 * t); // Continuous gentle oscillation
+      } else if (activeModeActual === 'short-period') {
+        displacement = 5 * Math.cos(6 * t); // Continuous fast oscillation
+      } else if (activeModeActual === 'unstable') {
+        displacement = 20 * Math.sin(t); // Erratic
+      }
+
+      setAnimatedPitch(displacement);
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [activeStabilityTab, activeModeActual, isStable, isNeutral]);
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden relative bg-[#020617] edu-scroll">
@@ -173,39 +213,60 @@ export default function StabilityTab() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-          
-          {/* CG BALANCER WIDGET */}
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col">
-            <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-sm flex items-center justify-between">
-              {isAr ? 'موازن مركز الثقل' : 'CG Balancer'}
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${isStable ? 'bg-emerald-500/20 text-emerald-400' : isNeutral ? 'bg-slate-500/20 text-slate-300' : 'bg-red-500/20 text-red-400'}`}>
-                {isStable ? (isAr ? 'مستقر' : 'STABLE') : isNeutral ? (isAr ? 'محايد' : 'NEUTRAL') : (isAr ? 'غير مستقر' : 'UNSTABLE')}
-              </span>
-            </h2>
+        <div className="flex justify-center mb-12">
+          <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/10 max-w-fit shadow-2xl">
+            <button 
+              onClick={() => setActiveStabilityTab('static')}
+              className={`px-8 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'static' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
+            >
+              {isAr ? 'الاستقرار الاستاتيكي' : 'Static Stability'}
+            </button>
+            <button 
+              onClick={() => setActiveStabilityTab('dynamic')}
+              className={`px-8 py-3 rounded-xl font-bold transition-all text-sm md:text-base ${activeStabilityTab === 'dynamic' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.2)]' : 'text-slate-400 hover:bg-white/5'}`}
+            >
+              {isAr ? 'الاستقرار الديناميكي' : 'Dynamic Stability'}
+            </button>
+          </div>
+        </div>
 
-            <div className="relative min-h-[250px] mb-10 bg-black/40 rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-inner">
-              <div className="flex-1 w-full relative">
-                <ThreeDPlane 
-                  pitch={isStable ? 0 : isNeutral ? 0 : 20} 
-                  showForces={true} 
-                  cgPosition={(cgPosition - 35) * 0.15} 
-                  cpPosition={(neutralPoint - 35) * 0.15} 
-                />
-                
-                {/* Overlay Legend */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></div>
-                    <span className="text-xs text-white font-bold tracking-wider">CG (Center of Gravity)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_#f59e0b]"></div>
-                    <span className="text-xs text-white font-bold tracking-wider">NP (Neutral Point)</span>
+        {activeStabilityTab === 'static' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12"
+          >
+            {/* CG BALANCER WIDGET */}
+            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col">
+              <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-sm flex items-center justify-between">
+                {isAr ? 'موازن مركز الثقل' : 'CG Balancer'}
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isStable ? 'bg-emerald-500/20 text-emerald-400' : isNeutral ? 'bg-slate-500/20 text-slate-300' : 'bg-red-500/20 text-red-400'}`}>
+                  {isStable ? (isAr ? 'مستقر' : 'STABLE') : isNeutral ? (isAr ? 'محايد' : 'NEUTRAL') : (isAr ? 'غير مستقر' : 'UNSTABLE')}
+                </span>
+              </h2>
+
+              <div className="relative min-h-[250px] mb-10 bg-black/40 rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-inner">
+                <div className="flex-1 w-full relative group">
+                  <ThreeDPlane 
+                    pitch={isStable ? 0 : isNeutral ? 0 : 20} 
+                    showForces={true} 
+                    cgPosition={(cgPosition - 35) * 0.15} 
+                    cpPosition={(neutralPoint - 35) * 0.15} 
+                  />
+                  
+                  {/* Overlay Legend */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></div>
+                      <span className="text-xs text-white font-bold tracking-wider">CG (Center of Gravity)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_#f59e0b]"></div>
+                      <span className="text-xs text-white font-bold tracking-wider">NP (Neutral Point)</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
             <div className="mb-4">
               <ModernSlider 
@@ -267,11 +328,28 @@ export default function StabilityTab() {
               </ResponsiveContainer>
             </div>
           </div>
-
-        </div>
+        </motion.div>
+        )}
 
         {/* DYNAMIC STABILITY SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24">
+        {activeStabilityTab === 'dynamic' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12"
+          >
+            {/* 3D Visualization of Dynamic Modes */}
+            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col">
+              <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-sm">
+                {isAr ? 'محاكاة الاستقرار الديناميكي' : 'Dynamic Stability Simulation'}
+              </h2>
+              <div className="relative min-h-[300px] mb-6 bg-black/40 rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-inner">
+                <ThreeDPlane 
+                  pitch={animatedPitch} 
+                  showForces={false} 
+                />
+              </div>
+            </div>
           
           <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col">
             <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-sm">
@@ -342,12 +420,41 @@ export default function StabilityTab() {
                   />
                 </LineChart>
               </ResponsiveContainer>
+              </div>
             </div>
-          </div>
 
-        </div>
+          </motion.div>
+        )}
 
         <StabilityDeepDive isAr={isAr} />
+
+        {/* SUMMARY */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}
+          className="mt-16 bg-gradient-to-r from-emerald-900/40 to-sky-900/40 border border-emerald-500/20 rounded-3xl p-8 shadow-2xl"
+        >
+          <h3 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">
+            {isAr ? 'ملخص الفصل الرابع' : 'Chapter 4 Quick Summary'}
+          </h3>
+          <ul className="space-y-3 text-slate-300">
+            <li className="flex gap-3">
+              <span className="text-emerald-400">❖</span>
+              {isAr ? 'الاستقرار الاستاتيكي يحدد الميل الأولي للطائرة للعودة بعد الاضطراب.' : 'Static stability determines the initial tendency of the aircraft to return after a disturbance.'}
+            </li>
+            <li className="flex gap-3">
+              <span className="text-sky-400">❖</span>
+              {isAr ? 'الاستقرار الديناميكي يصف سلوك الطائرة مع مرور الوقت (التخميد) ويشترط الاستقرار الاستاتيكي أولاً.' : 'Dynamic stability describes behavior over time (damping) and requires static stability first.'}
+            </li>
+            <li className="flex gap-3">
+              <span className="text-amber-400">❖</span>
+              {isAr ? 'موقع مركز الثقل (CG) حرج: إذا تراجع خلف النقطة المحايدة (NP) تصبح الطائرة غير مستقرة بشكل خطير.' : 'CG placement is critical: if it moves behind the Neutral Point (NP), the aircraft becomes dangerously unstable.'}
+            </li>
+            <li className="flex gap-3">
+              <span className="text-rose-400">❖</span>
+              {isAr ? 'التذبذب القصير (Short Period) سريع ومخمد بشدة، بينما فوغويد (Phugoid) بطيء وطويل.' : 'Short Period oscillation is fast and heavily damped, while Phugoid is slow and long.'}
+            </li>
+          </ul>
+        </motion.div>
 
       </div>
     </div>

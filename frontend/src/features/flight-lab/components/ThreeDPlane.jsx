@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, Environment, ContactShadows, Float, OrbitControls, Html, useProgress } from '@react-three/drei';
+import { useGLTF, Environment, ContactShadows, Float, OrbitControls, Html, useProgress, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { RefreshCw } from 'lucide-react';
 
@@ -19,7 +19,26 @@ function Loader() {
   )
 }
 
-function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition, cpPosition, controlForces }) {
+function AirflowParticles() {
+  const particlesRef = useRef();
+  
+  useFrame((state, delta) => {
+    if (particlesRef.current) {
+      particlesRef.current.position.z += delta * 15;
+      if (particlesRef.current.position.z > 10) {
+        particlesRef.current.position.z = -10;
+      }
+    }
+  });
+
+  return (
+    <group ref={particlesRef}>
+      <Sparkles count={200} scale={[20, 10, 30]} size={6} speed={0} opacity={0.5} color="#38bdf8" />
+    </group>
+  );
+}
+
+function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflow = false, cgPosition, cpPosition, controlForces }) {
   const { scene } = useGLTF('/assets/airplane_a380.glb');
   const group = useRef();
 
@@ -34,6 +53,7 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition
   return (
     <group ref={group} scale={0.5}>
       <primitive object={scene} />
+      {showAirflow && <AirflowParticles />}
       {showForces && (
         <>
           <arrowHelper args={[new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 1, 0), 4, 0x10b981, 0.5, 0.2]} />
@@ -111,7 +131,7 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition
 // Preload the model
 useGLTF.preload('/assets/airplane_a380.glb');
 
-export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces = false, cgPosition, cpPosition, controlForces }) {
+export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflow = false, showRunway = false, cgPosition, cpPosition, controlForces }) {
   const controlsRef = useRef();
 
   return (
@@ -135,11 +155,23 @@ export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces =
           
           <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
             <React.Suspense fallback={<Loader />}>
-              <Airplane pitch={pitch} roll={roll} yaw={yaw} showForces={showForces} cgPosition={cgPosition} cpPosition={cpPosition} controlForces={controlForces} />
+              <Airplane pitch={pitch} roll={roll} yaw={yaw} showForces={showForces} showAirflow={showAirflow} cgPosition={cgPosition} cpPosition={cpPosition} controlForces={controlForces} />
             </React.Suspense>
           </Float>
 
-          <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={20} blur={2} far={10} />
+          {showRunway && (
+            <mesh position={[0, -2.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[20, 100]} />
+              <meshStandardMaterial color="#1e293b" roughness={0.9} />
+              {/* Centerline */}
+              <mesh position={[0, 0, 0.01]}>
+                <planeGeometry args={[0.5, 100]} />
+                <meshBasicMaterial color="#cbd5e1" />
+              </mesh>
+            </mesh>
+          )}
+
+          <ContactShadows position={[0, -2.4, 0]} opacity={0.6} scale={20} blur={2} far={10} />
         </Canvas>
       </div>
       

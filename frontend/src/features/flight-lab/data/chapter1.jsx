@@ -38,12 +38,29 @@ export const chapter1Data = {
       <div className="space-y-8">
         <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">Core Physics Definitions</h2>
         
-        <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-          <h3 className="text-xl font-bold text-emerald-400 mb-2">Force</h3>
-          <p className="text-slate-300">A push or pull on an object, causing it to move or change motion. Measured in Newtons (N).</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-emerald-400 mb-2">Force</h3>
+            <p className="text-slate-300">A push or pull on an object, causing it to move or change motion. Measured in Newtons (N).</p>
+          </div>
+
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-purple-400 mb-2">Gravity</h3>
+            <p className="text-slate-300">The force that attracts a body toward the center of the earth, or toward any other physical body having mass.</p>
+          </div>
+
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-sky-400 mb-2">Velocity & Acceleration</h3>
+            <p className="text-slate-300"><strong>Velocity:</strong> Speed in a given direction (e.g., 100 knots heading North).<br/><strong>Acceleration:</strong> The rate of change of velocity per unit of time.</p>
+          </div>
+
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-amber-400 mb-2">Moment</h3>
+            <p className="text-slate-300">The turning effect of a force around a pivot. Calculated as <InlineMath math="Force \times Distance" />.</p>
+          </div>
         </div>
 
-        <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+        <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5 mt-4">
           <h3 className="text-xl font-bold text-sky-400 mb-2">Mass vs Weight</h3>
           <p className="text-slate-300 mb-4">
             <strong className="text-white">Mass</strong> is the amount of matter in an object, measured in kilograms (kg). <strong className="text-red-400">Mass is NOT a force.</strong>
@@ -51,8 +68,8 @@ export const chapter1Data = {
           <p className="text-slate-300">
             <strong className="text-white">Weight</strong> is the force exerted by gravity on an aircraft's mass. It pulls the plane downward.
           </p>
-          <div className="mt-4 p-4 bg-slate-950 rounded-xl font-mono text-center">
-            <BlockMath math="Weight = Mass \times Gravity" />
+          <div className="mt-4 p-4 bg-slate-950 rounded-xl font-mono text-center text-xl text-emerald-400">
+            Weight = Mass × Gravity
           </div>
         </div>
       </div>
@@ -61,12 +78,29 @@ export const chapter1Data = {
       <div className="space-y-8 text-right">
         <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">تعريفات فيزيائية أساسية</h2>
         
-        <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-          <h3 className="text-xl font-bold text-emerald-400 mb-2">القوة (Force)</h3>
-          <p className="text-slate-300">دفع أو سحب لجسم ما، مما يتسبب في حركته أو تغيير حركته. تُقاس بوحدة النيوتن (Newtons).</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-emerald-400 mb-2">القوة (Force)</h3>
+            <p className="text-slate-300">دفع أو سحب لجسم ما، مما يتسبب في حركته أو تغيير حركته. تُقاس بوحدة النيوتن (Newtons).</p>
+          </div>
+
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-purple-400 mb-2">الجاذبية (Gravity)</h3>
+            <p className="text-slate-300">القوة التي تجذب جسماً نحو مركز الأرض أو نحو أي جسم مادي آخر له كتلة.</p>
+          </div>
+
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-sky-400 mb-2">السرعة والتسارع (Velocity & Acceleration)</h3>
+            <p className="text-slate-300"><strong>السرعة المتجهة:</strong> السرعة في اتجاه معين.<br/><strong>التسارع:</strong> معدل تغير السرعة بالنسبة للزمن.</p>
+          </div>
+
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+            <h3 className="text-xl font-bold text-amber-400 mb-2">العزم (Moment)</h3>
+            <p className="text-slate-300">تأثير الدوران لقوة حول محور. يُحسب كـ <InlineMath math="Force \times Distance" />.</p>
+          </div>
         </div>
 
-        <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
+        <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5 mt-4">
           <h3 className="text-xl font-bold text-sky-400 mb-2">الكتلة مقابل الوزن (Mass vs Weight)</h3>
           <p className="text-slate-300 mb-4">
             <strong className="text-white">الكتلة (Mass)</strong> هي كمية المادة في جسم ما، تُقاس بالكيلوجرام (kg). <strong className="text-red-400">الكتلة ليست قوة!</strong>
@@ -74,8 +108,8 @@ export const chapter1Data = {
           <p className="text-slate-300">
             <strong className="text-white">الوزن (Weight)</strong> هو القوة التي تبذلها الجاذبية على كتلة الطائرة وتجذبها للأسفل.
           </p>
-          <div className="mt-4 p-4 bg-slate-950 rounded-xl font-mono text-center" dir="ltr">
-            <BlockMath math="Weight = Mass \times Gravity" />
+          <div className="mt-4 p-4 bg-slate-950 rounded-xl font-mono text-center text-xl text-emerald-400" dir="ltr">
+            Weight = Mass × Gravity
           </div>
         </div>
       </div>
@@ -224,27 +258,33 @@ export const chapter1Data = {
     id: 'layers',
     en: (
       <div className="space-y-8">
-        <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">Layers of the Atmosphere</h2>
-        <p className="text-lg text-slate-300">
-          The atmosphere is divided into layers based on temperature behavior.
-        </p>
+        <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">The Atmosphere</h2>
+        
+        <div className="bg-sky-950/40 p-8 rounded-3xl border border-sky-500/30 relative overflow-hidden shadow-2xl">
+          <div className="absolute -right-4 -top-4 text-[150px] opacity-10">🌍</div>
+          <h3 className="text-2xl font-black text-sky-400 mb-2 relative z-10">What is the Atmosphere?</h3>
+          <p className="text-lg text-slate-200 leading-relaxed relative z-10">
+            The atmosphere is the <strong>blanket of air surrounding the Earth</strong>. It's a mixture of gases (mostly Nitrogen 78% and Oxygen 21%) that supports life and makes flight possible. It is divided into distinct layers based on how temperature behaves as you climb.
+          </p>
+        </div>
 
         <div className="space-y-6">
           <div className="p-6 bg-gradient-to-br from-sky-900/40 to-transparent border border-sky-500/20 rounded-2xl">
-            <h3 className="text-2xl font-bold text-sky-400 mb-2">1. Troposphere (0 - 12 km)</h3>
+            <h3 className="text-2xl font-bold text-sky-400 mb-2">1. Troposphere (0 - 11 km)</h3>
             <p className="text-slate-300 font-bold mb-2">Where Aviation Lives.</p>
             <ul className="list-disc pl-5 text-slate-300 space-y-2">
               <li>Where commercial jets cruise and weather forms.</li>
-              <li><strong>Temperature</strong> decreases steadily.</li>
-              <li><strong>Pressure</strong> decreases rapidly.</li>
+              <li><strong>Temperature</strong> decreases steadily with altitude.</li>
+              <li><strong>Pressure</strong> decreases rapidly with altitude.</li>
             </ul>
           </div>
 
           <div className="p-6 bg-gradient-to-br from-indigo-900/40 to-transparent border border-indigo-500/20 rounded-2xl">
-            <h3 className="text-2xl font-bold text-indigo-400 mb-2">2. Stratosphere (12 - 50 km)</h3>
+            <h3 className="text-2xl font-bold text-indigo-400 mb-2">2. Stratosphere (11 - 50 km)</h3>
             <ul className="list-disc pl-5 text-slate-300 space-y-2">
               <li><strong>Temperature</strong> increases with altitude.</li>
               <li>Contains the Ozone layer.</li>
+              <li>Very stable air with little to no weather.</li>
             </ul>
           </div>
         </div>
@@ -252,30 +292,63 @@ export const chapter1Data = {
     ),
     ar: (
       <div className="space-y-8 text-right">
-        <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">طبقات الغلاف الجوي</h2>
-        <p className="text-lg text-slate-300">
-          ينقسم الغلاف الجوي إلى طبقات بناءً على التغيرات في درجة الحرارة.
-        </p>
+        <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">الغلاف الجوي</h2>
+        
+        <div className="bg-sky-950/40 p-8 rounded-3xl border border-sky-500/30 relative overflow-hidden shadow-2xl">
+          <div className="absolute -left-4 -top-4 text-[150px] opacity-10">🌍</div>
+          <h3 className="text-2xl font-black text-sky-400 mb-2 relative z-10">ما هو الغلاف الجوي؟</h3>
+          <p className="text-lg text-slate-200 leading-relaxed relative z-10">
+            الغلاف الجوي هو <strong>طبقة الهواء التي تحيط بالأرض</strong>. وهو مزيج من الغازات (معظمها النيتروجين 78٪ والأكسجين 21٪) تدعم الحياة وتجعل الطيران ممكناً. وينقسم إلى طبقات مميزة بناءً على كيفية تغير درجة الحرارة مع الارتفاع.
+          </p>
+        </div>
 
         <div className="space-y-6">
           <div className="p-6 bg-gradient-to-bl from-sky-900/40 to-transparent border border-sky-500/20 rounded-2xl">
-            <h3 className="text-2xl font-bold text-sky-400 mb-2">1. التروبوسفير (Troposphere)</h3>
+            <h3 className="text-2xl font-bold text-sky-400 mb-2">1. التروبوسفير (Troposphere - 0-11 km)</h3>
             <p className="text-slate-300 font-bold mb-2">حيث يعيش الطيران.</p>
             <ul className="list-disc pr-5 text-slate-300 space-y-2">
-              <li>تمتد من السطح لـ 12 كم. تطير فيها الطائرات.</li>
-              <li><strong>درجة الحرارة</strong> تنخفض باستمرار.</li>
-              <li><strong>الضغط</strong> ينخفض بشكل كبير.</li>
+              <li>تحدث فيها معظم ظواهر الطقس وتطير فيها الطائرات.</li>
+              <li><strong>درجة الحرارة</strong> تنخفض باستمرار مع الارتفاع.</li>
+              <li><strong>الضغط</strong> ينخفض بشكل كبير مع الارتفاع.</li>
             </ul>
           </div>
 
           <div className="p-6 bg-gradient-to-bl from-indigo-900/40 to-transparent border border-indigo-500/20 rounded-2xl">
-            <h3 className="text-2xl font-bold text-indigo-400 mb-2">2. الستراتوسفير (Stratosphere)</h3>
+            <h3 className="text-2xl font-bold text-indigo-400 mb-2">2. الستراتوسفير (Stratosphere - 11-50 km)</h3>
             <ul className="list-disc pr-5 text-slate-300 space-y-2">
               <li><strong>درجة الحرارة</strong> ترتفع مع الارتفاع.</li>
               <li>تحتوي على طبقة الأوزون.</li>
+              <li>هواء مستقر جداً مع غياب للطقس تقريباً.</li>
             </ul>
           </div>
         </div>
+      </div>
+    )
+  },
+  summary: {
+    id: 'summary',
+    en: (
+      <div className="space-y-8 mt-12 bg-emerald-900/20 p-8 rounded-3xl border border-emerald-500/20">
+        <h2 className="text-3xl font-bold text-emerald-400 border-b border-emerald-800/50 pb-4">Chapter 1 Summary</h2>
+        <ul className="list-disc pl-6 space-y-3 text-slate-300 text-lg">
+          <li><strong>Mass vs Weight:</strong> Mass is constant matter; Weight is Mass × Gravity (the downward pull).</li>
+          <li><strong>The 4 Forces:</strong> Lift (up) balances Weight (down). Thrust (forward) balances Drag (backward).</li>
+          <li><strong>Aircraft Axes:</strong> Roll (Longitudinal), Pitch (Lateral), and Yaw (Vertical).</li>
+          <li><strong>Air Properties:</strong> Air density (mass per volume) and pressure decrease with altitude, severely impacting performance.</li>
+          <li><strong>Atmosphere:</strong> Most flight and weather happen in the Troposphere, where temperature drops steadily with altitude.</li>
+        </ul>
+      </div>
+    ),
+    ar: (
+      <div className="space-y-8 mt-12 bg-emerald-900/20 p-8 rounded-3xl border border-emerald-500/20 text-right">
+        <h2 className="text-3xl font-bold text-emerald-400 border-b border-emerald-800/50 pb-4">ملخص الفصل الأول</h2>
+        <ul className="list-disc pr-6 space-y-3 text-slate-300 text-lg">
+          <li><strong>الكتلة والوزن:</strong> الكتلة ثابتة، بينما الوزن هو الكتلة × الجاذبية (قوة السحب للأسفل).</li>
+          <li><strong>القوى الأربع:</strong> الرفع (لأعلى) يعاكس الوزن (لأسفل). الدفع (للمقدمة) يعاكس السحب (للخلف).</li>
+          <li><strong>محاور الطائرة:</strong> الدحرجة (المحور الطولي)، الانحدار (المحور الجانبي)، والانحراف (المحور العمودي).</li>
+          <li><strong>خصائص الهواء:</strong> تنخفض كثافة الهواء والضغط مع الارتفاع، مما يؤثر على الأداء بشكل كبير.</li>
+          <li><strong>الغلاف الجوي:</strong> يحدث معظم الطيران والطقس في طبقة التروبوسفير، حيث تنخفض الحرارة مع الارتفاع.</li>
+        </ul>
       </div>
     )
   }

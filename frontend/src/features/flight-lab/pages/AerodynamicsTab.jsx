@@ -53,94 +53,310 @@ const AnimatedSection = ({ children, className = '' }) => (
   </motion.div>
 );
 
+const MomentLab = ({ language }) => {
+  const [force, setForce] = useState(50); // Newtons
+  const [distance, setDistance] = useState(5); // Meters
+  const moment = force * distance;
+
+  const t = {
+    title: { en: "Interactive Moment Lab", ar: "مختبر العزم التفاعلي" },
+    desc: { en: "A Moment is a turning force. It depends on the Force applied and its Distance from the pivot.", ar: "العزم هو قوة دورانية. يعتمد على القوة المطبقة ومسافتها من محور الدوران." },
+    force: { en: "Force", ar: "القوة" },
+    distance: { en: "Distance from Pivot", ar: "المسافة من المحور" },
+    moment: { en: "Total Moment", ar: "العزم الإجمالي" },
+    pivot: { en: "Pivot (CG)", ar: "محور الدوران" },
+  };
+
+  const isAr = language === 'ar';
+  
+  // Max values for UI
+  const maxDist = 10;
+  
+  return (
+    <div className="w-full max-w-5xl mx-auto my-16 bg-slate-900/80 rounded-3xl overflow-hidden border border-amber-500/20 shadow-2xl p-8">
+      <div className="text-center mb-8">
+        <h3 className="text-3xl font-bold text-amber-400 mb-2">{t.title[language]}</h3>
+        <p className="text-slate-400">{t.desc[language]}</p>
+      </div>
+
+      <div className="relative h-[300px] bg-black/40 rounded-2xl border border-white/5 mb-8 flex items-center justify-center overflow-hidden">
+        {/* Seesaw Line */}
+        <div className="absolute top-1/2 left-10 right-10 h-2 bg-slate-700 rounded-full" />
+        
+        {/* Pivot */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -mt-1 z-10 flex flex-col items-center">
+          <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-b-[25px] border-b-sky-500" />
+          <div className="mt-2 text-sky-400 font-bold text-sm bg-slate-900 px-2 py-1 rounded">{t.pivot[language]}</div>
+        </div>
+
+        {/* Applied Force Vector & Mass */}
+        <motion.div 
+          className="absolute top-1/2 z-20 flex flex-col items-center"
+          animate={{ x: `calc(-50% + ${(distance / maxDist) * 100 * (isAr ? -1 : 1)}px)` }} // Simplified positioning
+          style={{ [isAr ? 'left' : 'right']: `calc(50% - ${distance * 10}%)` }}
+        >
+          {/* Arrow */}
+          <div className="flex flex-col items-center translate-y-[-100%]">
+             <div className="text-amber-400 font-bold mb-1">{force} N</div>
+             <div className="w-1 bg-amber-400" style={{ height: `${force * 1.5}px` }} />
+             <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-amber-400" />
+          </div>
+          {/* Weight block */}
+          <div className="w-8 h-8 bg-amber-500/20 border border-amber-500 rounded mt-1 backdrop-blur-md flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-amber-400" />
+          </div>
+        </motion.div>
+
+        {/* Distance Indicator */}
+        <div 
+          className="absolute top-1/2 mt-8 border-b-2 border-dashed border-emerald-500/50 flex justify-center items-end pb-1"
+          style={{ 
+            [isAr ? 'right' : 'left']: '50%', 
+            width: `${distance * 10}%`,
+          }}
+        >
+          <span className="text-emerald-400 font-mono text-sm">{distance} m</span>
+        </div>
+
+        {/* Resulting Moment text */}
+        <div className="absolute bottom-4 left-4 right-4 text-center">
+          <div className="inline-block px-6 py-3 bg-slate-950/80 rounded-xl border border-white/10 font-mono text-xl text-white">
+            <span className="text-amber-400">{force}</span> × <span className="text-emerald-400">{distance}</span> = <span className="text-purple-400 font-bold">{moment} N·m</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 ${isAr ? 'text-right' : ''}`}>
+        <div>
+          <ModernSlider label={t.force[language]} unit="N" min={10} max={100} value={force} onChange={setForce} color="#f59e0b" />
+          <p className="text-xs text-slate-500 mt-2">{isAr ? 'الوزن أو القوة المطبقة.' : 'The weight or push applied.'}</p>
+        </div>
+        <div>
+          <ModernSlider label={t.distance[language]} unit="m" min={1} max={10} value={distance} onChange={setDistance} color="#10b981" />
+          <p className="text-xs text-slate-500 mt-2">{isAr ? 'المسافة عن محور الدوران. زيادة المسافة يضاعف العزم!' : 'Distance from pivot. More distance multiplies the moment!'}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AirPropertiesLab = ({ language }) => {
+  const [altitude, setAltitude] = useState(0); // 0 to 40k ft
+  
+  // Density and pressure drop with altitude.
+  // 0 ft -> 100% density, 40k ft -> ~25% density
+  const densityPercent = Math.max(10, 100 - (altitude / 400)); 
+  const pressureValue = Math.max(188, 1013 - (altitude * 0.0206)); // approximate mb
+
+  const t = {
+    title: { en: "Air Pressure & Density Lab", ar: "مختبر الضغط الجوي والكثافة" },
+    desc: { en: "See how altitude affects the air molecules. Higher altitude means fewer molecules (lower density) and less force pushing (lower pressure).", ar: "شاهد كيف يؤثر الارتفاع على جزيئات الهواء. ارتفاع أعلى يعني جزيئات أقل (كثافة أقل) وقوة دفع أقل (ضغط أقل)." },
+    alt: { en: "Altitude", ar: "الارتفاع" },
+    density: { en: "Density (Molecules)", ar: "الكثافة (الجزيئات)" },
+    pressure: { en: "Pressure", ar: "الضغط" },
+  };
+
+  const isAr = language === 'ar';
+  const numParticles = Math.floor((densityPercent / 100) * 150); // Up to 150 particles
+
+  // Generate random stable particles based on density
+  const particles = React.useMemo(() => {
+    return Array.from({ length: 150 }).map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 2,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+    }));
+  }, []);
+
+  return (
+    <div className="w-full max-w-5xl mx-auto my-16 bg-slate-900/80 rounded-3xl overflow-hidden border border-sky-500/20 shadow-2xl p-8">
+      <div className="text-center mb-8">
+        <h3 className="text-3xl font-bold text-sky-400 mb-2">{t.title[language]}</h3>
+        <p className="text-slate-400">{t.desc[language]}</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Molecule Box */}
+        <div className="lg:col-span-2 relative h-[300px] bg-[#020617] rounded-2xl border border-white/10 overflow-hidden shadow-inner flex items-center justify-center">
+          {particles.slice(0, numParticles).map(p => (
+            <motion.div
+              key={p.id}
+              className="absolute bg-sky-400 rounded-full opacity-60"
+              style={{
+                width: p.size,
+                height: p.size,
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                boxShadow: '0 0 8px rgba(56, 189, 248, 0.8)'
+              }}
+              animate={{
+                x: [0, (Math.random() - 0.5) * 50, 0],
+                y: [0, (Math.random() - 0.5) * 50, 0],
+              }}
+              transition={{
+                duration: p.duration * (200 / densityPercent), // Move faster at higher density (more collisions)
+                repeat: Infinity,
+                ease: "linear",
+                delay: p.delay
+              }}
+            />
+          ))}
+          
+          <div className="absolute bottom-4 left-4 right-4 flex justify-between px-4 py-2 bg-black/60 backdrop-blur rounded-xl border border-white/5 text-sm font-mono text-white">
+            <div>
+              <span className="text-amber-400 block text-xs">{t.density[language]}</span>
+              {densityPercent.toFixed(1)}%
+            </div>
+            <div className="text-right">
+              <span className="text-purple-400 block text-xs">{t.pressure[language]}</span>
+              {pressureValue.toFixed(0)} hPa
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className={`flex flex-col justify-center space-y-8 ${isAr ? 'text-right' : ''}`}>
+          <div>
+            <ModernSlider label={t.alt[language]} unit="ft" min={0} max={40000} step={1000} value={altitude} onChange={setAltitude} color="#38bdf8" />
+            <p className="text-xs text-slate-500 mt-2">
+              {isAr ? 'كلما ارتفعنا، يقل عدد الجزيئات وتتباعد، مما يقلل الكثافة والضغط.' : 'As we climb, molecules become fewer and spread out, lowering density and pressure.'}
+            </p>
+          </div>
+          
+          <div className="p-4 bg-slate-950/50 rounded-xl border border-white/5 space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 text-sm">{isAr ? 'تأثير الرفع:' : 'Lift Effect:'}</span>
+              <span className={`font-bold ${densityPercent > 70 ? 'text-emerald-400' : densityPercent > 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                {densityPercent > 70 ? (isAr ? 'ممتاز' : 'Excellent') : densityPercent > 40 ? (isAr ? 'متوسط' : 'Moderate') : (isAr ? 'ضعيف جداً' : 'Very Poor')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 text-sm">{isAr ? 'أداء المحرك:' : 'Engine Perf:'}</span>
+              <span className={`font-bold ${densityPercent > 70 ? 'text-emerald-400' : densityPercent > 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                {densityPercent > 70 ? (isAr ? '100%' : '100%') : densityPercent > 40 ? (isAr ? '60%' : '60%') : (isAr ? '30%' : '30%')}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const InteractiveAtmosphere = ({ language }) => {
-  const [altitude, setAltitude] = useState(0); // 0 to 100 km
+  const [activeLayerIndex, setActiveLayerIndex] = useState(0);
 
   const t = {
     title: { en: "Interactive Atmosphere", ar: "الغلاف الجوي التفاعلي" },
-    layer: { en: "Layer", ar: "الطبقة" },
+    desc: { en: "Select a layer to see its properties and how it affects flight.", ar: "حدد طبقة لرؤية خصائصها وكيف تؤثر على الطيران." },
     temp: { en: "Temperature", ar: "درجة الحرارة" },
     pressure: { en: "Pressure", ar: "الضغط" },
-    seaLevel: { en: "Sea Level (0 km)", ar: "مستوى سطح البحر (0 كم)" },
-    spaceBoundary: { en: "Space Boundary (100 km)", ar: "حدود الفضاء (100 كم)" },
-    currentAlt: { en: "Current Altitude", ar: "الارتفاع الحالي" },
-    tropo: { en: "Troposphere", ar: "التروبوسفير" },
-    strato: { en: "Stratosphere", ar: "الستراتوسفير" },
-    meso: { en: "Mesosphere", ar: "الميزوسفير" }
+    density: { en: "Density", ar: "الكثافة" },
+    effect: { en: "Aircraft Effect", ar: "تأثير الطائرة" },
   };
 
-  // Calculations based on standard atmosphere model (simplified)
-  let layer = t.tropo[language];
-  let temp = 15 - (altitude * 6.5); // drops 6.5C per km in troposphere
-  let pressure = 1013 * Math.exp(-altitude / 8); // approximate exponential decay
-  let bgClass = "from-sky-500 to-sky-900";
-  let cloudsOpacity = Math.max(0, 1 - (altitude / 12));
-  let starsOpacity = Math.min(1, Math.max(0, (altitude - 12) / 30));
+  const layers = [
+    {
+      id: 'troposphere',
+      name: { en: "Troposphere (0-11 km)", ar: "التروبوسفير (0-11 كم)" },
+      bgClass: "from-sky-400 to-sky-900",
+      temp: "15°C ➔ -56.5°C",
+      pressure: "1013 ➔ 226 hPa",
+      density: { en: "High (1.225 kg/m³)", ar: "عالية (1.225 كجم/م³)" },
+      effect: { en: "Optimal for lift. High engine performance. Weather occurs here.", ar: "مثالي للرفع. أداء محرك عالي. الطقس يحدث هنا." },
+      planeY: "80%",
+      planeScale: 1,
+    },
+    {
+      id: 'stratosphere',
+      name: { en: "Stratosphere (11-50 km)", ar: "الستراتوسفير (11-50 كم)" },
+      bgClass: "from-indigo-900 to-[#020617]",
+      temp: "-56.5°C ➔ -2.5°C",
+      pressure: "226 ➔ 1 hPa",
+      density: { en: "Low (0.3 kg/m³)", ar: "منخفضة (0.3 كجم/م³)" },
+      effect: { en: "Thin air: Less lift but much less drag. High fuel efficiency for jets.", ar: "هواء رقيق: رفع أقل ولكن سحب أقل. كفاءة وقود عالية للطائرات النفاثة." },
+      planeY: "40%",
+      planeScale: 0.8,
+    },
+    {
+      id: 'mesosphere',
+      name: { en: "Mesosphere (50-85 km)", ar: "الميزوسفير (50-85 كم)" },
+      bgClass: "from-[#020617] to-black",
+      temp: "-2.5°C ➔ -90°C",
+      pressure: "< 1 hPa",
+      density: { en: "Extremely Low", ar: "منخفضة جداً" },
+      effect: { en: "Unsuitable for normal flight. Air is too thin for lift or jet engines.", ar: "غير صالح للطيران العادي. الهواء خفيف جداً للرفع أو المحركات." },
+      planeY: "10%",
+      planeScale: 0.5,
+    }
+  ];
 
-  if (altitude > 12 && altitude <= 50) {
-    layer = t.strato[language];
-    temp = -56.5 + ((altitude - 12) * 1.5); // Temp rises due to ozone
-    bgClass = "from-indigo-900 to-[#020617]";
-  } else if (altitude > 50) {
-    layer = t.meso[language];
-    temp = -5 + ((altitude - 50) * -2.5); // Temp drops sharply
-    bgClass = "from-[#020617] to-black";
-  }
+  const activeLayer = layers[activeLayerIndex];
 
   return (
-    <div className={`w-full max-w-5xl mx-auto my-24 p-8 bg-slate-900/50 rounded-3xl border border-white/10 backdrop-blur-md ${language === 'ar' ? 'text-right' : ''}`}>
-      <h3 className="text-3xl font-bold text-white mb-6 text-center">{t.title[language]}</h3>
+    <div className={`w-full max-w-5xl mx-auto my-24 p-8 bg-slate-900/50 rounded-3xl border border-white/10 backdrop-blur-md shadow-2xl ${language === 'ar' ? 'text-right' : ''}`}>
+      <h3 className="text-3xl font-bold text-white mb-2 text-center">{t.title[language]}</h3>
+      <p className="text-slate-400 text-center mb-8">{t.desc[language]}</p>
       
-      <div className={`relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-t ${bgClass} transition-colors duration-1000 flex`}>
+      <div className="flex flex-wrap justify-center gap-4 mb-8">
+        {layers.map((layer, idx) => (
+          <button
+            key={layer.id}
+            onClick={() => setActiveLayerIndex(idx)}
+            className={`px-6 py-3 rounded-full font-bold transition-all ${
+              activeLayerIndex === idx 
+                ? 'bg-sky-500 text-white shadow-[0_0_20px_rgba(14,165,233,0.5)] scale-105' 
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+            }`}
+          >
+            {layer.name[language]}
+          </button>
+        ))}
+      </div>
+
+      <div className={`relative w-full h-[400px] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-t ${activeLayer.bgClass} transition-colors duration-1000 flex`}>
         {/* Parallax Elements */}
-        <div className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: starsOpacity }}>
+        <div className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: activeLayerIndex > 0 ? 1 : 0 }}>
           <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-50"></div>
         </div>
-        <div className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: cloudsOpacity }}>
-           <div className="w-full h-full flex items-end justify-center pb-24 space-x-12 opacity-30 blur-sm">
+        <div className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: activeLayerIndex === 0 ? 1 : 0 }}>
+           <div className="w-full h-full flex items-end justify-center pb-12 space-x-12 opacity-40 blur-[2px]">
              <div className="text-9xl">☁️</div>
              <div className="text-8xl">☁️</div>
              <div className="text-9xl">☁️</div>
            </div>
         </div>
 
-        {/* Flight Data Dashboard */}
-        <div className="absolute top-6 left-6 right-6 flex justify-between gap-4 z-10">
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-4 flex-1 text-center">
-            <div className="text-sky-400 text-xs font-bold tracking-widest uppercase">{t.layer[language]}</div>
-            <div className="text-2xl font-bold text-white">{layer}</div>
-          </div>
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-4 flex-1 text-center">
-            <div className="text-amber-400 text-xs font-bold tracking-widest uppercase">{t.temp[language]}</div>
-            <div className="text-2xl font-bold text-white" dir="ltr">{temp.toFixed(1)} °C</div>
-          </div>
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-4 flex-1 text-center">
-            <div className="text-purple-400 text-xs font-bold tracking-widest uppercase">{t.pressure[language]}</div>
-            <div className="text-2xl font-bold text-white" dir="ltr">{pressure.toFixed(1)} hPa</div>
-          </div>
-        </div>
-
         {/* Animated Plane */}
-        <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-300 ease-out z-20" 
-             style={{ bottom: `${(altitude / 100) * 80 + 10}%` }}>
-          <div className="text-6xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] -rotate-90">✈️</div>
+        <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-1000 ease-in-out z-20" 
+             style={{ top: activeLayer.planeY, transform: `translateX(-50%) scale(${activeLayer.planeScale})` }}>
+          <div className="text-6xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] -rotate-0">✈️</div>
         </div>
       </div>
 
-      <div className="mt-8 px-6">
-        <div className="flex justify-between text-slate-400 font-bold mb-2">
-          <span>{t.seaLevel[language]}</span>
-          <span>{t.spaceBoundary[language]}</span>
+      {/* Info Panel overlay - Moved Outside */}
+      <div className="mt-6 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div>
+            <div className="text-sky-400 text-xs font-bold tracking-widest uppercase mb-1">{t.temp[language]}</div>
+            <div className="text-xl font-bold text-white" dir="ltr">{activeLayer.temp}</div>
+          </div>
+          <div>
+            <div className="text-purple-400 text-xs font-bold tracking-widest uppercase mb-1">{t.pressure[language]}</div>
+            <div className="text-xl font-bold text-white" dir="ltr">{activeLayer.pressure}</div>
+          </div>
+          <div>
+            <div className="text-amber-400 text-xs font-bold tracking-widest uppercase mb-1">{t.density[language]}</div>
+            <div className="text-xl font-bold text-white">{activeLayer.density[language]}</div>
+          </div>
+          <div>
+            <div className="text-emerald-400 text-xs font-bold tracking-widest uppercase mb-1">{t.effect[language]}</div>
+            <div className="text-sm font-semibold text-slate-200">{activeLayer.effect[language]}</div>
+          </div>
         </div>
-        <ModernSlider 
-          min={0} 
-          max={100} 
-          step={0.5}
-          value={altitude} 
-          onChange={setAltitude}
-          color="#0ea5e9"
-        />
-        <div className="text-center mt-2 text-sky-400 font-bold text-xl" dir="ltr">{t.currentAlt[language]}: {altitude.toFixed(1)} km</div>
       </div>
     </div>
   );
@@ -201,87 +417,79 @@ const IdealGasLaw = ({ language }) => {
   );
 };
 
-const FlightDiagnostic = ({ language }) => {
-  const [lift, setLift] = useState(100);
-  const [weight, setWeight] = useState(100);
+const ForcesLab = ({ language }) => {
   const [thrust, setThrust] = useState(50);
   const [drag, setDrag] = useState(50);
+  
+  // Calculate dynamic lift based on thrust (speed)
+  const lift = Math.min(150, 30 + thrust * 1.2);
+  const weight = 100;
 
   const t = {
-    status: { en: "Flight Computer Status", ar: "حالة كمبيوتر الطيران" },
-    steady: { en: "✓ STEADY LEVEL FLIGHT", ar: "✓ طيران مستوي ومستقر" },
-    dynamic: { en: "⚠ DYNAMIC FLIGHT", ar: "⚠ طيران ديناميكي غير مستقر" },
-    vertical: { en: "Vertical", ar: "عمودي" },
-    horizontal: { en: "Horizontal", ar: "أفقي" },
+    title: { en: "Interactive Forces Lab", ar: "مختبر القوى التفاعلي" },
+    desc: { en: "Increase thrust to see how the aircraft accelerates, generating lift until it overcomes weight and takes off.", ar: "قم بزيادة الدفع لترى كيف تتسارع الطائرة، وتولد الرفع حتى تتغلب على الوزن وتقلع." },
     lift: { en: "Lift", ar: "الرفع" },
     weight: { en: "Weight", ar: "الوزن" },
     thrust: { en: "Thrust", ar: "الدفع" },
     drag: { en: "Drag", ar: "السحب" },
-    reset: { en: "Reset to Steady Level Flight", ar: "إعادة التعيين لطيران مستوي" },
-    climbing: { en: "Climbing", ar: "صعود" },
-    descending: { en: "Descending", ar: "نزول" },
-    level: { en: "Level Flight", ar: "طيران مستوي" },
-    accelerating: { en: "Accelerating", ar: "تسارع" },
-    decelerating: { en: "Decelerating", ar: "تباطؤ" },
-    constant: { en: "Constant Speed", ar: "سرعة ثابتة" }
+    status: { en: "Flight Status", ar: "حالة الطيران" },
+    parked: { en: "Parked / Taxiing", ar: "متوقفة / تتحرك على المدرج" },
+    takeoff: { en: "Taking Off!", ar: "تقلع!" },
+    climbing: { en: "Climbing", ar: "تصعد" },
   };
 
-  let vState = t.level[language];
-  let vColor = "text-emerald-400";
-  let vBg = "bg-emerald-500/10 border-emerald-500/30";
-  if (lift > weight) { vState = t.climbing[language]; vColor = "text-sky-400"; vBg = "bg-sky-500/10 border-sky-500/30"; }
-  if (lift < weight) { vState = t.descending[language]; vColor = "text-red-400"; vBg = "bg-red-500/10 border-red-500/30"; }
-
-  let hState = t.constant[language];
-  let hColor = "text-emerald-400";
-  let hBg = "bg-emerald-500/10 border-emerald-500/30";
-  if (thrust > drag) { hState = t.accelerating[language]; hColor = "text-amber-400"; hBg = "bg-amber-500/10 border-amber-500/30"; }
-  if (thrust < drag) { hState = t.decelerating[language]; hColor = "text-purple-400"; hBg = "bg-purple-500/10 border-purple-500/30"; }
-
-  const isSteady = lift === weight && thrust === drag;
+  let statusText = t.parked[language];
+  let statusColor = "text-slate-400";
+  let pitch = 0;
+  
+  if (lift > weight + 10) {
+    statusText = t.climbing[language];
+    statusColor = "text-sky-400";
+    pitch = 15;
+  } else if (lift > weight) {
+    statusText = t.takeoff[language];
+    statusColor = "text-emerald-400";
+    pitch = 10;
+  }
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-24 grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Diagnostic Panel */}
-      <div className={`p-8 rounded-3xl border ${isSteady ? 'bg-emerald-950/30 border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.2)]' : 'bg-slate-900/50 border-slate-700'} transition-all duration-500 flex flex-col justify-center items-center text-center`}>
-        <div className="text-sky-400 text-sm font-bold tracking-widest uppercase mb-4">{t.status[language]}</div>
-        
-        <div className={`text-4xl font-black mb-4 ${isSteady ? 'text-emerald-400' : 'text-white'}`}>
-          {isSteady ? t.steady[language] : t.dynamic[language]}
-        </div>
-        
-        <div className={`flex gap-4 w-full mt-8 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-          <div className={`flex-1 p-4 rounded-xl border ${vBg} ${vColor} font-bold`}>
-            {t.vertical[language]}: {vState}
-          </div>
-          <div className={`flex-1 p-4 rounded-xl border ${hBg} ${hColor} font-bold`}>
-            {t.horizontal[language]}: {hState}
-          </div>
-        </div>
+    <div className="w-full max-w-6xl mx-auto my-24 bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
+      <div className="p-8 text-center border-b border-slate-800">
+        <h3 className="text-3xl font-bold text-white mb-2">{t.title[language]}</h3>
+        <p className="text-slate-400">{t.desc[language]}</p>
       </div>
 
-      {/* Controls */}
-      <div className={`bg-slate-900/50 p-8 rounded-3xl border border-slate-800 space-y-6 ${language === 'ar' ? 'text-right' : ''}`}>
-        <div>
-          <ModernSlider label={t.lift[language]} unit="kN" min={50} max={150} value={lift} onChange={setLift} color="#10b981" />
+      <div className="grid grid-cols-1 lg:grid-cols-3">
+        {/* 3D View */}
+        <div className="relative w-full h-[500px] lg:col-span-2 bg-gradient-to-b from-[#020617] to-slate-900 cursor-grab">
+          <ThreeDPlane pitch={pitch} roll={0} yaw={0} showRunway={false} showForces={true} showAirflow={thrust > 20} />
+          
+          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/10">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.status[language]}</div>
+            <div className={`text-xl font-black ${statusColor}`}>{statusText}</div>
+          </div>
         </div>
-        <div>
-          <ModernSlider label={t.weight[language]} unit="kN" min={50} max={150} value={weight} onChange={setWeight} color="#ef4444" />
+
+        {/* Controls */}
+        <div className={`bg-slate-950 p-8 flex flex-col justify-center space-y-8 ${language === 'ar' ? 'text-right' : ''}`}>
+          <div>
+            <ModernSlider label={t.thrust[language]} unit="%" min={0} max={100} value={thrust} onChange={(v) => { setThrust(v); setDrag(v * 0.8); }} color="#0ea5e9" />
+            <p className="text-xs text-slate-500 mt-2">{language === 'ar' ? 'يولد سرعة أمامية.' : 'Generates forward speed.'}</p>
+          </div>
+          <div>
+            <ModernSlider label={t.drag[language]} unit="%" min={0} max={100} value={drag} onChange={() => {}} color="#f59e0b" />
+            <p className="text-xs text-slate-500 mt-2">{language === 'ar' ? 'تزداد المقاومة مع زيادة السرعة (الدفع).' : 'Resistance increases with speed (thrust).'}</p>
+          </div>
+          <div className="h-px bg-slate-800 w-full my-2"></div>
+          <div>
+            <ModernSlider label={t.lift[language]} unit="%" min={0} max={150} value={lift} onChange={() => {}} color="#10b981" />
+            <p className="text-xs text-slate-500 mt-2">{language === 'ar' ? 'ينتج عن السرعة. يجب أن يتجاوز الوزن للإقلاع.' : 'Generated by speed. Must overcome weight to fly.'}</p>
+          </div>
+          <div>
+            <ModernSlider label={t.weight[language]} unit="%" min={0} max={150} value={weight} onChange={() => {}} color="#ef4444" />
+            <p className="text-xs text-slate-500 mt-2">{language === 'ar' ? 'الجاذبية المستمرة للأسفل.' : 'Constant downward pull.'}</p>
+          </div>
         </div>
-        <div className="h-px bg-slate-800 w-full my-4"></div>
-        <div>
-          <ModernSlider label={t.thrust[language]} unit="kN" min={20} max={80} value={thrust} onChange={setThrust} color="#0ea5e9" />
-        </div>
-        <div>
-          <ModernSlider label={t.drag[language]} unit="kN" min={20} max={80} value={drag} onChange={setDrag} color="#f59e0b" />
-        </div>
-        
-        <button 
-          onClick={() => { setLift(100); setWeight(100); setThrust(50); setDrag(50); }}
-          className="w-full py-3 mt-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
-        >
-          {t.reset[language]}
-        </button>
       </div>
     </div>
   );
@@ -307,7 +515,7 @@ const InteractiveAxes = ({ language }) => {
         <p className="text-slate-400">{t.desc[language]}</p>
       </div>
       <div className="relative w-full h-[600px] cursor-grab">
-        <ThreeDPlane pitch={pitch} roll={roll} yaw={yaw} />
+        <ThreeDPlane pitch={pitch} roll={roll} yaw={yaw} showAirflow={false} />
       </div>
       <div className={`bg-slate-950 p-8 grid grid-cols-1 md:grid-cols-3 gap-8 ${language === 'ar' ? 'flex-row-reverse text-right' : ''}`}>
         <div className="flex flex-col items-center gap-4">
@@ -343,15 +551,16 @@ export default function AerodynamicsTab() {
           {data.intro[language]}
         </AnimatedSection>
 
-        {/* DEFINITIONS */}
+        {/* DEFINITIONS & MOMENT LAB */}
         <AnimatedSection className="mb-32">
           {data.definitions[language]}
+          <MomentLab language={language} />
         </AnimatedSection>
 
         {/* FORCES & DIAGNOSTIC */}
         <AnimatedSection>
           {data.forces[language]}
-          <FlightDiagnostic language={language} />
+          <ForcesLab language={language} />
         </AnimatedSection>
 
         {/* AXES & 3D PLANE */}
@@ -363,8 +572,19 @@ export default function AerodynamicsTab() {
         {/* ATMOSPHERE & PROPERTIES */}
         <AnimatedSection>
           {data.layers[language]}
-          <InteractiveAtmosphere language={language} />
-          <IdealGasLaw language={language} />
+          
+          <div className="my-12">
+            <InteractiveAtmosphere language={language} />
+          </div>
+
+          <div className="my-12">
+            <AirPropertiesLab language={language} />
+          </div>
+        </AnimatedSection>
+
+        {/* SUMMARY */}
+        <AnimatedSection>
+          {data.summary[language]}
         </AnimatedSection>
 
       </div>
