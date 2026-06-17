@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
-import { useTenant } from '../context/TenantContext';
-import { useAppContext } from '../context/AppContext';
-import DashboardLayout from '../layouts/DashboardLayout';
+import { supabase } from '../../services/supabaseClient';
+import { useTenant } from '../../context/TenantContext';
+import { useAppContext } from '../../context/AppContext';
+import DashboardLayout from '../../layouts/DashboardLayout';
 import { Users, BookOpen, Clock, Activity, Award, Search, Filter, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
 
