@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { useAppContext } from '../../context/AppContext';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle, UserPlus } from 'lucide-react';
 
 export default function SuperadminDashboard() {
   const { user } = useAppContext();
