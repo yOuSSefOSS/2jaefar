@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabaseClient';
 const tiers = [
   {
     name: 'Free',
-    price: '$0',
+    price: '0 EGP',
     description: 'Perfect for exploring aerodynamics.',
     features: [
       { name: '1 Import Quota', included: true },
@@ -23,7 +23,7 @@ const tiers = [
   },
   {
     name: 'Pro',
-    price: '$19',
+    price: '1000 EGP',
     period: '/mo',
     description: 'For students and hobbyists.',
     features: [
@@ -41,7 +41,7 @@ const tiers = [
   },
   {
     name: 'Ultra',
-    price: '$49',
+    price: '2500 EGP',
     period: '/mo',
     description: 'For professional aerospace engineers.',
     features: [
@@ -67,7 +67,7 @@ const Pricing = () => {
     setLoadingTier(tierId);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/create-checkout-session`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/paymob/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ const Pricing = () => {
       
       const data = await response.json();
       if (data.url) {
-        window.location.href = data.url; // Redirect to Stripe Checkout
+        window.location.href = data.url; // Redirect to Paymob Checkout
       } else {
         alert('Failed to initialize checkout: ' + data.error);
       }

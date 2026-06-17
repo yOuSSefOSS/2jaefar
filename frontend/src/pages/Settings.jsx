@@ -335,6 +335,42 @@ const Settings = () => {
             className="space-y-6 max-w-2xl"
          >
             
+            {/* Profile Settings */}
+            <motion.div 
+               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+               className="bg-brand-800/40 p-6 rounded-2xl border border-white/5 backdrop-blur-md shadow-xl"
+            >
+               <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+                 <Users size={16} className="text-[var(--color-accent-blue)]" /> Profile Settings
+               </h3>
+               <div className="flex gap-4 items-end">
+                 <div className="flex-1">
+                   <label className="block text-xs font-mono text-brand-400 mb-2 uppercase tracking-widest">Display Name</label>
+                   <input
+                     type="text"
+                     id="displayNameInput"
+                     placeholder="Your Name"
+                     className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-brand-500 focus:outline-none focus:border-[var(--color-accent-blue)] transition-colors"
+                   />
+                 </div>
+                 <button
+                   onClick={async () => {
+                     const name = document.getElementById('displayNameInput').value;
+                     if (!name.trim()) return;
+                     const { data: { user } } = await supabase.auth.getUser();
+                     if (user) {
+                       const { error } = await supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
+                       if (!error) alert('Display name updated successfully!');
+                       else alert('Failed to update: ' + error.message);
+                     }
+                   }}
+                   className="px-6 py-3 rounded-xl bg-[var(--color-accent-blue)] text-white text-sm font-semibold hover:brightness-110 transition"
+                 >
+                   Save Name
+                 </button>
+               </div>
+            </motion.div>
+            
             {/* NeuralFoil Toggle */}
             <motion.div 
                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}

@@ -467,10 +467,16 @@ app.post('/api/workspaces/remove', authMiddleware, async (req, res) => {
 
 // ─── ADMIN DASHBOARD ENDPOINTS ──────────────────────────────────────────────
 
-// Extremely strict middleware that only allows the owner of the specific workspace
+// Extremely strict middleware that only allows global superadmins
 const adminMiddleware = async (req, res, next) => {
-  if (req.workspaceId !== '7baec122-9241-4aaf-9f07-7147acd6b10b') {
-    return res.status(403).json({ error: `Access denied: Your active workspace is ${req.workspaceId}, not the admin workspace.` });
+  const { data } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', req.user.id)
+    .single();
+
+  if (!data || data.role !== 'superadmin') {
+    return res.status(403).json({ error: `Access denied: You must be a global superadmin.` });
   }
   next();
 };
@@ -519,6 +525,226 @@ app.get('/api/admin/workspaces', authMiddleware, adminMiddleware, async (req, re
   res.json({ workspaces });
 });
 
+// POST /api/admin/academy/:id/add-member — add a user to an academy by email
+app.post('/api/admin/academy/:id/add-member', authMiddleware, adminMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { email, role } = req.body;
+  if (!email || !role) return res.status(400).json({ error: 'Missing parameters' });
+
+  // 1. Look up the user by email
+  const { data: authData, error: lookupError } = await supabase.auth.admin.listUsers();
+  if (lookupError || !authData?.users) return res.status(500).json({ error: 'Could not search users.' });
+
+  const targetUser = authData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  if (!targetUser) {
+    return res.status(404).json({ error: 'No user found with that email address.' });
+  }
+
+  // 2. Update their profile with the new academy_id and role
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ academy_id: id, role: role })
+    .eq('id', targetUser.id);
+
+  if (updateError) return res.status(500).json({ error: updateError.message });
+
+  res.json({ success: true, message: 'User added to academy.' });
+});
+
+// POST /api/admin/move-user — move a user to a different workspace
+app.post('/api/admin/move-user', authMiddleware, adminMiddleware, async (req, res) => {
+  const { userId, newWorkspaceId } = req.body;
+  if (!userId || !newWorkspaceId) return res.status(400).json({ error: 'Missing parameters' });
+
+  // 1. Delete their existing workspace membership
+  await supabase
+    .from('workspace_members')
+    .delete()
+    .eq('user_id', userId);
+
+  // 2. Insert into new workspace
+  const { error: insertError } = await supabase
+    .from('workspace_members')
+    .insert({ workspace_id: newWorkspaceId, user_id: userId, role: 'member' });
+
+  if (insertError) return res.status(500).json({ error: insertError.message });
+
+  // 3. Update their active_workspace_id
+  // 4. Combine data
+  const members = membersData.map(m => {
+    const prof = profiles?.find(p => p.id === m.user_id);
+    const authU = authUsers.find(u => u.id === m.user_id);
+    return {
+      role: m.role,
+      user_id: m.user_id,
+      profiles: { display_name: prof?.display_name },
+      auth_users: { email: authU?.email }
+    };
+  });
+
+  // 5. Fetch the workspace name and plan
+  const { data: ws } = await supabase
+    .from('workspaces')
+    .select('name, plan')
+    .eq('id', req.workspaceId)
+    .single();
+
+  res.json({ workspace: ws, members: members });
+});
+
+// POST /api/workspaces/invite — invite an existing Vortex-Gen user by email
+app.post('/api/workspaces/invite', authMiddleware, async (req, res) => {
+  if (req.userRole !== 'owner') {
+    return res.status(403).json({ error: 'Only the workspace owner can invite members.' });
+  }
+
+  const { email } = req.body;
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  }
+
+  // Look up the user in auth.users by email using the admin API
+  const { data: authData, error: lookupError } = await supabase.auth.admin.listUsers();
+  if (lookupError || !authData?.users) return res.status(500).json({ error: 'Could not search for user. Make sure SUPABASE_SERVICE_ROLE_KEY is set.' });
+
+  const targetUser = authData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  if (!targetUser) {
+    return res.status(404).json({ error: 'No Vortex-Gen account found with that email address.' });
+  }
+
+  // Check if user is already a member
+  const { data: existing } = await supabase
+    .from('workspace_members')
+    .select('user_id')
+    .eq('workspace_id', req.workspaceId)
+    .eq('user_id', targetUser.id)
+    .single();
+
+  if (existing) {
+    return res.status(409).json({ error: 'This user is already a member of your workspace.' });
+  }
+
+  // Add them as a member
+  const { error: insertError } = await supabase
+    .from('workspace_members')
+    .insert({ workspace_id: req.workspaceId, user_id: targetUser.id, role: 'member' });
+
+  if (insertError) return res.status(500).json({ error: insertError.message });
+
+  // Also update their active_workspace_id in profiles so they switch context
+  await supabase
+    .from('profiles')
+    .update({ active_workspace_id: req.workspaceId })
+    .eq('id', targetUser.id);
+
+  res.json({ success: true, message: `${email} has been added to your workspace.` });
+});
+
+// POST /api/workspaces/remove — remove a member from the workspace
+app.post('/api/workspaces/remove', authMiddleware, async (req, res) => {
+  if (req.userRole !== 'owner') {
+    return res.status(403).json({ error: 'Only the workspace owner can remove members.' });
+  }
+
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId is required.' });
+  if (userId === req.user.id) return res.status(400).json({ error: 'You cannot remove yourself.' });
+
+  await supabase
+    .from('workspace_members')
+    .delete()
+    .eq('workspace_id', req.workspaceId)
+    .eq('user_id', userId);
+
+  res.json({ success: true });
+});
+
+// ─── ADMIN DASHBOARD ENDPOINTS ──────────────────────────────────────────────
+
+// Extremely strict middleware that only allows global superadmins
+const adminMiddleware = async (req, res, next) => {
+  const { data } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', req.user.id)
+    .single();
+
+  if (!data || data.role !== 'superadmin') {
+    return res.status(403).json({ error: `Access denied: You must be a global superadmin.` });
+  }
+  next();
+};
+
+// GET /api/admin/users — fetch all users across the entire system
+app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res) => {
+  // 1. Fetch all workspace_members
+  const { data: membersData, error } = await supabase
+    .from('workspace_members')
+    .select('role, user_id, workspace_id');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  // 2. Fetch all profiles
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, display_name');
+
+  // 3. Fetch all emails
+  const { data: authData } = await supabase.auth.admin.listUsers();
+  const authUsers = authData?.users || [];
+
+  // 4. Combine into an easy format
+  const users = membersData.map(m => {
+    const prof = profiles?.find(p => p.id === m.user_id);
+    const authU = authUsers.find(u => u.id === m.user_id);
+    return {
+      user_id: m.user_id,
+      email: authU?.email || 'Unknown',
+      display_name: prof?.display_name || 'No Name',
+      role: m.role,
+      workspace_id: m.workspace_id
+    };
+  });
+
+  res.json({ users });
+});
+
+// GET /api/admin/workspaces — fetch all available workspaces
+app.get('/api/admin/workspaces', authMiddleware, adminMiddleware, async (req, res) => {
+  const { data: workspaces, error } = await supabase
+    .from('workspaces')
+    .select('id, name, plan');
+    
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ workspaces });
+});
+
+// POST /api/admin/academy/:id/add-member — add a user to an academy by email
+app.post('/api/admin/academy/:id/add-member', authMiddleware, adminMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { email, role } = req.body;
+  if (!email || !role) return res.status(400).json({ error: 'Missing parameters' });
+
+  // 1. Look up the user by email
+  const { data: authData, error: lookupError } = await supabase.auth.admin.listUsers();
+  if (lookupError || !authData?.users) return res.status(500).json({ error: 'Could not search users.' });
+
+  const targetUser = authData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  if (!targetUser) {
+    return res.status(404).json({ error: 'No user found with that email address.' });
+  }
+
+  // 2. Update their profile with the new academy_id and role
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ academy_id: id, role: role })
+    .eq('id', targetUser.id);
+
+  if (updateError) return res.status(500).json({ error: updateError.message });
+
+  res.json({ success: true, message: 'User added to academy.' });
+});
+
 // POST /api/admin/move-user — move a user to a different workspace
 app.post('/api/admin/move-user', authMiddleware, adminMiddleware, async (req, res) => {
   const { userId, newWorkspaceId } = req.body;
@@ -544,6 +770,85 @@ app.post('/api/admin/move-user', authMiddleware, adminMiddleware, async (req, re
     .eq('id', userId);
 
   res.json({ success: true });
+});
+
+// ─── PAYMOB CHECKOUT INTEGRATION ──────────────────────────────────────────────
+
+// POST /api/paymob/checkout — Create a Paymob payment key and return the iframe URL
+app.post('/api/paymob/checkout', authMiddleware, async (req, res) => {
+  const { tier } = req.body;
+  if (!tier) return res.status(400).json({ error: 'Tier is required' });
+
+  // Pricing mapped in EGP (approximate conversion for placeholder)
+  const pricing = {
+    'pro': 1000, // 1000 EGP
+    'pro_max': 2500 // 2500 EGP
+  };
+
+  const amountCents = (pricing[tier] || 0) * 100;
+  if (amountCents === 0) return res.status(400).json({ error: 'Invalid tier' });
+
+  // Note: To fully implement Paymob, you need PAYMOB_API_KEY, PAYMOB_INTEGRATION_ID, and PAYMOB_IFRAME_ID in your .env
+  const apiKey = process.env.PAYMOB_API_KEY;
+  if (!apiKey) {
+    return res.status(501).json({ error: 'Paymob API key not configured on the backend. Please add PAYMOB_API_KEY to your .env file.' });
+  }
+
+  try {
+    // 1. Authentication Request
+    const authRes = await fetch('https://accept.paymob.com/api/auth/tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey })
+    });
+    const authData = await authRes.json();
+    const token = authData.token;
+
+    // 2. Order Registration Request
+    const orderRes = await fetch('https://accept.paymob.com/api/ecommerce/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        auth_token: token,
+        delivery_needed: 'false',
+        amount_cents: amountCents,
+        currency: 'EGP',
+        items: []
+      })
+    });
+    const orderData = await orderRes.json();
+    const orderId = orderData.id;
+
+    // 3. Payment Key Request
+    const paymentKeyRes = await fetch('https://accept.paymob.com/api/acceptance/payment_keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        auth_token: token,
+        amount_cents: amountCents,
+        expiration: 3600,
+        order_id: orderId,
+        billing_data: {
+          apartment: 'NA', email: 'user@example.com', floor: 'NA', first_name: 'NA',
+          street: 'NA', building: 'NA', phone_number: 'NA', shipping_method: 'NA',
+          postal_code: 'NA', city: 'NA', country: 'EG', last_name: 'NA', state: 'NA'
+        },
+        currency: 'EGP',
+        integration_id: process.env.PAYMOB_INTEGRATION_ID
+      })
+    });
+    const paymentKeyData = await paymentKeyRes.json();
+    const paymentKey = paymentKeyData.token;
+
+    // Return the iframe URL
+    const iframeId = process.env.PAYMOB_IFRAME_ID;
+    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`;
+
+    res.json({ url: iframeUrl });
+  } catch (err) {
+    console.error('Paymob checkout error:', err);
+    res.status(500).json({ error: 'Internal server error during Paymob checkout.' });
+  }
 });
 
 app.listen(PORT, () => {
