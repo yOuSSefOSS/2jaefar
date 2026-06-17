@@ -79,7 +79,7 @@ const MomentLab = ({ language }) => {
         <p className="text-slate-400">{t.desc[language]}</p>
       </div>
 
-      <div className="relative h-[300px] bg-black/40 rounded-2xl border border-white/5 mb-8 flex items-center justify-center overflow-hidden">
+      <div className="relative h-[200px] md:h-[300px] bg-black/40 rounded-2xl border border-white/5 mb-8 flex items-center justify-center overflow-hidden">
         {/* Seesaw Line */}
         <div className="absolute top-1/2 left-10 right-10 h-2 bg-slate-700 rounded-full" />
         
@@ -180,7 +180,7 @@ const AirPropertiesLab = ({ language }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Molecule Box */}
-        <div className="lg:col-span-2 relative h-[300px] bg-[#020617] rounded-2xl border border-white/10 overflow-hidden shadow-inner flex items-center justify-center">
+        <div className="lg:col-span-2 relative h-[250px] md:h-[300px] bg-[#020617] rounded-2xl border border-white/10 overflow-hidden shadow-inner flex items-center justify-center">
           {particles.slice(0, numParticles).map(p => (
             <motion.div
               key={p.id}
@@ -317,23 +317,23 @@ const InteractiveAtmosphere = ({ language }) => {
         ))}
       </div>
 
-      <div className={`relative w-full h-[400px] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-t ${activeLayer.bgClass} transition-colors duration-1000 flex`}>
+      <div className={`relative w-full h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-t ${activeLayer.bgClass} transition-colors duration-1000 flex`}>
         {/* Parallax Elements */}
         <div className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: activeLayerIndex > 0 ? 1 : 0 }}>
           <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-50"></div>
         </div>
         <div className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: activeLayerIndex === 0 ? 1 : 0 }}>
-           <div className="w-full h-full flex items-end justify-center pb-12 space-x-12 opacity-40 blur-[2px]">
-             <div className="text-9xl">☁️</div>
-             <div className="text-8xl">☁️</div>
-             <div className="text-9xl">☁️</div>
+           <div className="w-full h-full flex items-end justify-center pb-8 md:pb-12 space-x-6 md:space-x-12 opacity-40 blur-[2px]">
+             <div className="text-6xl md:text-9xl">☁️</div>
+             <div className="text-5xl md:text-8xl">☁️</div>
+             <div className="text-6xl md:text-9xl">☁️</div>
            </div>
         </div>
 
         {/* Animated Plane */}
         <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-1000 ease-in-out z-20" 
              style={{ top: activeLayer.planeY, transform: `translateX(-50%) scale(${activeLayer.planeScale})` }}>
-          <div className="text-6xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] -rotate-0">✈️</div>
+          <div className="text-4xl md:text-6xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] -rotate-0">✈️</div>
         </div>
       </div>
 
@@ -461,7 +461,7 @@ const ForcesLab = ({ language }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3">
         {/* 3D View */}
-        <div className="relative w-full h-[500px] lg:col-span-2 bg-gradient-to-b from-[#020617] to-slate-900 cursor-grab">
+        <div className="relative w-full h-[300px] lg:h-[500px] lg:col-span-2 bg-gradient-to-b from-[#020617] to-slate-900 cursor-grab">
           <ThreeDPlane pitch={pitch} roll={0} yaw={0} showRunway={false} showForces={true} showAirflow={thrust > 20} />
           
           <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/10">
@@ -514,7 +514,7 @@ const InteractiveAxes = ({ language }) => {
         <h3 className="text-3xl font-bold text-white mb-2">{t.title[language]}</h3>
         <p className="text-slate-400">{t.desc[language]}</p>
       </div>
-      <div className="relative w-full h-[600px] cursor-grab">
+      <div className="relative w-full h-[300px] md:h-[400px] lg:h-[600px] cursor-grab">
         <ThreeDPlane pitch={pitch} roll={roll} yaw={yaw} showAirflow={false} />
       </div>
       <div className={`bg-slate-950 p-8 grid grid-cols-1 md:grid-cols-3 gap-8 ${language === 'ar' ? 'flex-row-reverse text-right' : ''}`}>

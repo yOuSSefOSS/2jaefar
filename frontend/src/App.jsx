@@ -35,6 +35,7 @@ import HighLiftDevicesTab from './features/flight-lab/pages/HighLiftDevicesTab';
 import StabilityTab from './features/flight-lab/pages/StabilityTab';
 import ControlsTab from './features/flight-lab/pages/ControlsTab';
 import { AcademyProvider } from './context/AcademyContext';
+import { TenantProvider } from './context/TenantContext';
 import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
@@ -72,6 +73,7 @@ function App() {
 
   return (
     <AppProvider>
+      <TenantProvider>
       {showLoadingScreen && (
         <LoadingScreen 
           isInitializing={isInitializing} 
@@ -151,6 +153,7 @@ function App() {
           />
         </Routes>
       </BrowserRouter>
+      </TenantProvider>
     </AppProvider>
   );
 }

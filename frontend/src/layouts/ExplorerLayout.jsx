@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wind, GraduationCap, FlaskConical, ChevronRight, Menu, X, User } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useTenant } from '../context/TenantContext';
 import { SkeletonExplorePage, SkeletonViewer } from '../components/Skeleton';
 import logoUrl from '../assets/logo.png';
 
@@ -20,6 +21,7 @@ const ExplorerLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const { user, displayName } = useAppContext();
+  const { tenant } = useTenant();
 
   // Artificial delay to show skeleton and prevent UI freezing on heavy component mount
   React.useEffect(() => {
@@ -37,7 +39,7 @@ const ExplorerLayout = () => {
   }));
 
   return (
-    <div className="flex flex-col h-screen bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] font-sans overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] font-sans overflow-hidden">
       
       {/* ── Top Navbar ── */}
       <header className="h-16 flex-shrink-0 bg-[var(--color-edu-navy-light)]/80 backdrop-blur-xl border-b border-white/6 flex items-center justify-between px-6 z-30">
@@ -46,12 +48,12 @@ const ExplorerLayout = () => {
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
             <img 
-              src={logoUrl} 
-              alt="Vortex-Gen Logo" 
+              src={tenant?.logo_url || logoUrl} 
+              alt={tenant ? `${tenant.name} Logo` : "Vortex-Gen Logo"} 
               className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] group-hover:drop-shadow-[0_0_16px_rgba(56,189,248,0.6)] transition-all" 
             />
             <span className="font-bold text-lg tracking-wider text-white">
-              Vortex-Gen
+              {tenant?.name || "Vortex-Gen"}
             </span>
             <span className="hidden sm:inline-block text-[10px] font-mono tracking-widest text-[var(--color-edu-sky)] bg-[var(--color-edu-sky)]/10 px-2 py-0.5 rounded-full border border-[var(--color-edu-sky)]/20">
               ACADEMY
@@ -91,19 +93,6 @@ const ExplorerLayout = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-          {/* Flight Lab CTA */}
-          <Link
-            to="/principles-of-flight"
-            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold tracking-wider uppercase
-              bg-gradient-to-r from-emerald-500/15 to-emerald-600/15
-              border border-emerald-500/25 text-emerald-400
-              hover:border-emerald-500/40 hover:bg-emerald-500/20
-              transition-all duration-300 mr-2"
-          >
-            <GraduationCap size={14} />
-            Flight Academy
-          </Link>
-
           {/* Labs CTA */}
           <Link
             to="/lab"
@@ -163,13 +152,6 @@ const ExplorerLayout = () => {
                   {item.label}
                 </Link>
               ))}
-              <Link
-                to="/principles-of-flight"
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 px-4 py-3 rounded-lg text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2"
-              >
-                <GraduationCap size={16} /> Flight Academy
-              </Link>
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}

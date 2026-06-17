@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { BookOpen, Wind, Activity, Maximize, Target, ArrowLeft, Languages } from 'lucide-react';
+import { BookOpen, Wind, Activity, Maximize, Target, ArrowLeft, Languages, Menu, X } from 'lucide-react';
 import { useAcademy } from '../../../context/AcademyContext';
+import { useTenant } from '../../../context/TenantContext';
 
 export default function FlightLabLayout() {
   const { language, toggleLanguage } = useAcademy();
+  const { tenant } = useTenant();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const chapters = [
     { name: language === 'en' ? 'Ch 1: Atmosphere & Basics' : 'الفصل 1: الغلاف الجوي والأساسيات', path: 'aerodynamics', icon: <Wind className="w-5 h-5" /> },
@@ -15,19 +18,28 @@ export default function FlightLabLayout() {
   ];
 
   return (
-    <div className="h-screen bg-[#020617] flex flex-col text-slate-200 overflow-hidden font-sans" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="h-[100dvh] bg-[#020617] flex flex-col text-slate-200 overflow-hidden font-sans" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Premium Top Header */}
-      <header className="h-16 flex-shrink-0 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 z-30">
-        <Link to="/" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-          <ArrowLeft size={18} className={language === 'ar' ? 'rotate-180' : ''} />
-          <span className="font-semibold text-sm">{language === 'en' ? 'Back to Home' : 'العودة للرئيسية'}</span>
-        </Link>
+      <header className="h-16 flex-shrink-0 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 sm:px-6 z-40 relative">
+        <div className="flex items-center gap-3">
+          <button 
+            className="md:hidden text-slate-400 hover:text-white"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          <Link to="/" className="hidden sm:flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+            <ArrowLeft size={18} className={language === 'ar' ? 'rotate-180' : ''} />
+            <span className="font-semibold text-sm">{language === 'en' ? 'Back to Home' : 'العودة للرئيسية'}</span>
+          </Link>
+        </div>
         
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
-            <span className="font-extrabold text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-emerald-400">
-              Vortex-Gen
+            {tenant?.logo_url && <img src={tenant.logo_url} alt="Logo" className="h-6 w-auto mr-2 object-contain" />}
+            <span className="font-extrabold text-lg sm:text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-emerald-400">
+              {tenant?.name || "Vortex-Gen"}
             </span>
-            <span className="mx-3 text-[10px] font-mono tracking-widest text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+            <span className="hidden sm:inline-block mx-3 text-[10px] font-mono tracking-widest text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
               ACADEMY
             </span>
         </div>
@@ -35,10 +47,10 @@ export default function FlightLabLayout() {
         {/* Language Toggle */}
         <button 
           onClick={toggleLanguage}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition-colors text-sm font-medium"
+          className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition-colors text-xs sm:text-sm font-medium"
         >
           <Languages size={16} className="text-sky-400" />
-          <span>{language === 'en' ? 'عربي' : 'English'}</span>
+          <span className="hidden sm:inline">{language === 'en' ? 'عربي' : 'English'}</span>
         </button>
       </header>
 
@@ -47,14 +59,16 @@ export default function FlightLabLayout() {
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(56,189,248,0.03),transparent)]" />
 
         {/* Sidebar Navigation */}
-        <aside className="w-72 flex-shrink-0 bg-[#0f172a]/40 backdrop-blur-md border-r border-l border-white/5 flex flex-col pt-8 z-20">
-          <div className="px-6 mb-8">
-            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
-              {language === 'en' ? 'Course Syllabus' : 'منهج الدورة'}
-            </h2>
-            <p className="text-2xl font-bold text-white tracking-tight">
-              {language === 'en' ? 'Principles of Flight' : 'مبادئ الطيران'}
-            </p>
+        <aside className={`${isSidebarOpen ? 'translate-x-0' : (language === 'ar' ? 'translate-x-full' : '-translate-x-full')} md:translate-x-0 absolute md:relative z-30 transition-transform duration-300 w-72 h-full flex-shrink-0 bg-[#0f172a]/95 md:bg-[#0f172a]/40 backdrop-blur-md border-r border-l border-white/5 flex flex-col pt-8`}>
+          <div className="px-6 mb-8 flex justify-between items-center">
+            <div>
+              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+                {language === 'en' ? 'Course Syllabus' : 'منهج الدورة'}
+              </h2>
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                {language === 'en' ? 'Principles of Flight' : 'مبادئ الطيران'}
+              </p>
+            </div>
           </div>
 
           <nav className="flex-1 space-y-1 px-4 overflow-y-auto">
@@ -62,6 +76,7 @@ export default function FlightLabLayout() {
               <NavLink
                 key={tab.name}
                 to={tab.path}
+                onClick={() => setIsSidebarOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center space-x-3 rtl:space-x-reverse px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isActive
@@ -86,8 +101,16 @@ export default function FlightLabLayout() {
           </div>
         </aside>
 
+        {/* Mobile Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-black/50 z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Main Content Area (Scrollytelling Container) */}
-        <div className="flex-1 overflow-hidden relative flex flex-col bg-[#020617] z-10 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
+        <div className="flex-1 overflow-hidden relative flex flex-col bg-[#020617] z-10 md:shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
           <Outlet />
         </div>
       </main>

@@ -425,7 +425,7 @@ export default function HighLiftTab() {
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden relative bg-[#020617]">
       {/* 1. INTERACTIVE HERO - THE WIND TUNNEL */}
-      <div className="relative w-full h-[60vh] min-h-[500px] border-b border-white/10 bg-black">
+      <div className="relative w-full h-[60vh] min-h-[400px] md:min-h-[500px] border-b border-white/10 bg-black">
         <EducationalWindTunnel
           isSimulating={true}
           pitchAngle={aoa}

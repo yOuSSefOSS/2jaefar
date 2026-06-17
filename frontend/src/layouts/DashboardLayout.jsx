@@ -3,14 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { Settings, User, Wind, Gem, ArrowLeft, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
+import { useTenant } from '../context/TenantContext';
 import logoUrl from '../assets/logo.png';
 
 const DashboardLayout = ({ children, isBackendConnected }) => {
   const location = useLocation();
   const { subscriptionTier } = useAppContext();
+  const { tenant } = useTenant();
 
   return (
-    <div className="flex flex-col h-screen bg-[var(--color-brand-900)] text-brand-50 font-sans overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-[var(--color-brand-900)] text-brand-50 font-sans overflow-hidden">
       
       {/* Top Navbar */}
       <header className="h-16 flex-shrink-0 bg-[var(--color-brand-800)]/50 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-20 shadow-[0_5px_30px_rgba(0,0,0,0.5)]">
@@ -28,8 +30,8 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           </Link>
 
           <div className="flex items-center gap-3">
-            <img src={logoUrl} alt="Vortex-Gen Logo" className="h-30 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
-            <span className="font-bold text-xl tracking-widest text-white">Vortex-Gen</span>
+            <img src={tenant?.logo_url || logoUrl} alt={tenant ? `${tenant.name} Logo` : "Vortex-Gen Logo"} className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+            <span className="font-bold text-xl tracking-widest text-white">{tenant?.name || "Vortex-Gen"}</span>
             <span className="hidden sm:inline-block text-[9px] font-mono tracking-widest text-[var(--color-accent-neon)] bg-[var(--color-accent-neon)]/8 px-2 py-0.5 rounded-full border border-[var(--color-accent-neon)]/20">
               LAB
             </span>

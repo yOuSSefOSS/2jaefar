@@ -107,11 +107,11 @@ const LandingPage = () => {
           </motion.p>
 
           {/* CTAs */}
-          <motion.div {...fadeUp(0.3)} className="flex flex-wrap items-center justify-center gap-4">
-            <Link to="/explore" className="cta-primary">
+          <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link to="/explore" className="cta-primary w-full sm:w-auto justify-center">
               Start Exploring <ArrowRight size={18} />
             </Link>
-            <Link to="/dashboard" className="cta-secondary">
+            <Link to="/dashboard" className="cta-secondary w-full sm:w-auto justify-center">
               <FlaskConical size={18} /> Go to Lab
             </Link>
           </motion.div>
@@ -204,7 +204,7 @@ const LandingPage = () => {
             Click on any component of the airplane to start learning.
           </motion.p>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {TOPICS.map((t, i) => (
               <motion.div
                 key={t.label}
