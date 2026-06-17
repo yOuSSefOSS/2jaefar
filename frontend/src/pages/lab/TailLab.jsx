@@ -39,111 +39,7 @@ const ModernSlider = ({ value, min, max, onChange, label, unit, color }) => {
   );
 };
 
-const AirPropertiesLab = ({ language }) => {
-  const [altitude, setAltitude] = useState(0); // 0 to 40k ft
-  
-  // Density and pressure drop with altitude.
-  // 0 ft -> 100% density, 40k ft -> ~25% density
-  const densityPercent = Math.max(10, 100 - (altitude / 400)); 
-  const pressureValue = Math.max(188, 1013 - (altitude * 0.0206)); // approximate mb
 
-  const t = {
-    title: { en: "Air Pressure & Density Lab", ar: "مختبر الضغط الجوي والكثافة" },
-    desc: { en: "See how altitude affects the air molecules. Higher altitude means fewer molecules (lower density) and less force pushing (lower pressure).", ar: "شاهد كيف يؤثر الارتفاع على جزيئات الهواء. ارتفاع أعلى يعني جزيئات أقل (كثافة أقل) وقوة دفع أقل (ضغط أقل)." },
-    alt: { en: "Altitude", ar: "الارتفاع" },
-    density: { en: "Density (Molecules)", ar: "الكثافة (الجزيئات)" },
-    pressure: { en: "Pressure", ar: "الضغط" },
-  };
-
-  const isAr = language === 'ar';
-  const numParticles = Math.floor((densityPercent / 100) * 150); // Up to 150 particles
-
-  // Generate random stable particles based on density
-  const particles = React.useMemo(() => {
-    return Array.from({ length: 150 }).map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      duration: Math.random() * 3 + 2,
-      delay: Math.random() * 2,
-    }));
-  }, []);
-
-  return (
-    <div className="w-full max-w-5xl mx-auto my-16 bg-black/40 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl p-8">
-      <div className="text-center mb-8">
-        <h3 className="text-3xl font-bold text-sky-400 mb-2">{t.title[language]}</h3>
-        <p className="text-slate-400">{t.desc[language]}</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Molecule Box */}
-        <div className="lg:col-span-2 relative h-[250px] md:h-[300px] bg-black/50 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-inner flex items-center justify-center">
-          {particles.slice(0, numParticles).map(p => (
-            <motion.div
-              key={p.id}
-              className="absolute bg-sky-400 rounded-full opacity-60"
-              style={{
-                width: p.size,
-                height: p.size,
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                boxShadow: '0 0 8px rgba(56, 189, 248, 0.8)'
-              }}
-              animate={{
-                x: [0, (Math.random() - 0.5) * 50, 0],
-                y: [0, (Math.random() - 0.5) * 50, 0],
-              }}
-              transition={{
-                duration: p.duration * (200 / densityPercent), // Move faster at higher density (more collisions)
-                repeat: Infinity,
-                ease: "linear",
-                delay: p.delay
-              }}
-            />
-          ))}
-          
-          <div className="absolute bottom-4 left-4 right-4 flex justify-between px-4 py-2 bg-black/60 backdrop-blur rounded-xl border border-white/5 text-sm font-mono text-white">
-            <div>
-              <span className="text-amber-400 block text-xs">{t.density[language]}</span>
-              {densityPercent.toFixed(1)}%
-            </div>
-            <div className="text-right">
-              <span className="text-purple-400 block text-xs">{t.pressure[language]}</span>
-              {pressureValue.toFixed(0)} hPa
-            </div>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className={`flex flex-col justify-center space-y-8 ${isAr ? 'text-right' : ''}`}>
-          <div>
-            <ModernSlider label={t.alt[language]} unit="ft" min={0} max={40000} value={altitude} onChange={setAltitude} color="#38bdf8" />
-            <p className="text-xs text-slate-500 mt-2">
-              {isAr ? 'كلما ارتفعنا، يقل عدد الجزيئات وتتباعد، مما يقلل الكثافة والضغط.' : 'As we climb, molecules become fewer and spread out, lowering density and pressure.'}
-            </p>
-          </div>
-          
-          <div className="p-4 bg-black/30 backdrop-blur-md rounded-xl border border-white/5 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">{isAr ? 'تأثير الرفع:' : 'Lift Effect:'}</span>
-              <span className={`font-bold ${densityPercent > 70 ? 'text-emerald-400' : densityPercent > 40 ? 'text-amber-400' : 'text-red-400'}`}>
-                {densityPercent > 70 ? (isAr ? 'ممتاز' : 'Excellent') : densityPercent > 40 ? (isAr ? 'متوسط' : 'Moderate') : (isAr ? 'ضعيف جداً' : 'Very Poor')}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">{isAr ? 'أداء المحرك:' : 'Engine Perf:'}</span>
-              <span className={`font-bold ${densityPercent > 70 ? 'text-emerald-400' : densityPercent > 40 ? 'text-amber-400' : 'text-red-400'}`}>
-                {densityPercent > 70 ? (isAr ? '100%' : '100%') : densityPercent > 40 ? (isAr ? '60%' : '60%') : (isAr ? '30%' : '30%')}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ForcesLab = ({ language }) => {
   const [thrust, setThrust] = useState(50);
@@ -641,7 +537,6 @@ const TailLab = () => {
         {/* Additional Interactive Labs */}
         <div className="mt-16 space-y-16 pb-16">
           <ForcesLab language={language || 'en'} />
-          <AirPropertiesLab language={language || 'en'} />
         </div>
       </div>
     </div>
