@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 
@@ -11,6 +11,7 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,7 +19,10 @@ const Login = () => {
     setError('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError(error.message);
-    else navigate('/explore');
+    else {
+      const from = location.state?.from?.pathname || '/explore';
+      navigate(from, { replace: true });
+    }
     setLoading(false);
   };
 

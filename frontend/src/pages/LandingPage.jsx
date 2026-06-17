@@ -226,13 +226,9 @@ const LandingPage = () => {
                       ))}
                     </ul>
                     <div className="flex flex-wrap gap-3">
-                      <Link to="/login" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+                      <Link to="/lab" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
                         style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}>
-                        Open Wind Tunnel <ArrowRight size={16} />
-                      </Link>
-                      <Link to="/lab" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[var(--color-edu-text-muted)] hover:text-white transition-colors"
-                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-                        See All Labs
+                        Explore Labs Hub <ArrowRight size={16} />
                       </Link>
                     </div>
                   </div>

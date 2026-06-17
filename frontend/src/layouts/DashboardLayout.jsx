@@ -31,13 +31,13 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
             Explorer
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <Link to="/lab/airfoil" className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity">
             <img src={tenant?.logo_url || logoUrl} alt={tenant ? `${tenant.name} Logo` : "Vortex-Gen Logo"} className="h-6 sm:h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
             <span className="hidden sm:inline-block font-bold text-xl tracking-widest text-white">{tenant?.name || "Vortex-Gen"}</span>
             <span className="hidden sm:inline-block text-[9px] font-mono tracking-widest text-[var(--color-accent-neon)] bg-[var(--color-accent-neon)]/8 px-2 py-0.5 rounded-full border border-[var(--color-accent-neon)]/20">
               LAB
             </span>
-          </div>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-3">
             <TopNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} />

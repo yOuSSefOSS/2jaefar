@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle, User, Eye, EyeOff } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
 
@@ -15,6 +15,7 @@ const Signup = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -31,7 +32,10 @@ const Signup = () => {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (signInError) setError(signInError.message);
-    else navigate('/explore');
+    else {
+      const from = location.state?.from?.pathname || '/explore';
+      navigate(from, { replace: true });
+    }
   };
 
   const handleGoogleSignup = async () => {

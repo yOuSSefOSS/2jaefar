@@ -1,10 +1,11 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { Loader2 } from 'lucide-react';
 
 const AuthGuard = ({ children }) => {
   const { user, isAuthLoading } = useAppContext();
+  const location = useLocation();
 
   if (isAuthLoading) {
     return (
@@ -15,7 +16,7 @@ const AuthGuard = ({ children }) => {
   }
 
   if (!user && import.meta.env.MODE !== 'development') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If in development mode and not logged in, we let them through by mocking a user or just passing through.
