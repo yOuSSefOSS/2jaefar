@@ -53,6 +53,48 @@ function Airplane({ pitch = 0, roll = 0, yaw = 0, showForces = false, showAirflo
   return (
     <group ref={group} scale={0.5}>
       <Clone object={scene} />
+      
+      {/* Visual Control Surfaces overlay */}
+      <group>
+        {/* Left Aileron (Green) */}
+        <group position={[3.5, 0.2, 1.0]} rotation={[-roll * (Math.PI / 180), 0, 0]}>
+          <mesh position={[0, 0, 0.4]}>
+            <boxGeometry args={[2, 0.05, 0.8]} />
+            <meshStandardMaterial color="#10b981" transparent opacity={0.8} emissive="#10b981" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+        {/* Right Aileron (Green) */}
+        <group position={[-3.5, 0.2, 1.0]} rotation={[roll * (Math.PI / 180), 0, 0]}>
+          <mesh position={[0, 0, 0.4]}>
+            <boxGeometry args={[2, 0.05, 0.8]} />
+            <meshStandardMaterial color="#10b981" transparent opacity={0.8} emissive="#10b981" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+
+        {/* Left Elevator (Blue) */}
+        <group position={[1.5, 0.6, 4.2]} rotation={[-pitch * (Math.PI / 180), 0, 0]}>
+          <mesh position={[0, 0, 0.4]}>
+            <boxGeometry args={[1.5, 0.05, 0.8]} />
+            <meshStandardMaterial color="#0ea5e9" transparent opacity={0.8} emissive="#0ea5e9" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+        {/* Right Elevator (Blue) */}
+        <group position={[-1.5, 0.6, 4.2]} rotation={[-pitch * (Math.PI / 180), 0, 0]}>
+          <mesh position={[0, 0, 0.4]}>
+            <boxGeometry args={[1.5, 0.05, 0.8]} />
+            <meshStandardMaterial color="#0ea5e9" transparent opacity={0.8} emissive="#0ea5e9" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+
+        {/* Rudder (Yellow) */}
+        <group position={[0, 1.8, 4.0]} rotation={[0, -yaw * (Math.PI / 180), 0]}>
+          <mesh position={[0, 0, 0.5]}>
+            <boxGeometry args={[0.05, 1.5, 1]} />
+            <meshStandardMaterial color="#f59e0b" transparent opacity={0.8} emissive="#f59e0b" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+      </group>
+
       {showAirflow && <AirflowParticles />}
       {showForces && (
         <>
