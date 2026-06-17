@@ -29,8 +29,8 @@ export const TenantProvider = ({ children }) => {
           .eq('id', user.id)
           .single();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error("Error fetching user profile:", profileError);
+        if (profileError && profileError.code !== 'PGRST116' && profileError.code !== '42P01') {
+          console.warn("Notice fetching user profile (could be uninitialized DB):", profileError.message);
         }
 
         const academyId = profile?.academy_id;

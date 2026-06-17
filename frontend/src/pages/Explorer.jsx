@@ -185,14 +185,14 @@ const Explorer = () => {
           </div>
 
         {/* Quick Navigation Cards */}
-        <div className="pointer-events-auto flex flex-col lg:flex-row gap-3 w-full lg:w-auto">
+        <div className="pointer-events-auto flex flex-row lg:flex-row gap-3 w-full lg:w-auto overflow-x-auto pb-2 custom-scrollbar snap-x">
           {AIRCRAFT_ZONES.map((zone) => (
               <button
                 key={zone.id}
                 onClick={() => setSelectedZone(zone.id)}
                 onMouseEnter={() => setHoveredZone(zone.id)}
                 onMouseLeave={() => setHoveredZone(null)}
-                className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-300 text-left group shadow-lg backdrop-blur-md
+                className={`flex-none w-[200px] lg:flex-1 lg:w-auto flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-300 text-left group shadow-lg backdrop-blur-md snap-center
                   ${(hoveredZone || selectedZone) === zone.id
                     ? 'bg-white/10 border-white/25 scale-105'
                     : 'bg-black/40 border-white/10 hover:bg-white/10'
@@ -211,7 +211,7 @@ const Explorer = () => {
                   <div className="text-sm font-semibold text-white">{zone.label}</div>
                   <div className="text-[11px] text-[var(--color-edu-text-muted)] truncate">{zone.facts[0]}</div>
                 </div>
-                <ChevronRight size={14} className="text-[var(--color-edu-text-muted)] group-hover:text-white transition-colors flex-shrink-0" />
+                <ChevronRight size={14} className="text-[var(--color-edu-text-muted)] group-hover:text-white transition-colors flex-shrink-0 hidden lg:block" />
               </button>
             ))}
           </div>

@@ -48,9 +48,9 @@ const WING_ZONES = {
 };
 
 const TelemetryBox = ({ label, value, color }) => (
-  <div className="flex flex-col bg-black/40 border border-white/10 rounded-xl p-3">
-    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-mono mb-1">{label}</span>
-    <span className="text-xl font-mono font-bold" style={{ color, textShadow: `0 0 15px ${color}50` }}>{value}</span>
+  <div className="flex flex-col bg-black/40 border border-white/10 rounded-xl p-2 sm:p-3">
+    <span className="text-[8px] sm:text-[9px] uppercase tracking-widest text-slate-500 font-mono mb-1 truncate">{label}</span>
+    <span className="text-sm sm:text-xl font-mono font-bold" style={{ color, textShadow: `0 0 15px ${color}50` }}>{value}</span>
   </div>
 );
 
@@ -195,14 +195,14 @@ const WingsLab = () => {
             
             <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex-1 shadow-2xl flex flex-col">
               
-              <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
-                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 font-mono text-[10px] text-white tracking-widest uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: wingColor, boxShadow: `0 0 10px ${wingColor}` }} /> 
-                  Wind Tunnel Active
+              <div className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-6 flex justify-between items-start z-20 pointer-events-none">
+                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1.5 sm:px-4 sm:py-2 font-mono text-[8px] sm:text-[10px] text-white tracking-widest uppercase flex items-center gap-1.5 sm:gap-2 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full animate-pulse" style={{ backgroundColor: wingColor, boxShadow: `0 0 10px ${wingColor}` }} /> 
+                  <span className="hidden sm:inline">Wind Tunnel </span>Active
                 </div>
-                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-4 py-2 text-right shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                  <div className="font-mono text-[9px] text-slate-500 tracking-widest uppercase mb-1">Critical Mach</div>
-                  <div className="font-mono text-sm font-bold text-[#f59e0b]">M_crit ≈ {criticalMach.toFixed(2)}</div>
+                <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1.5 sm:px-4 sm:py-2 text-right shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  <div className="font-mono text-[7px] sm:text-[9px] text-slate-500 tracking-widest uppercase mb-0.5 sm:mb-1">Critical Mach</div>
+                  <div className="font-mono text-xs sm:text-sm font-bold text-[#f59e0b]">M_crit ≈ {criticalMach.toFixed(2)}</div>
                 </div>
               </div>
 

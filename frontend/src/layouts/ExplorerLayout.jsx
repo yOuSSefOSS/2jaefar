@@ -153,11 +153,11 @@ const ExplorerLayout = () => {
                 </Link>
               ))}
               <Link
-                to="/dashboard"
+                to="/lab"
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-2 px-4 py-3 rounded-lg text-sm font-bold text-[var(--color-edu-sky)] bg-[var(--color-edu-sky)]/10 border border-[var(--color-edu-sky)]/20 flex items-center gap-2"
               >
-                <FlaskConical size={16} /> Wind Tunnel Lab
+                <FlaskConical size={16} /> Labs Hub
               </Link>
             </div>
           </motion.div>

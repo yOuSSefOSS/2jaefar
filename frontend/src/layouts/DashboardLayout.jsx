@@ -29,9 +29,9 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
             Explorer
           </Link>
 
-          <div className="flex items-center gap-3">
-            <img src={tenant?.logo_url || logoUrl} alt={tenant ? `${tenant.name} Logo` : "Vortex-Gen Logo"} className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
-            <span className="font-bold text-xl tracking-widest text-white">{tenant?.name || "Vortex-Gen"}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src={tenant?.logo_url || logoUrl} alt={tenant ? `${tenant.name} Logo` : "Vortex-Gen Logo"} className="h-6 sm:h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+            <span className="hidden sm:inline-block font-bold text-xl tracking-widest text-white">{tenant?.name || "Vortex-Gen"}</span>
             <span className="hidden sm:inline-block text-[9px] font-mono tracking-widest text-[var(--color-accent-neon)] bg-[var(--color-accent-neon)]/8 px-2 py-0.5 rounded-full border border-[var(--color-accent-neon)]/20">
               LAB
             </span>
@@ -45,8 +45,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           </nav>
         </div>
         
-        {/* Right Side Controls & Status */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <div className="hidden sm:flex items-center gap-3 bg-black/40 px-4 py-1.5 rounded-full border border-white/5">
             <div className={`w-2 h-2 rounded-full ${isBackendConnected ? 'bg-[var(--color-accent-neon)] shadow-[0_0_10px_var(--color-accent-neon)]' : 'bg-[var(--color-accent-pink)] shadow-[0_0_10px_var(--color-accent-pink)]'} animate-pulse`}></div>
             <span className="text-brand-300 font-mono text-xs tracking-wider">
@@ -54,14 +53,14 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
              <Link to="/pricing" className="hidden sm:flex items-center gap-2 p-1.5 px-3 border border-[var(--color-accent-blue)]/50 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-neon)] rounded-full hover:bg-[var(--color-accent-blue)]/20 transition-all text-xs font-bold uppercase tracking-widest">
                <Gem size={14} /> {subscriptionTier}
              </Link>
-             <Link to="/settings" className="p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="Settings">
+             <Link to="/settings" className="p-1.5 sm:p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="Settings">
                <Settings size={20} />
              </Link>
-             <Link to="/profile" className="p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="User Profile">
+             <Link to="/profile" className="p-1.5 sm:p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="User Profile">
                <User size={20} />
              </Link>
           </div>
