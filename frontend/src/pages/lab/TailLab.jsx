@@ -142,20 +142,14 @@ const InteractiveAxes = ({ language }) => {
         <ThreeDPlane pitch={pitch} roll={roll} yaw={yaw} showAirflow={false} />
       </div>
       <div className={`bg-black/20 backdrop-blur-xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 ${language === 'ar' ? 'flex-row-reverse text-right' : ''}`}>
-        <div className="flex flex-col items-center gap-4">
-          <label className="text-sky-400 font-bold text-lg">{t.pitch[language]}</label>
-          <input type="range" min="-45" max="45" value={pitch} onChange={(e) => setPitch(Number(e.target.value))} className="w-full accent-sky-500" />
-          <span className="text-slate-400 font-mono text-xl" dir="ltr">{pitch}°</span>
+        <div className="flex flex-col justify-center">
+          <ModernSlider label={t.pitch[language]} unit="°" min={-45} max={45} value={pitch} onChange={setPitch} color="#0ea5e9" />
         </div>
-        <div className="flex flex-col items-center gap-4">
-          <label className="text-emerald-400 font-bold text-lg">{t.roll[language]}</label>
-          <input type="range" min="-90" max="90" value={roll} onChange={(e) => setRoll(Number(e.target.value))} className="w-full accent-emerald-500" />
-          <span className="text-slate-400 font-mono text-xl" dir="ltr">{roll}°</span>
+        <div className="flex flex-col justify-center">
+          <ModernSlider label={t.roll[language]} unit="°" min={-90} max={90} value={roll} onChange={setRoll} color="#10b981" />
         </div>
-        <div className="flex flex-col items-center gap-4">
-          <label className="text-amber-400 font-bold text-lg">{t.yaw[language]}</label>
-          <input type="range" min="-45" max="45" value={yaw} onChange={(e) => setYaw(Number(e.target.value))} className="w-full accent-amber-500" />
-          <span className="text-slate-400 font-mono text-xl" dir="ltr">{yaw}°</span>
+        <div className="flex flex-col justify-center">
+          <ModernSlider label={t.yaw[language]} unit="°" min={-45} max={45} value={yaw} onChange={setYaw} color="#f59e0b" />
         </div>
       </div>
     </div>
