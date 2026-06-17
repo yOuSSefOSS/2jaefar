@@ -438,9 +438,9 @@ const AnatomySection = () => (
     <motion.div variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {[
         { num: '01', title: 'Fuselage',       desc: 'The main body. Balances passenger volume against aerodynamic drag.', color: '#ec4899' },
-        { num: '02', title: 'Wings / Airfoil',desc: 'The source of lift. Camber and angle of attack control efficiency.', color: '#00f0ff' },
-        { num: '03', title: 'Empennage',      desc: 'Tail section. Elevators control pitch; the rudder controls yaw.',    color: '#f59e0b' },
-        { num: '04', title: 'Engines',        desc: 'Turbofans compress air, mix fuel, and ignite to generate thrust.',   color: '#38bdf8' },
+        { num: '02', title: 'Wings / Airfoil',desc: 'The source of lift. Test geometries in the AI Wind Tunnel.', color: '#00f0ff' },
+        { num: '03', title: 'Empennage',      desc: 'Tail section. Interactive Stability Labs teach CG and pitch authority.',    color: '#f59e0b' },
+        { num: '04', title: 'Engines',        desc: 'Interactive Forces Lab simulates thrust overcoming drag for liftoff.',   color: '#38bdf8' },
       ].map((part) => (
         <GlowCard key={part.title} color={part.color}>
           <p className="text-4xl font-black opacity-10 absolute top-4 right-5" style={{ color: part.color }}>{part.num}</p>
@@ -477,9 +477,9 @@ const TransitionSection = () => (
       {/* Step flow */}
       <motion.div variants={stagger} className="grid sm:grid-cols-3 gap-4 mb-12 text-left">
         {[
-          { step: '1', label: 'Learn', desc: 'Study the Airfoil in the 3D Explorer. Rotate it, inspect the geometry, read the physics.', color: '#00f0ff' },
-          { step: '2', label: 'Simulate', desc: 'Click "Send to Lab". The exact shape is instantly imported into the Wind Tunnel.', color: '#ec4899' },
-          { step: '3', label: 'Iterate', desc: 'Adjust speed, angle, density. Watch Lift (Cl) and Drag (Cd) change in real-time.', color: '#f59e0b' },
+          { step: '1', label: 'Wind Tunnel', desc: 'Study the Airfoil in the 3D Explorer. The exact shape is instantly imported into the AI Wind Tunnel.', color: '#00f0ff' },
+          { step: '2', label: 'Stability Lab', desc: 'Drag the Center of Gravity against the Aerodynamic Center to calculate Static Margin and Pitch Authority.', color: '#ec4899' },
+          { step: '3', label: 'Forces Lab', desc: 'Throttle up the engines. Balance Lift, Weight, Thrust, and Drag dynamically in real-time.', color: '#f59e0b' },
         ].map((s) => (
           <GlowCard key={s.step} color={s.color}>
             <p className="text-4xl font-black mb-3 opacity-20" style={{ color: s.color }}>{s.step}</p>
@@ -499,19 +499,19 @@ const WindTunnelSection = () => (
   <Section>
     <motion.div variants={stagger} className="grid lg:grid-cols-2 gap-16 items-center">
       <GlowCard color="#00f0ff" className="lg:order-2">
-        <motion.p variants={fadeUp} className="text-[#ec4899] font-mono tracking-widest uppercase text-xs mb-4">The Lab</motion.p>
+        <motion.p variants={fadeUp} className="text-[#ec4899] font-mono tracking-widest uppercase text-xs mb-4">The Interactive Labs</motion.p>
         <motion.h2 variants={fadeUp} className="text-4xl font-black text-white mb-6">Live AI Simulation</motion.h2>
         <motion.p variants={fadeUp} className="text-[#94a3b8] text-lg leading-relaxed mb-8">
-          The heart of Vortex-Gen is the Wind Tunnel. By leveraging{' '}
-          <strong className="text-[#00f0ff]">NeuralFoil</strong>, an advanced ML model, we bypass
-          hours of traditional CFD computation.
+          The heart of Vortex-Gen is a suite of physical laboratories. By leveraging{' '}
+          <strong className="text-[#00f0ff]">NeuralFoil</strong> and physical simulators, we bypass
+          hours of traditional computation.
         </motion.p>
         <ul className="space-y-3">
           {[
-            'Real-Time Streamline Flow Visualization',
-            'Live Drag (Cd) and Lift (Cl) Metrics',
-            'Custom .DAT Airfoil File Importing',
-            'Altitude &amp; Density Environment Presets',
+            'Real-Time Flow Visualization & Heatmaps',
+            'Interactive 3D Aircraft Axes & Controls',
+            'Dynamic Stability Margin & CG Grids',
+            'Live Thrust-vs-Drag Liftoff Engine Simulation',
           ].map((item, i) => (
             <li key={i} className="flex items-center gap-3 text-[#e2e8f0] text-sm">
               <div className="w-2 h-2 rounded-full bg-[#ec4899] shrink-0" />

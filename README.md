@@ -2,7 +2,7 @@
   <img src="frontend/public/banner.png" alt="Vortex-Gen Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px;">
 
   # 🌀 Vortex-Gen
-  ### The Next-Generation Aerodynamic Simulation Platform
+  ### The Definitive AI-Powered Aerospace & Flight Physics Simulator
   
   [![Vercel Deployment](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://vortex-gen.vercel.app)
   [![Hugging Face Backend](https://img.shields.io/badge/AI_Engine-Hugging_Face-yellow?style=for-the-badge&logo=huggingface)](https://youssev-vortex-gen-backend.hf.space/api/status)
@@ -10,7 +10,7 @@
   [![PyTorch ML](https://img.shields.io/badge/Backend-PyTorch-ee4c2c?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
 
   <p align="center">
-    <strong>Vortex-Gen</strong> brings enterprise-grade Computational Fluid Dynamics (CFD) right into your browser. Combining breathtaking <strong>WebGL visualizations</strong> with a millisecond-latency <strong>PyTorch Neural Network</strong>, we've built the ultimate sandbox for aerospace students, researchers, and hobbyists.
+    <strong>Vortex-Gen</strong> brings enterprise-grade Computational Fluid Dynamics (CFD) and complete 6-DOF flight physics right into your browser. Combining breathtaking <strong>WebGL visualizations</strong> with a millisecond-latency <strong>PyTorch Neural Network</strong>, we've built the ultimate sandbox for aerospace students, researchers, instructors, and hobbyists.
   </p>
 </div>
 
@@ -18,11 +18,12 @@
 
 ## 🔥 Why Vortex-Gen?
 
-Traditional CFD is incredibly computationally expensive and mathematically dense. **Vortex-Gen democratization aerodynamics.** By swapping heavy Navier-Stokes solvers for a trained Neural Surrogate Model (**NeuralFoil**), you get instant feedback. 
+Traditional CFD and flight dynamic simulations are incredibly computationally expensive and mathematically dense. **Vortex-Gen democratizes aerodynamics.** By swapping heavy Navier-Stokes solvers for a trained Neural Surrogate Model (**NeuralFoil**) and integrating real-time physics engines, you get instant, accurate feedback.
 
-- **⚡ Instant Telemetry:** Real-time $C_L$, $C_D$, and Drag Polars.
+- **⚡ Instant Telemetry:** Real-time $C_L$, $C_D$, Drag Polars, and pitching moments.
 - **💨 Analytical CFD Smoke:** Mathematically accurate Von Kármán vortex streets and streaklines natively rendered in your browser.
-- **👥 Collaborative Workspaces:** Secure, isolated team environments for sharing custom geometries.
+- **🛫 Complete Flight Envelope:** Transition seamlessly from testing 2D airfoils in a wind tunnel to dynamically balancing aircraft Center of Gravity and thrust vectors.
+- **👥 Collaborative Workspaces:** Secure, isolated team environments for sharing custom geometries and running interactive classroom labs.
 
 ---
 
@@ -42,25 +43,30 @@ Vortex-Gen operates on a highly distributed, hybrid architecture built for maxim
 
 ---
 
-## ✨ Core Features
+## ✨ Core Features & Laboratories
 
-### 🌪️ The Wind Tunnel Lab
+### 🌪️ The Wind Tunnel (Wings Lab)
 - **Real-Time 3D CFD Visualization:** Interactive particle flow engine mapping pressure differentials and velocity heatmaps.
 - **Live Interactive Charts:** Track Lift, Drag, and Stall Zones over shifting Angles of Attack dynamically.
 - **Dual Compare Mode:** Rigorously test two airfoils (e.g., NACA 0012 vs custom `.dat`) side-by-side with overlaid analytics.
+- **AI-Powered Autotune:** Rapid automated sweep to identify the highest-$C_L$ geometry across hundreds of NACA parameters.
 
-### 🤖 AI-Powered Autotune
-- **Fast Tune:** Rapid automated sweep to identify the highest-$C_L$ geometry across hundreds of NACA parameters.
-- **Deep Tune:** Exhaustive optimization for enterprise-grade precision (Pro Max exclusively).
-- **Golden Lift Mode:** Visually targets and glows at the absolute best Lift-to-Drag ratio.
+### ⚖️ Stability & Tail Lab
+- **Interactive 3D Aircraft Axes:** Drag to rotate the 3D plane in real-time. Sliders mechanically deflect control surfaces (Ailerons, Elevators, Rudder) with visually accurate physics.
+- **CG & Neutral Point Grid:** Calculate Static Margin and Pitch Authority dynamically as you drag the Center of Gravity relative to the Aerodynamic Center.
+- **Empennage Analysis:** Understand tail volume coefficients, horizontal stabilizer sizing, and longitudinal static stability.
+
+### 🚀 Engine & Forces Lab
+- **Interactive Forces Physics:** Adjust engine thrust to overcome drag and aircraft weight. Experience the dynamic interplay between Thrust, Drag, Lift, and Weight to achieve simulated liftoff.
+- **Altitude & Density Simulation:** Real-time atmospheric simulation showing pressure and air density drops up to 40,000ft, affecting true airspeed and thrust output.
+
+### 👨‍🏫 Instructor & Academic Suites
+- **Classroom Dashboards:** Generate invite links to onboard students into dedicated academy portals.
+- **Progress Tracking:** Monitor which students have completed specific flight labs and review their aerodynamic configurations.
 
 ### 🛠️ Export Artifacts
 - **3D STL Generator:** Convert any optimized 2D airfoil into a physical 3D-printable solid (Drone span, Plane Section).
 - **Multi-Page Analytical PDFs:** Professional, branded PDF reports stitched client-side with `jsPDF` outlining your exact telemetry.
-
-### 🏢 Team Workspaces
-- **Hierarchical Access:** All users operate within workspaces. Owners can invite colleagues.
-- **Tier Inheritance:** Team members inherit the premium processing power (NeuralFoil limits) of the workspace owner.
 
 ---
 
@@ -99,13 +105,17 @@ npm run dev
 
 ---
 
-## 📚 Project Resources
-For a deeper dive into the system's design and our business model, check out the generated artifacts in the root directory:
-- 📄 **`Vortex-Gen — Full Project Architecture.pdf`**
-- 📄 **`vortex_gen_pitch.pdf`**
+## 📚 Legal & Safety Disclaimers
+
+Vortex-Gen is an **educational platform** designed to teach aerodynamic theory.
+- The platform uses surrogate neural networks and approximations.
+- Simulated thrust, lift, and stability margins do not account for all real-world environmental and structural variables.
+- **Do not use Vortex-Gen data to design, construct, modify, or operate real-world aircraft, UAVs, or aerospace vehicles.**
+- Refer to the full `Terms of Use` and `Privacy Policy` inside the application for detailed liability waivers regarding simulation data usage.
 
 ---
 
 <div align="center">
   <p>Built with ❤️ for the future of Aerospace Engineering.</p>
+  <p>© Vortex-Gen. All rights reserved.</p>
 </div>

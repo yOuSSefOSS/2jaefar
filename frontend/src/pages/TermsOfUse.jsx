@@ -147,10 +147,11 @@ const TermsOfUse = () => {
             {[
               'An interactive Aircraft Explorer for learning about aircraft components.',
               'A Wind Tunnel Laboratory powered by the NeuralFoil machine-learning aerodynamic model.',
-              'Real-time Cl/Cd coefficient prediction, drag polars, and stall analysis.',
+              'Real-time Stability and Tail Laboratories mapping Center of Gravity and Pitch Authority.',
+              'An Interactive Forces and Engine Lab simulating Thrust vs Drag flight mechanics.',
               'Custom airfoil import (.dat / .csv) and Autotune optimization tools.',
               '3D STL export and multi-page analytical PDF report generation.',
-              'Team Workspaces for collaboration and premium feature sharing.',
+              'Team Workspaces for collaboration and Instructor/Academic tracking.',
               'An AI-powered aerodynamic simulation backend running on Hugging Face.',
             ].map((item, i) => (
               <Bullet key={i} color="#a78bfa">{item}</Bullet>
@@ -340,6 +341,7 @@ const TermsOfUse = () => {
             <Bullet color="#f59e0b">The Service will be available uninterrupted or error-free at all times.</Bullet>
             <Bullet color="#f59e0b">Simulation results will be accurate, complete, or suitable for engineering use.</Bullet>
             <Bullet color="#f59e0b">The NeuralFoil model will produce results equivalent to full Computational Fluid Dynamics (CFD) analysis.</Bullet>
+            <Bullet color="#f59e0b">Stability, thrust, and CG simulations mirror real-world material limitations, structural flex, or chaotic weather events.</Bullet>
             <Bullet color="#f59e0b">Any bugs or errors will be corrected within a specific timeframe.</Bullet>
           </div>
         </Section>

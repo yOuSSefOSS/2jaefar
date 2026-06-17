@@ -156,6 +156,7 @@ const PrivacyPolicy = () => {
             <p className="text-[10px] font-mono tracking-widest uppercase text-[#a78bfa] mb-3">Usage & Subscription Data</p>
             <DataRow label="Subscription tier" detail="Free, Pro, or Pro Max — stored in your profile to gate access to NeuralFoil AI, Autotune, and other premium features." />
             <DataRow label="Airfoil import count" detail="A running counter of how many custom .dat airfoil files you have imported this billing period. Used to enforce tier limits." />
+            <DataRow label="Flight Lab & Simulation State Data" detail="Data from the Stability, Tail, and Forces labs (such as thrust adjustments, CG positions, and custom geometries) are processed exclusively in your browser and are NOT logged or stored on our servers permanently, unless explicitly saved to a team workspace." />
             <DataRow label="Stripe Customer ID" detail="A reference token linking your Vortex-Gen account to your Stripe billing profile. We do not store card numbers." />
           </div>
 
