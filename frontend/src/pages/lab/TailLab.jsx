@@ -173,7 +173,7 @@ const TailLab = () => {
           {/* Visualization Canvas */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}
-            className="lg:col-span-9 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl min-h-[400px]"
+            className="lg:col-span-9 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl min-h-[400px] h-[450px] lg:h-full"
           >
             {/* HUD Overlay Top */}
             <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
