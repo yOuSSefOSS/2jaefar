@@ -31,14 +31,14 @@ const Signup = () => {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (signInError) setError(signInError.message);
-    else navigate('/');
+    else navigate('/explore');
   };
 
   const handleGoogleSignup = async () => {
     setGoogleLoading(true); setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` }
+      options: { redirectTo: `${window.location.origin}/explore` }
     });
     if (error) { setError(error.message); setGoogleLoading(false); }
   };

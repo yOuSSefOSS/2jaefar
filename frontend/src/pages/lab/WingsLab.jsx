@@ -193,7 +193,7 @@ const WingsLab = () => {
           {/* Visualization Canvas */}
           <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }} className="lg:col-span-9 flex flex-col gap-4">
             
-            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex-1 shadow-2xl flex flex-col">
+            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex-1 shadow-2xl flex flex-col min-h-[400px]">
               
               <div className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-6 flex justify-between items-start z-20 pointer-events-none">
                 <div className="bg-[#0b1221]/80 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1.5 sm:px-4 sm:py-2 font-mono text-[8px] sm:text-[10px] text-white tracking-widest uppercase flex items-center gap-1.5 sm:gap-2 shadow-[0_0_15px_rgba(0,0,0,0.5)]">

@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { useTenant } from '../context/TenantContext';
 import logoUrl from '../assets/logo.png';
+import { Menu, X } from 'lucide-react';
 
 const DashboardLayout = ({ children, isBackendConnected }) => {
   const location = useLocation();
   const { subscriptionTier } = useAppContext();
   const { tenant } = useTenant();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
     <div className="flex flex-col h-[100dvh] bg-[var(--color-brand-900)] text-brand-50 font-sans overflow-hidden">
@@ -58,15 +60,44 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
              <Link to="/pricing" className="hidden sm:flex items-center gap-2 p-1.5 px-3 border border-[var(--color-accent-blue)]/50 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-neon)] rounded-full hover:bg-[var(--color-accent-blue)]/20 transition-all text-xs font-bold uppercase tracking-widest">
                <Gem size={14} /> {subscriptionTier}
              </Link>
-             <Link to="/settings" className="p-1.5 sm:p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="Settings">
+             <Link to="/settings" className="hidden sm:block p-1.5 sm:p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="Settings">
                <Settings size={20} />
              </Link>
-             <Link to="/profile" className="p-1.5 sm:p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="User Profile">
+             <Link to="/profile" className="hidden sm:block p-1.5 sm:p-2 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all" title="User Profile">
                <User size={20} />
              </Link>
+             <button 
+               className="md:hidden p-1.5 text-brand-400 hover:text-[var(--color-accent-neon)] hover:bg-white/5 rounded-lg transition-all"
+               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+             >
+               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-b border-white/10 bg-[var(--color-brand-800)]/95 backdrop-blur-md overflow-hidden z-10"
+          >
+            <nav className="flex flex-col p-4 gap-2">
+              <MobileNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              <MobileNavItem to="/instructor" label="Instructor" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              <MobileNavItem to="/profile" label="Profile" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              <MobileNavItem to="/settings" label="Settings" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              <MobileNavItem to="/pricing" label="Pricing" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              <Link to="/explore" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl transition-all duration-300 font-bold text-[13px] tracking-widest uppercase flex items-center gap-2 text-brand-300 hover:text-white hover:bg-white/5">
+                <ArrowLeft size={16} /> Back to Explorer
+              </Link>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content Workspace */}
       <main className="flex-1 flex flex-col min-w-0 min-h-0 relative">
@@ -119,6 +150,25 @@ const TopNavItem = ({ to, label, currentPath }) => {
         </motion.div>
       )}
       <span className="relative z-10">{label}</span>
+    </Link>
+  );
+};
+
+const MobileNavItem = ({ to, label, currentPath, onClick }) => {
+  const isActive = currentPath.startsWith(to) || (currentPath === '/' && to === '/dashboard');
+  
+  return (
+    <Link 
+      to={to} 
+      onClick={onClick}
+      className={`px-4 py-3 rounded-xl transition-all duration-300 font-bold text-[13px] tracking-widest uppercase
+        ${isActive 
+          ? 'bg-[var(--color-accent-blue)]/10 border border-[var(--color-accent-blue)]/30 text-[var(--color-accent-neon)]' 
+          : 'text-brand-300 hover:text-white hover:bg-white/5'
+        }` 
+      }
+    >
+      {label}
     </Link>
   );
 };

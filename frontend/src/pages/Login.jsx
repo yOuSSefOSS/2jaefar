@@ -18,7 +18,7 @@ const Login = () => {
     setError('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError(error.message);
-    else navigate('/');
+    else navigate('/explore');
     setLoading(false);
   };
 
@@ -27,7 +27,7 @@ const Login = () => {
     setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` }
+      options: { redirectTo: `${window.location.origin}/explore` }
     });
     if (error) { setError(error.message); setGoogleLoading(false); }
   };
