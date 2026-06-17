@@ -5,6 +5,7 @@ import { chapter1Data } from '../data/chapter1';
 import ThreeDPlane from '../components/ThreeDPlane';
 import { useProgress } from '../../../hooks/useProgress';
 import { CheckCircle2 } from 'lucide-react';
+import QuizModal from '../components/QuizModal';
 
 const ModernSlider = ({ value, min, max, step = 1, onChange, label, unit, color }) => {
   const trackRef = React.useRef(null);
@@ -547,11 +548,34 @@ export default function AerodynamicsTab() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleComplete = async () => {
-    setIsSaving(true);
-    const result = await markModuleComplete('aerodynamics_101', 100);
-    if (result) setIsCompleted(true);
-    setIsSaving(false);
+  const [showQuiz, setShowQuiz] = useState(false);
+
+  const aerodynamicsQuestions = [
+    {
+      question: "Which two factors primarily determine the Moment around a pivot?",
+      options: ["Speed and Density", "Force and Distance", "Weight and Thrust", "Temperature and Pressure"],
+      correctAnswer: 1,
+      explanation: "A moment is calculated by multiplying the applied Force by its perpendicular Distance from the pivot."
+    },
+    {
+      question: "If an aircraft pitches UP, it is rotating around which axis?",
+      options: ["Longitudinal Axis", "Vertical Axis", "Lateral Axis", "Horizontal Axis"],
+      correctAnswer: 2,
+      explanation: "Pitch is rotation around the Lateral (wing-to-wing) axis."
+    },
+    {
+      question: "Which layer of the atmosphere contains most of the weather and decreases in temperature as altitude increases?",
+      options: ["Stratosphere", "Mesosphere", "Troposphere", "Thermosphere"],
+      correctAnswer: 2,
+      explanation: "The Troposphere is the lowest layer where temperature drops at roughly 2°C per 1,000 ft."
+    }
+  ];
+
+  const handleQuizComplete = (score) => {
+    if (score >= 70) {
+      setIsCompleted(true);
+    }
+    // We don't automatically close the modal so they can see the results screen
   };
 
   return (
@@ -600,8 +624,8 @@ export default function AerodynamicsTab() {
           
           <div className="mt-16 flex justify-center pb-16">
             <button
-              onClick={handleComplete}
-              disabled={isCompleted || isSaving}
+              onClick={() => setShowQuiz(true)}
+              disabled={isCompleted}
               className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl ${
                 isCompleted 
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 cursor-not-allowed scale-100' 
@@ -609,12 +633,20 @@ export default function AerodynamicsTab() {
               }`}
             >
               <CheckCircle2 className={isCompleted ? "animate-pulse" : ""} />
-              {isSaving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : 
-               isCompleted ? (language === 'ar' ? 'تم إكمال المختبر' : 'Lab Completed!') : 
-               (language === 'ar' ? 'إكمال مختبر الديناميكا الهوائية' : 'Complete Aerodynamics Lab')}
+              {isCompleted ? (language === 'ar' ? 'تم اجتياز الاختبار' : 'Module Passed!') : 
+               (language === 'ar' ? 'بدء اختبار الوحدة' : 'Take Module Quiz')}
             </button>
           </div>
         </AnimatedSection>
+
+        <QuizModal
+          isOpen={showQuiz}
+          onClose={() => setShowQuiz(false)}
+          moduleId="aerodynamics_101"
+          moduleTitle="Aerodynamics 101"
+          questions={aerodynamicsQuestions}
+          onComplete={handleQuizComplete}
+        />
 
       </div>
     </div>

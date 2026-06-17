@@ -266,6 +266,19 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// DEV ONLY: Quick endpoint to make the current user a superadmin
+app.post('/api/dev/make-superadmin', authMiddleware, async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Not allowed in production.' });
+  }
+  const { error } = await supabase
+    .from('user_roles')
+    .upsert({ user_id: req.user.id, role: 'superadmin' });
+  
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true, message: 'You are now a superadmin!' });
+});
+
 app.post('/api/log', (req, res) => {
   console.log('BROWSER LOG:', req.body);
   res.sendStatus(200);

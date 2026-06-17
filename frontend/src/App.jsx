@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Admin from './pages/Admin';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
+import SuperadminDashboard from './pages/admin/SuperadminDashboard';
 import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
 import Pitch from './pages/Pitch';
@@ -132,6 +133,18 @@ function App() {
               </AuthGuard>
             }
           />
+
+          <Route path="/instructor" element={
+            <AuthGuard>
+              <InstructorDashboard />
+            </AuthGuard>
+          } />
+
+          <Route path="/superadmin" element={
+            <AuthGuard>
+              <SuperadminDashboard />
+            </AuthGuard>
+          } />
 
           {/* Legacy /dashboard redirect */}
           <Route path="/dashboard" element={<Navigate to="/lab/airfoil" replace />} />
