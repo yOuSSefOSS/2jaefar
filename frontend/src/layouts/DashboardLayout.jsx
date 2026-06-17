@@ -39,6 +39,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
 
           <nav className="hidden md:flex items-center gap-3">
             <TopNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} />
+            <TopNavItem to="/instructor" label="Instructor" currentPath={location.pathname} />
             <TopNavItem to="/profile" label="Profile" currentPath={location.pathname} />
             <TopNavItem to="/settings" label="Settings" currentPath={location.pathname} />
             <TopNavItem to="/pricing" label="Pricing" currentPath={location.pathname} />

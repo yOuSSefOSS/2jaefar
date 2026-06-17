@@ -10,6 +10,7 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Admin from './pages/Admin';
+import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
 import Pitch from './pages/Pitch';
@@ -146,6 +147,7 @@ function App() {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/admin" element={<Admin />} />
+                    <Route path="/instructor" element={<InstructorDashboard />} />
                   </Routes>
                 </DashboardLayout>
               </AuthGuard>

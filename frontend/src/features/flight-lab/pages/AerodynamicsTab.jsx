@@ -3,6 +3,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useAcademy } from '../../../context/AcademyContext';
 import { chapter1Data } from '../data/chapter1';
 import ThreeDPlane from '../components/ThreeDPlane';
+import { useProgress } from '../../../hooks/useProgress';
+import { CheckCircle2 } from 'lucide-react';
 
 const ModernSlider = ({ value, min, max, step = 1, onChange, label, unit, color }) => {
   const trackRef = React.useRef(null);
@@ -541,6 +543,16 @@ const InteractiveAxes = ({ language }) => {
 export default function AerodynamicsTab() {
   const { language } = useAcademy();
   const data = chapter1Data;
+  const { markModuleComplete } = useProgress();
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleComplete = async () => {
+    setIsSaving(true);
+    const result = await markModuleComplete('aerodynamics_101', 100);
+    if (result) setIsCompleted(true);
+    setIsSaving(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 overflow-y-auto edu-scroll pb-32">
@@ -585,6 +597,23 @@ export default function AerodynamicsTab() {
         {/* SUMMARY */}
         <AnimatedSection>
           {data.summary[language]}
+          
+          <div className="mt-16 flex justify-center pb-16">
+            <button
+              onClick={handleComplete}
+              disabled={isCompleted || isSaving}
+              className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl ${
+                isCompleted 
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 cursor-not-allowed scale-100' 
+                  : 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:scale-105 hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] border border-sky-400/50'
+              }`}
+            >
+              <CheckCircle2 className={isCompleted ? "animate-pulse" : ""} />
+              {isSaving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : 
+               isCompleted ? (language === 'ar' ? 'تم إكمال المختبر' : 'Lab Completed!') : 
+               (language === 'ar' ? 'إكمال مختبر الديناميكا الهوائية' : 'Complete Aerodynamics Lab')}
+            </button>
+          </div>
         </AnimatedSection>
 
       </div>
