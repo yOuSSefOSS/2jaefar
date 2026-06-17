@@ -309,7 +309,8 @@ const TelemetryBox = ({ label, value, color }) => (
 );
 
 const TailLab = () => {
-  const { language } = useAcademy();
+  const academyCtx = useAcademy();
+  const language = academyCtx?.language || 'en';
   const [cgPct, setCgPct] = useState(28);
   const [speed, setSpeed] = useState(250);
   const [tailArea, setTailArea] = useState(18);
