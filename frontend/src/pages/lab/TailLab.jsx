@@ -173,7 +173,7 @@ const TailLab = () => {
           {/* Visualization Canvas */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}
-            className="lg:col-span-9 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl"
+            className="lg:col-span-9 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl min-h-[400px]"
           >
             {/* HUD Overlay Top */}
             <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
@@ -189,7 +189,7 @@ const TailLab = () => {
             </div>
 
             {/* Interactive SVG Canvas */}
-            <div className="flex-1 w-full relative select-none">
+            <div className="flex-1 w-full relative select-none min-h-[250px]">
               <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full absolute inset-0">
                 <defs>
                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">

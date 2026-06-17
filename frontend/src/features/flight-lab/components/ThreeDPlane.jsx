@@ -149,7 +149,7 @@ export default function ThreeDPlane({ pitch = 0, roll = 0, yaw = 0, showForces =
 
   return (
     <div className="w-full h-full flex-1 min-h-[300px] relative group">
-      <div className="w-full h-full cursor-grab active:cursor-grabbing">
+      <div className="absolute inset-0 cursor-grab active:cursor-grabbing">
         <Canvas shadows camera={{ position: [-5, 3, 10], fov: 45 }}>
           <color attach="background" args={['#020617']} />
           <Environment preset="city" />

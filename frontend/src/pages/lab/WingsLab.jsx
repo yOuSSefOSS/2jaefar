@@ -206,7 +206,7 @@ const WingsLab = () => {
                 </div>
               </div>
 
-              <div className="flex-1 w-full relative">
+              <div className="flex-1 w-full relative min-h-[250px]">
                 <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full absolute inset-0">
                   <defs>
                     <radialGradient id="tunnelGlow" cx="50%" cy="50%" r="50%">
