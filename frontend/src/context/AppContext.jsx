@@ -127,6 +127,9 @@ export const AppProvider = ({ children }) => {
         .eq('id', userId)
         .single();
         
+      console.log('fetchUserData profileData:', profileData);
+      console.log('fetchUserData profileError:', profileError);
+        
       if (!profileError && profileData) {
         setActiveWorkspaceId(profileData.active_workspace_id);
         setAccountType(profileData.account_type || 'pending');
