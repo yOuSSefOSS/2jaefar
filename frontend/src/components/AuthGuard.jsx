@@ -35,7 +35,9 @@ export const GlobalOnboardingGuard = ({ children }) => {
   const { user, isAuthLoading, accountType } = useAppContext();
   const location = useLocation();
 
-  if (!isAuthLoading && user && accountType === 'pending' && location.pathname !== '/onboarding') {
+  const allowedRoutes = ['/onboarding', '/profile'];
+
+  if (!isAuthLoading && user && accountType === 'pending' && !allowedRoutes.includes(location.pathname)) {
     return <Navigate to="/onboarding" replace />;
   }
 

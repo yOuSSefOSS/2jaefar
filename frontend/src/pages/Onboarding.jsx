@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, GraduationCap, Loader2, AlertCircle } from 'lucide-react';
 import { apiFetch } from '../services/apiService';
 import { useAppContext } from '../context/AppContext';
+import { supabase } from '../services/supabaseClient';
+import { LogOut } from 'lucide-react';
 
 const Onboarding = () => {
   const [mode, setMode] = useState(null); // 'academy' or 'workspace'
@@ -12,6 +14,11 @@ const Onboarding = () => {
   
   const navigate = useNavigate();
   const { fetchUserData, user } = useAppContext();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,7 +86,25 @@ const Onboarding = () => {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#020817', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#020817', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
+      
+      {/* Logout Button at Top Right */}
+      <button 
+        onClick={handleLogout}
+        style={{
+          position: 'absolute', top: '20px', right: '20px',
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(51,65,85,0.6)',
+          borderRadius: '8px', padding: '0.5rem 1rem', color: '#cbd5e1',
+          cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s',
+          backdropFilter: 'blur(10px)'
+        }}
+        onMouseOver={e => { e.currentTarget.style.background = 'rgba(15,23,42,0.9)'; e.currentTarget.style.color = 'white'; }}
+        onMouseOut={e => { e.currentTarget.style.background = 'rgba(15,23,42,0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
+      >
+        <LogOut size={16} /> Log Out
+      </button>
+
       <div style={{ width: '100%', maxWidth: '600px', background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(51,65,85,0.5)', borderRadius: '20px', padding: '3rem', backdropFilter: 'blur(20px)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
