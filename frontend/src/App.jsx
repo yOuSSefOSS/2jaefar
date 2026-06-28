@@ -9,9 +9,11 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Onboarding from './pages/Onboarding';
 import Admin from './pages/Admin';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import SuperadminDashboard from './pages/admin/SuperadminDashboard';
+import AcademyAdmin from './pages/admin/AcademyAdmin';
 import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
 import Pitch from './pages/Pitch';
@@ -164,9 +166,21 @@ function App() {
             </AuthGuard>
           } />
 
+          <Route path="/onboarding" element={
+            <AuthGuard>
+              <Onboarding />
+            </AuthGuard>
+          } />
+
           <Route path="/superadmin" element={
             <AuthGuard>
               <SuperadminDashboard />
+            </AuthGuard>
+          } />
+
+          <Route path="/academy-admin/:id?" element={
+            <AuthGuard>
+              <AcademyAdmin />
             </AuthGuard>
           } />
 

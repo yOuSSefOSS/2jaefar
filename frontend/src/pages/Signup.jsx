@@ -33,8 +33,7 @@ const Signup = () => {
     setLoading(false);
     if (signInError) setError(signInError.message);
     else {
-      const from = location.state?.from?.pathname || '/explore';
-      navigate(from, { replace: true });
+      navigate('/onboarding', { replace: true });
     }
   };
 
@@ -42,7 +41,7 @@ const Signup = () => {
     setGoogleLoading(true); setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/explore` }
+      options: { redirectTo: `${window.location.origin}/onboarding` }
     });
     if (error) { setError(error.message); setGoogleLoading(false); }
   };

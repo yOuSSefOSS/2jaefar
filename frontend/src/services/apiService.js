@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from './supabaseClient';
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`,
@@ -29,6 +30,39 @@ export const checkBackendStatus = async () => {
   } catch (error) {
     console.error("Backend connection failed:", error);
     throw error;
+  }
+};
+
+export const apiFetch = async (endpoint, options = {}) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(options.headers || {})
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  
+  if (!response.ok) {
+    let errorMsg = 'An error occurred';
+    try {
+      const errData = await response.json();
+      errorMsg = errData.error || errData.message || errorMsg;
+    } catch (e) {
+      // Ignored
+    }
+    throw new Error(errorMsg);
+  }
+
+  if (response.status === 204) return null;
+  
+  try {
+    return await response.json();
+  } catch (e) {
+    return null; // Return null if response is empty or invalid JSON
   }
 };
 

@@ -21,6 +21,9 @@ export const AppProvider = ({ children }) => {
   const [subscriptionTier, setSubscriptionTier] = useState('free'); // 'free', 'pro', 'pro_max'
   const [importsCount, setImportsCount] = useState(0);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [accountType, setAccountType] = useState('pending');
+  const [userRole, setUserRole] = useState(null);
+  const [academyId, setAcademyId] = useState(null);
 
   // Application Settings State
   const [useNeuralFoil, setUseNeuralFoil] = useState(
@@ -93,6 +96,8 @@ export const AppProvider = ({ children }) => {
       setUser({ id: 'dev-mock-user', email: 'dev@localhost' });
       setActiveWorkspaceId('dev-mock-workspace');
       setSubscriptionTier('pro_max'); // Give dev user all features
+      setAccountType('workspace');
+      setUserRole('superadmin');
       setIsAuthLoading(false);
       return;
     }
@@ -127,30 +132,37 @@ export const AppProvider = ({ children }) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('active_workspace_id')
+        .select('active_workspace_id, account_type, academy_id, role')
         .eq('id', userId)
         .single();
         
       if (!profileError && profileData) {
         setActiveWorkspaceId(profileData.active_workspace_id);
+        setAccountType(profileData.account_type || 'pending');
+        setAcademyId(profileData.academy_id);
+        setUserRole(profileData.role);
         
-        // Fetch workspace plan
-        const { data: memberData } = await supabase
-          .from('workspace_members')
-          .select('workspaces(plan)')
-          .eq('user_id', userId)
-          .eq('workspace_id', profileData.active_workspace_id)
-          .single();
+        if (profileData.account_type === 'workspace') {
+          // Fetch workspace plan
+          const { data: memberData } = await supabase
+            .from('workspace_members')
+            .select('workspaces(plan)')
+            .eq('user_id', userId)
+            .eq('workspace_id', profileData.active_workspace_id)
+            .single();
+            
+          setSubscriptionTier(memberData?.workspaces?.plan || 'free');
           
-        setSubscriptionTier(memberData?.workspaces?.plan || 'free');
-        
-        // Fetch custom airfoils count for imports limit
-        const { count } = await supabase
-          .from('custom_airfoils')
-          .select('id', { count: 'exact', head: true })
-          .eq('workspace_id', profileData.active_workspace_id);
-          
-        setImportsCount(count || 0);
+          // Fetch custom airfoils count for imports limit
+          const { count } = await supabase
+            .from('custom_airfoils')
+            .select('id', { count: 'exact', head: true })
+            .eq('workspace_id', profileData.active_workspace_id);
+            
+          setImportsCount(count || 0);
+        } else if (profileData.account_type === 'academy' || profileData.account_type === 'superadmin') {
+          setSubscriptionTier('pro_max');
+        }
       }
     } catch (err) {
       console.error('Error fetching user data:', err);
@@ -171,10 +183,14 @@ export const AppProvider = ({ children }) => {
   const value = {
     user, setUser,
     activeWorkspaceId, setActiveWorkspaceId,
+    accountType, setAccountType,
+    userRole, setUserRole,
+    academyId, setAcademyId,
     displayName: user?.user_metadata?.display_name || user?.email || 'Guest',
     subscriptionTier, setSubscriptionTier,
     importsCount, setImportsCount,
     isAuthLoading,
+    fetchUserData,
 
     useNeuralFoil, setUseNeuralFoil,
     units, setUnits,

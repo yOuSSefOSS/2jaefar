@@ -9,7 +9,7 @@ import { Menu, X } from 'lucide-react';
 
 const DashboardLayout = ({ children, isBackendConnected }) => {
   const location = useLocation();
-  const { subscriptionTier } = useAppContext();
+  const { subscriptionTier, userRole, accountType } = useAppContext();
   const { tenant } = useTenant();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -41,7 +41,15 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
 
           <nav className="hidden md:flex items-center gap-3">
             <TopNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} />
-            <TopNavItem to="/instructor" label="Instructor" currentPath={location.pathname} />
+            {(userRole === 'instructor' || userRole === 'academy_owner' || accountType === 'superadmin') && (
+              <TopNavItem to="/instructor" label="Instructor" currentPath={location.pathname} />
+            )}
+            {(userRole === 'academy_owner' || accountType === 'superadmin') && (
+              <TopNavItem to="/academy-admin" label="Academy Admin" currentPath={location.pathname} />
+            )}
+            {accountType === 'superadmin' && (
+              <TopNavItem to="/superadmin" label="Superadmin" currentPath={location.pathname} />
+            )}
             <TopNavItem to="/profile" label="Profile" currentPath={location.pathname} />
             <TopNavItem to="/settings" label="Settings" currentPath={location.pathname} />
             <TopNavItem to="/pricing" label="Pricing" currentPath={location.pathname} />
@@ -87,7 +95,15 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           >
             <nav className="flex flex-col p-4 gap-2">
               <MobileNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
-              <MobileNavItem to="/instructor" label="Instructor" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              {(userRole === 'instructor' || userRole === 'academy_owner' || accountType === 'superadmin') && (
+                <MobileNavItem to="/instructor" label="Instructor" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              )}
+              {(userRole === 'academy_owner' || accountType === 'superadmin') && (
+                <MobileNavItem to="/academy-admin" label="Academy Admin" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              )}
+              {accountType === 'superadmin' && (
+                <MobileNavItem to="/superadmin" label="Superadmin" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
+              )}
               <MobileNavItem to="/profile" label="Profile" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
               <MobileNavItem to="/settings" label="Settings" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
               <MobileNavItem to="/pricing" label="Pricing" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { useAppContext } from '../../context/AppContext';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle, UserPlus, Users } from 'lucide-react';
 
 export default function SuperadminDashboard() {
   const { user } = useAppContext();
+  const navigate = useNavigate();
   const [academies, setAcademies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
@@ -169,11 +171,23 @@ export default function SuperadminDashboard() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-white/10 pt-4 mt-auto">
-                <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">
+              <div className="flex justify-end gap-2 border-t border-white/10 pt-4 mt-auto relative z-10">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); navigate(`/academy-admin/${academy.id}`); }}
+                  className="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 rounded-lg text-sky-400 hover:text-sky-300 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <Users className="w-3.5 h-3.5" /> Manage Users
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); /* TODO settings */ }}
+                  className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
+                >
                   <Settings className="w-4 h-4" />
                 </button>
-                <button className="p-2 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); /* TODO delete */ }}
+                  className="p-1.5 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
