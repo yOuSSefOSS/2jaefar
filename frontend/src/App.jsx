@@ -42,6 +42,11 @@ import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
 
+// Error Screens
+import NotFound from './pages/error/NotFound';
+import ServerError from './pages/error/ServerError';
+import Vulnerability from './pages/error/Vulnerability';
+
 function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -92,6 +97,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
+          {/* ── Error Routes ── */}
+          <Route path="/error/500" element={<ServerError />} />
+          <Route path="/error/403" element={<Vulnerability />} />
+
           {/* ── Explorer Routes (Public — educational content) ── */}
           <Route path="/explore" element={<ExplorerLayout />}>
             <Route index element={<Explorer />} />
@@ -128,6 +137,7 @@ function App() {
                 <DashboardLayout isBackendConnected={isConnected}>
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </DashboardLayout>
               </AuthGuard>
@@ -161,11 +171,15 @@ function App() {
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/instructor" element={<InstructorDashboard />} />
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </DashboardLayout>
               </AuthGuard>
             }
           />
+          
+          {/* Global 404 Catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       </TenantProvider>
