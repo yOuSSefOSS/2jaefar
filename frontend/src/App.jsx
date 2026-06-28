@@ -40,7 +40,7 @@ import StabilityTab from './features/flight-lab/pages/StabilityTab';
 import ControlsTab from './features/flight-lab/pages/ControlsTab';
 import { AcademyProvider } from './context/AcademyContext';
 import { TenantProvider } from './context/TenantContext';
-import AuthGuard from './components/AuthGuard';
+import AuthGuard, { GlobalOnboardingGuard } from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -90,7 +90,8 @@ function App() {
         />
       )}
       <BrowserRouter>
-        <Routes>
+        <GlobalOnboardingGuard>
+          <Routes>
           {/* ── Public Routes ── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/pitch" element={<Pitch />} />
@@ -209,6 +210,7 @@ function App() {
           {/* Global 404 Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </GlobalOnboardingGuard>
       </BrowserRouter>
       </TenantProvider>
     </AppProvider>

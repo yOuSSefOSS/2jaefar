@@ -31,4 +31,15 @@ const AuthGuard = ({ children }) => {
   return children;
 };
 
+export const GlobalOnboardingGuard = ({ children }) => {
+  const { user, isAuthLoading, accountType } = useAppContext();
+  const location = useLocation();
+
+  if (!isAuthLoading && user && accountType === 'pending' && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
+};
+
 export default AuthGuard;

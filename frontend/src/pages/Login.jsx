@@ -3,6 +3,8 @@ import { supabase } from '../services/supabaseClient';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
+import { useAppContext } from '../context/AppContext';
+import { useEffect } from 'react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,18 +14,30 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthLoading, accountType } = useAppContext();
+
+  useEffect(() => {
+    // If logged in, route to appropriate page based on accountType
+    if (user && !isAuthLoading) {
+      if (accountType === 'pending') {
+        navigate('/onboarding', { replace: true });
+      } else {
+        const from = location.state?.from?.pathname || '/explore';
+        navigate(from, { replace: true });
+      }
+    }
+  }, [user, isAuthLoading, accountType, navigate, location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError(error.message);
-    else {
-      const from = location.state?.from?.pathname || '/explore';
-      navigate(from, { replace: true });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
     }
-    setLoading(false);
+    // Don't navigate here. Let the useEffect handle it.
   };
 
   const handleGoogleLogin = async () => {

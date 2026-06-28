@@ -123,16 +123,6 @@ app.use(express.json());
 const authMiddleware = async (req, res, next) => {
   req.supabase = supabase;
 
-  // DEV BYPASS: If running locally in development mode, mock user and bypass Supabase
-  if (process.env.NODE_ENV !== 'production') {
-    req.user = { id: 'dev-mock-user', email: 'dev@localhost' };
-    req.accountType = 'workspace';
-    req.workspaceId = 'dev-mock-workspace';
-    req.userTier = 'pro_max';
-    req.userRole = 'owner';
-    return next();
-  }
-
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
 

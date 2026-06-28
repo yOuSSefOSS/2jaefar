@@ -3,6 +3,8 @@ import { supabase } from '../services/supabaseClient';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle, User, Eye, EyeOff } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
+import { useAppContext } from '../context/AppContext';
+import { useEffect } from 'react';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -16,6 +18,17 @@ const Signup = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthLoading, accountType } = useAppContext();
+
+  useEffect(() => {
+    if (user && !isAuthLoading) {
+      if (accountType === 'pending') {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/explore', { replace: true });
+      }
+    }
+  }, [user, isAuthLoading, accountType, navigate]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -28,12 +41,10 @@ const Signup = () => {
       options: { data: { display_name: name } }
     });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
-    // Auto sign-in immediately (no email verification required)
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (signInError) setError(signInError.message);
-    else {
-      navigate('/onboarding', { replace: true });
+    if (signInError) {
+      setError(signInError.message);
+      setLoading(false);
     }
   };
 

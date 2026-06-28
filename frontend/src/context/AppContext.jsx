@@ -91,16 +91,7 @@ export const AppProvider = ({ children }) => {
 
   // Auth Effect
   useEffect(() => {
-    // DEV BYPASS: If running locally in development mode, mock a user session
-    if (import.meta.env.MODE === 'development') {
-      setUser({ id: 'dev-mock-user', email: 'dev@localhost' });
-      setActiveWorkspaceId('dev-mock-workspace');
-      setSubscriptionTier('pro_max'); // Give dev user all features
-      setAccountType('workspace');
-      setUserRole('superadmin');
-      setIsAuthLoading(false);
-      return;
-    }
+    // Removed dev bypass to allow real auth locally
 
     const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
