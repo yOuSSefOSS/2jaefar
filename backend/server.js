@@ -611,6 +611,38 @@ const adminMiddleware = async (req, res, next) => {
   next();
 };
 
+// POST /api/admin/academy/:id/add-member — Manually assign a user to an academy by email
+app.post('/api/admin/academy/:id/add-member', authMiddleware, adminMiddleware, async (req, res) => {
+  const { id } = req.params; // Academy ID
+  const { email, role } = req.body;
+
+  if (!email || !role) return res.status(400).json({ error: 'Email and role are required.' });
+
+  // 1. Look up user by email in auth.users
+  const { data: authData, error: lookupError } = await supabase.auth.admin.listUsers();
+  if (lookupError || !authData?.users) return res.status(500).json({ error: 'Failed to query users.' });
+
+  const targetUser = authData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  if (!targetUser) {
+    return res.status(404).json({ error: 'User not found. They must create an account first before you can assign them.' });
+  }
+
+  // 2. Update their profile
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ 
+      academy_id: id, 
+      role: role,
+      account_type: 'academy',
+      active_workspace_id: null // clear any workspace if they had one
+    })
+    .eq('id', targetUser.id);
+
+  if (updateError) return res.status(500).json({ error: updateError.message });
+
+  res.json({ success: true, message: 'User added to academy successfully.' });
+});
+
 // GET /api/admin/users — fetch all users across the entire system
 app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res) => {
   // 1. Fetch all workspace_members

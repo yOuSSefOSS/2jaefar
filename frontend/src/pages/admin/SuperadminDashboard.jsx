@@ -297,6 +297,7 @@ export default function SuperadminDashboard() {
                     <select id="addUserRole" className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-[#0ea5e9] focus:outline-none">
                       <option value="student">Student</option>
                       <option value="instructor">Instructor</option>
+                      <option value="academy_owner">Academy Owner</option>
                     </select>
                     <button 
                       onClick={async () => {
@@ -366,6 +367,7 @@ export default function SuperadminDashboard() {
                             >
                               <option value="student">Student</option>
                               <option value="instructor">Instructor</option>
+                              <option value="academy_owner">Academy Owner</option>
                             </select>
                             
                             <button 
