@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle, UserPlus, Users } from 'lucide-react';
+import { apiFetch } from '../../services/apiService';
 
 export default function SuperadminDashboard() {
   const { user } = useAppContext();
@@ -307,20 +308,16 @@ export default function SuperadminDashboard() {
                         
                         // Because profiles doesn't contain email, we need to ask the backend.
                         // I will add a temporary fix: we will update the backend to handle this via API or directly here if we can query users.
-                        const token = (await supabase.auth.getSession()).data?.session?.access_token;
-                        const res = await fetch(`http://localhost:5000/api/admin/academy/${selectedAcademy.id}/add-member`, {
-                          method: 'POST',
-                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email, role })
-                        });
-                        
-                        if (res.ok) {
+                        try {
+                          await apiFetch(`/api/admin/academy/${selectedAcademy.id}/add-member`, {
+                            method: 'POST',
+                            body: JSON.stringify({ email, role })
+                          });
                           alert('User added to Academy!');
                           document.getElementById('addUserEmail').value = '';
                           fetchAcademyMembers(selectedAcademy.id);
-                        } else {
-                          const err = await res.json();
-                          alert('Failed to add user: ' + (err.error || 'Unknown error'));
+                        } catch (err) {
+                          alert('Failed to add user: ' + (err.message || 'Unknown error'));
                         }
                       }}
                       className="bg-[#0ea5e9] hover:bg-sky-500 text-white px-6 py-2 rounded-lg font-bold transition-colors"
