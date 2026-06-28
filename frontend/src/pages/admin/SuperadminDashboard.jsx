@@ -102,35 +102,7 @@ export default function SuperadminDashboard() {
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-white mb-2">Unauthorized Access</h1>
           <p className="text-slate-400">You must be a Superadmin to view this page.</p>
-          <div className="mt-8 bg-[#0b1221] border border-white/10 p-6 rounded-xl text-left inline-block">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2"><Settings className="w-5 h-5 text-[#0ea5e9]" /> How to gain access:</h3>
-            <ol className="list-decimal list-inside text-slate-300 space-y-2 text-sm font-mono mb-4">
-              <li>Open your Supabase Dashboard</li>
-              <li>Go to the <span className="text-[#0ea5e9]">profiles</span> table</li>
-              <li>Find your user row</li>
-              <li>Change your <span className="text-pink-500">role</span> column to <span className="text-[#10b981]">superadmin</span></li>
-              <li>Refresh this page</li>
-            </ol>
 
-            <button 
-              onClick={async () => {
-                const token = (await supabase.auth.getSession()).data?.session?.access_token;
-                if (!token) return;
-                const res = await fetch('http://localhost:5000/api/dev/make-superadmin', {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                  window.location.reload();
-                } else {
-                  alert('Dev fast-track failed. Check server logs.');
-                }
-              }}
-              className="mt-4 w-full bg-pink-600/20 hover:bg-pink-600/40 text-pink-400 border border-pink-500/30 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-            >
-              Dev Fast-Track: Make Me Superadmin Now
-            </button>
-          </div>
         </div>
       </DashboardLayout>
     );
