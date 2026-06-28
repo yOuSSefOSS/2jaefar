@@ -98,8 +98,22 @@ function App() {
           <Route path="/signup" element={<Signup />} />
 
           {/* ── Error Routes ── */}
-          <Route path="/error/500" element={<ServerError />} />
-          <Route path="/error/403" element={<Vulnerability />} />
+          <Route 
+            path="/error/500" 
+            element={
+              <DashboardLayout isBackendConnected={isConnected}>
+                <ServerError />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/error/403" 
+            element={
+              <DashboardLayout isBackendConnected={isConnected}>
+                <Vulnerability />
+              </DashboardLayout>
+            } 
+          />
 
           {/* ── Explorer Routes (Public — educational content) ── */}
           <Route path="/explore" element={<ExplorerLayout />}>

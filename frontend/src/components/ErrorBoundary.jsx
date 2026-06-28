@@ -1,4 +1,6 @@
 import React from 'react';
+import HolographicErrorLayout from './HolographicErrorLayout';
+import { RefreshCw, Home } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -25,27 +27,30 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-brand-900 flex items-center justify-center p-4 relative overflow-hidden">
-           <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-500/20 via-brand-900 to-brand-900"></div>
-           <div className="premium-glass p-8 md:p-12 max-w-2xl w-full text-center relative z-10 border-t-4 border-t-amber-500/50">
-              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 mb-4 tracking-tight">SYSTEM OVERRIDE</h1>
-              <p className="text-edu-text-muted mb-8 leading-relaxed">A critical avionics failure has occurred.</p>
-              
-              {/* Optional: Show error details in development */}
-              {import.meta.env.DEV && (
-                <div className="text-left bg-black/40 p-4 rounded-xl overflow-auto text-xs text-red-400 font-mono mb-8 border border-red-500/20 max-h-48">
-                  <p>{this.state.error && this.state.error.toString()}</p>
-                </div>
-              )}
+        <HolographicErrorLayout imageSrc="/ERROR 500.jpg" glowColor="amber">
+          {import.meta.env.DEV && (
+            <div className="hidden lg:block absolute bottom-full left-0 w-full text-left bg-black/80 p-4 rounded-xl overflow-auto text-xs text-red-400 font-mono mb-4 border border-red-500/50 max-h-48 backdrop-blur-md">
+              <p>{this.state.error && this.state.error.toString()}</p>
+            </div>
+          )}
 
-              <button 
-                onClick={() => window.location.href = '/'}
-                className="px-6 py-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all font-semibold tracking-wide w-full sm:w-auto"
-              >
-                Reboot System
-              </button>
-           </div>
-        </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 rounded-xl bg-amber-500/20 text-white border border-amber-500/40 hover:bg-amber-500/40 hover:border-amber-500/60 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 w-full sm:w-auto justify-center backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.3)] font-semibold uppercase tracking-wider text-sm"
+            >
+              <RefreshCw size={18} />
+              <span>Restart Sequence</span>
+            </button>
+            <a 
+              href="/"
+              className="px-6 py-3 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 w-full sm:w-auto justify-center backdrop-blur-md shadow-[0_0_15px_rgba(255,255,255,0.1)] font-semibold uppercase tracking-wider text-sm"
+            >
+              <Home size={18} />
+              <span>Return to Base</span>
+            </a>
+          </div>
+        </HolographicErrorLayout>
       );
     }
 
