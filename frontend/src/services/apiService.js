@@ -7,6 +7,21 @@ const api = axios.create({
   }
 });
 
+// Global interceptor to catch API errors and redirect to our custom screens
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      if (error.response.status === 403) {
+        window.location.href = '/error/403';
+      } else if (error.response.status >= 500) {
+        window.location.href = '/error/500';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const checkBackendStatus = async () => {
   try {
     const response = await api.get('/status');
