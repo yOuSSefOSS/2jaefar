@@ -381,14 +381,14 @@ app.post('/api/onboarding/workspace', authMiddleware, async (req, res) => {
     .from('workspace_members')
     .insert([{ workspace_id: newWorkspaceId, user_id: req.user.id, role: 'owner' }]);
 
-  // 3. Update profile
+  // 3. Update their profile to active workspace
   await supabase
     .from('profiles')
-    .update({ 
+    .upsert({ 
+      id: req.user.id,
       active_workspace_id: newWorkspaceId,
-      account_type: 'workspace' 
-    })
-    .eq('id', req.user.id);
+      account_type: 'workspace'
+    });
 
   res.json({ success: true, workspaceId: newWorkspaceId });
 });
@@ -397,11 +397,13 @@ app.post('/api/onboarding/academy', authMiddleware, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: 'Invite code is required.' });
 
+  const cleanCode = code.trim();
+
   // 1. Find unused invite
   const { data: invite, error: inviteError } = await supabase
     .from('academy_invites')
     .select('id, academy_id')
-    .eq('code', code)
+    .eq('code', cleanCode)
     .eq('used', false)
     .single();
 
@@ -418,12 +420,12 @@ app.post('/api/onboarding/academy', authMiddleware, async (req, res) => {
   // 3. Update profile
   await supabase
     .from('profiles')
-    .update({ 
+    .upsert({ 
+      id: req.user.id,
       academy_id: invite.academy_id,
       account_type: 'academy',
       role: 'student'
-    })
-    .eq('id', req.user.id);
+    });
 
   res.json({ success: true, academyId: invite.academy_id });
 });
