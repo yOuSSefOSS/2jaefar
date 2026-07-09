@@ -7,9 +7,9 @@ import { useTenant } from '../context/TenantContext';
 import logoUrl from '../assets/logo.png';
 import { Menu, X } from 'lucide-react';
 
-const DashboardLayout = ({ children, isBackendConnected }) => {
+const DashboardLayout = ({ children }) => {
   const location = useLocation();
-  const { subscriptionTier, userRole, accountType } = useAppContext();
+  const { subscriptionTier } = useAppContext();
   const { tenant } = useTenant();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -41,15 +41,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
 
           <nav className="hidden md:flex items-center gap-3">
             <TopNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} />
-            {(userRole === 'instructor' || userRole === 'academy_owner' || accountType === 'superadmin') && (
-              <TopNavItem to="/instructor" label="Instructor" currentPath={location.pathname} />
-            )}
-            {(userRole === 'academy_owner' || accountType === 'superadmin') && (
-              <TopNavItem to="/academy-admin" label="Academy Admin" currentPath={location.pathname} />
-            )}
-            {accountType === 'superadmin' && (
-              <TopNavItem to="/superadmin" label="Superadmin" currentPath={location.pathname} />
-            )}
+            <TopNavItem to="/instructor" label="Instructor" currentPath={location.pathname} />
             <TopNavItem to="/profile" label="Profile" currentPath={location.pathname} />
             <TopNavItem to="/settings" label="Settings" currentPath={location.pathname} />
             <TopNavItem to="/pricing" label="Pricing" currentPath={location.pathname} />
@@ -57,12 +49,6 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
         </div>
         
         <div className="flex items-center gap-3 sm:gap-6">
-          <div className="hidden sm:flex items-center gap-3 bg-black/40 px-4 py-1.5 rounded-full border border-white/5">
-            <div className={`w-2 h-2 rounded-full ${isBackendConnected ? 'bg-[var(--color-accent-neon)] shadow-[0_0_10px_var(--color-accent-neon)]' : 'bg-[var(--color-accent-pink)] shadow-[0_0_10px_var(--color-accent-pink)]'} animate-pulse`}></div>
-            <span className="text-brand-300 font-mono text-xs tracking-wider">
-              {isBackendConnected ? 'API_LINK_UP' : 'API_LINK_DOWN'}
-            </span>
-          </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
              <Link to="/pricing" className="hidden sm:flex items-center gap-2 p-1.5 px-3 border border-[var(--color-accent-blue)]/50 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-neon)] rounded-full hover:bg-[var(--color-accent-blue)]/20 transition-all text-xs font-bold uppercase tracking-widest">
@@ -95,15 +81,7 @@ const DashboardLayout = ({ children, isBackendConnected }) => {
           >
             <nav className="flex flex-col p-4 gap-2">
               <MobileNavItem to="/dashboard" label="Simulation" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
-              {(userRole === 'instructor' || userRole === 'academy_owner' || accountType === 'superadmin') && (
-                <MobileNavItem to="/instructor" label="Instructor" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
-              )}
-              {(userRole === 'academy_owner' || accountType === 'superadmin') && (
-                <MobileNavItem to="/academy-admin" label="Academy Admin" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
-              )}
-              {accountType === 'superadmin' && (
-                <MobileNavItem to="/superadmin" label="Superadmin" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
-              )}
+              <MobileNavItem to="/instructor" label="Instructor" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
               <MobileNavItem to="/profile" label="Profile" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
               <MobileNavItem to="/settings" label="Settings" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />
               <MobileNavItem to="/pricing" label="Pricing" currentPath={location.pathname} onClick={() => setMobileMenuOpen(false)} />

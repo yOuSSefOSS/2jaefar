@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Mail, Lock, Loader2, AlertCircle, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
-import { useAppContext } from '../context/AppContext';
-import { useEffect } from 'react';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -18,17 +16,6 @@ const Signup = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthLoading, accountType } = useAppContext();
-
-  useEffect(() => {
-    if (user && !isAuthLoading) {
-      if (accountType === 'pending') {
-        navigate('/onboarding', { replace: true });
-      } else {
-        navigate('/explore', { replace: true });
-      }
-    }
-  }, [user, isAuthLoading, accountType, navigate]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -41,10 +28,13 @@ const Signup = () => {
       options: { data: { display_name: name } }
     });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
+    // Auto sign-in immediately (no email verification required)
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError) {
-      setError(signInError.message);
-      setLoading(false);
+    setLoading(false);
+    if (signInError) setError(signInError.message);
+    else {
+      const from = location.state?.from?.pathname || '/explore';
+      navigate(from, { replace: true });
     }
   };
 
@@ -52,7 +42,7 @@ const Signup = () => {
     setGoogleLoading(true); setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/onboarding` }
+      options: { redirectTo: `${window.location.origin}/explore` }
     });
     if (error) { setError(error.message); setGoogleLoading(false); }
   };
@@ -77,6 +67,20 @@ const Signup = () => {
 
       <div style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'linear-gradient(145deg, rgba(15,23,42,0.97), rgba(8,15,32,0.99))', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '20px', padding: '2.5rem', boxShadow: '0 25px 80px rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)' }}>
         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.8), rgba(56,189,248,0.8), transparent)', borderRadius: '0 0 4px 4px' }} />
+
+        {/* BACK BUTTON */}
+        <Link to="/" style={{
+          position: 'absolute', top: '1.5rem', left: '1.5rem',
+          display: 'flex', alignItems: 'center', gap: '0.4rem',
+          color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600,
+          transition: 'color 0.2s', zIndex: 10
+        }}
+        onMouseOver={e => e.currentTarget.style.color = '#38bdf8'}
+        onMouseOut={e => e.currentTarget.style.color = '#64748b'}
+        >
+          <ArrowLeft size={16} />
+          Back
+        </Link>
 
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{ width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 1.25rem', background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(56,189,248,0.2))', border: '1px solid rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(99,102,241,0.2)' }}>

@@ -123,6 +123,15 @@ app.use(express.json());
 const authMiddleware = async (req, res, next) => {
   req.supabase = supabase;
 
+  // DEV BYPASS: If running locally in development mode, mock user and bypass Supabase
+  if (process.env.NODE_ENV !== 'production') {
+    req.user = { id: 'dev-mock-user', email: 'dev@localhost' };
+    req.workspaceId = 'dev-mock-workspace';
+    req.userTier = 'pro_max';
+    req.userRole = 'owner';
+    return next();
+  }
+
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -131,28 +140,13 @@ const authMiddleware = async (req, res, next) => {
 
   req.user = user;
   
-  // Fetch profile to get active_workspace_id, account_type, etc.
+  // Fetch profile to get active_workspace_id
   const { data: profile } = await supabase
     .from('profiles')
-    .select('active_workspace_id, account_type, academy_id, role')
+    .select('active_workspace_id')
     .eq('id', user.id)
     .single();
 
-  req.accountType = profile?.account_type || 'pending';
-
-  if (req.accountType === 'pending') {
-    // Let onboarding endpoints handle pending users
-    return next();
-  }
-
-  if (req.accountType === 'academy') {
-    req.academyId = profile?.academy_id;
-    req.userRole = profile?.role; // student, instructor, academy_owner
-    req.userTier = 'pro_max'; // Academies default to max features
-    return next();
-  }
-
-  // --- WORKSPACE LOGIC ---
   // Fetch ALL workspaces this user is a member of (to self-heal stale data)
   const { data: allMemberships } = await supabase
     .from('workspace_members')
@@ -359,132 +353,6 @@ app.post('/api/create-checkout-session', authMiddleware, async (req, res) => {
   }
 });
 
-// ─── ONBOARDING ───────────────────────────────────────────────────────────
-
-app.post('/api/onboarding/workspace', authMiddleware, async (req, res) => {
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ error: 'Workspace name is required.' });
-
-  // 1. Create the personal workspace
-  const { data: workspaceData, error: wsError } = await supabase
-    .from('workspaces')
-    .insert([{ name, owner_id: req.user.id, plan: 'free' }])
-    .select()
-    .single();
-
-  if (wsError) return res.status(500).json({ error: wsError.message });
-
-  const newWorkspaceId = workspaceData.id;
-
-  // 2. Make the user the owner
-  await supabase
-    .from('workspace_members')
-    .insert([{ workspace_id: newWorkspaceId, user_id: req.user.id, role: 'owner' }]);
-
-  // 3. Update their profile to active workspace
-  await supabase
-    .from('profiles')
-    .upsert({ 
-      id: req.user.id,
-      active_workspace_id: newWorkspaceId,
-      account_type: 'workspace'
-    });
-
-  res.json({ success: true, workspaceId: newWorkspaceId });
-});
-
-app.post('/api/onboarding/academy', authMiddleware, async (req, res) => {
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ error: 'Invite code is required.' });
-
-  const cleanCode = code.trim();
-
-  // 1. Find unused invite
-  const { data: invite, error: inviteError } = await supabase
-    .from('academy_invites')
-    .select('id, academy_id')
-    .eq('code', cleanCode)
-    .eq('used', false)
-    .single();
-
-  if (inviteError || !invite) {
-    return res.status(400).json({ error: 'Invalid or already used invite code.' });
-  }
-
-  // 2. Mark invite as used
-  await supabase
-    .from('academy_invites')
-    .update({ used: true, used_by: req.user.id })
-    .eq('id', invite.id);
-
-  // 3. Update profile
-  await supabase
-    .from('profiles')
-    .upsert({ 
-      id: req.user.id,
-      academy_id: invite.academy_id,
-      account_type: 'academy',
-      role: 'student'
-    });
-
-  res.json({ success: true, academyId: invite.academy_id });
-});
-
-// ─── ACADEMY MANAGEMENT ───────────────────────────────────────────────────
-
-const academyAdminMiddleware = async (req, res, next) => {
-  const academyId = req.params.id;
-  // Check if they are superadmin
-  const { data: roleData } = await supabase.from('profiles').select('account_type, role, academy_id').eq('id', req.user.id).single();
-  if (roleData?.account_type === 'superadmin') return next();
-  // Check if they are academy_owner for this academy
-  if (roleData?.role === 'academy_owner' && roleData?.academy_id === academyId) return next();
-  
-  return res.status(403).json({ error: 'Access denied: Must be Academy Owner or Superadmin.' });
-};
-
-app.post('/api/academy/:id/generate-codes', authMiddleware, academyAdminMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { count } = req.body;
-  if (!count || count < 1 || count > 500) return res.status(400).json({ error: 'Count must be between 1 and 500' });
-
-  const invites = [];
-  for (let i = 0; i < count; i++) {
-    // Generate a random 8-character alphanumeric string
-    const code = 'VRTX-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-    invites.push({ academy_id: id, code, used: false });
-  }
-
-  const { error } = await supabase.from('academy_invites').insert(invites);
-  if (error) return res.status(500).json({ error: error.message });
-
-  res.json({ success: true, generated: count });
-});
-
-app.get('/api/academy/:id/invites', authMiddleware, academyAdminMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { data, error } = await supabase.from('academy_invites').select('*').eq('academy_id', id).order('created_at', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ invites: data });
-});
-
-app.get('/api/academy/:id/members', authMiddleware, academyAdminMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { data, error } = await supabase.from('profiles').select('id, display_name, role, account_type').eq('academy_id', id).order('role', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ members: data });
-});
-
-app.post('/api/academy/:id/update-role', authMiddleware, academyAdminMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { userId, role } = req.body;
-  if (!['student', 'instructor', 'academy_owner'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
-  
-  const { error } = await supabase.from('profiles').update({ role }).eq('id', userId).eq('academy_id', id);
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true });
-});
-
 // ─── WORKSPACE MANAGEMENT ─────────────────────────────────────────────────
 
 // GET /api/workspaces/members — list all members of the active workspace
@@ -601,7 +469,13 @@ app.post('/api/workspaces/remove', authMiddleware, async (req, res) => {
 
 // Extremely strict middleware that only allows global superadmins
 const adminMiddleware = async (req, res, next) => {
-  if (req.accountType !== 'superadmin') {
+  const { data } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', req.user.id)
+    .single();
+
+  if (!data || data.role !== 'superadmin') {
     return res.status(403).json({ error: `Access denied: You must be a global superadmin.` });
   }
   next();

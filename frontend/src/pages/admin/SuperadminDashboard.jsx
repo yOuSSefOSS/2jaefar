@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { useAppContext } from '../../context/AppContext';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { useNavigate } from 'react-router-dom';
-import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle, UserPlus, Users } from 'lucide-react';
-import { apiFetch } from '../../services/apiService';
+import { Shield, Plus, Building, Settings, Trash2, CheckCircle, AlertTriangle, UserPlus } from 'lucide-react';
 
 export default function SuperadminDashboard() {
   const { user } = useAppContext();
-  const navigate = useNavigate();
   const [academies, setAcademies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
@@ -105,7 +102,35 @@ export default function SuperadminDashboard() {
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-white mb-2">Unauthorized Access</h1>
           <p className="text-slate-400">You must be a Superadmin to view this page.</p>
+          <div className="mt-8 bg-[#0b1221] border border-white/10 p-6 rounded-xl text-left inline-block">
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2"><Settings className="w-5 h-5 text-[#0ea5e9]" /> How to gain access:</h3>
+            <ol className="list-decimal list-inside text-slate-300 space-y-2 text-sm font-mono mb-4">
+              <li>Open your Supabase Dashboard</li>
+              <li>Go to the <span className="text-[#0ea5e9]">profiles</span> table</li>
+              <li>Find your user row</li>
+              <li>Change your <span className="text-pink-500">role</span> column to <span className="text-[#10b981]">superadmin</span></li>
+              <li>Refresh this page</li>
+            </ol>
 
+            <button 
+              onClick={async () => {
+                const token = (await supabase.auth.getSession()).data?.session?.access_token;
+                if (!token) return;
+                const res = await fetch('http://localhost:5000/api/dev/make-superadmin', {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                  window.location.reload();
+                } else {
+                  alert('Dev fast-track failed. Check server logs.');
+                }
+              }}
+              className="mt-4 w-full bg-pink-600/20 hover:bg-pink-600/40 text-pink-400 border border-pink-500/30 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+            >
+              Dev Fast-Track: Make Me Superadmin Now
+            </button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -172,23 +197,11 @@ export default function SuperadminDashboard() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-white/10 pt-4 mt-auto relative z-10">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); navigate(`/academy-admin/${academy.id}`); }}
-                  className="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 rounded-lg text-sky-400 hover:text-sky-300 transition-colors flex items-center gap-1.5 text-xs font-medium"
-                >
-                  <Users className="w-3.5 h-3.5" /> Manage Users
-                </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); /* TODO settings */ }}
-                  className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
-                >
+              <div className="flex justify-end gap-2 border-t border-white/10 pt-4 mt-auto">
+                <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">
                   <Settings className="w-4 h-4" />
                 </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); /* TODO delete */ }}
-                  className="p-1.5 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
-                >
+                <button className="p-2 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -298,7 +311,6 @@ export default function SuperadminDashboard() {
                     <select id="addUserRole" className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-[#0ea5e9] focus:outline-none">
                       <option value="student">Student</option>
                       <option value="instructor">Instructor</option>
-                      <option value="academy_owner">Academy Owner</option>
                     </select>
                     <button 
                       onClick={async () => {
@@ -308,16 +320,20 @@ export default function SuperadminDashboard() {
                         
                         // Because profiles doesn't contain email, we need to ask the backend.
                         // I will add a temporary fix: we will update the backend to handle this via API or directly here if we can query users.
-                        try {
-                          await apiFetch(`/api/admin/academy/${selectedAcademy.id}/add-member`, {
-                            method: 'POST',
-                            body: JSON.stringify({ email, role })
-                          });
+                        const token = (await supabase.auth.getSession()).data?.session?.access_token;
+                        const res = await fetch(`http://localhost:5000/api/admin/academy/${selectedAcademy.id}/add-member`, {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, role })
+                        });
+                        
+                        if (res.ok) {
                           alert('User added to Academy!');
                           document.getElementById('addUserEmail').value = '';
                           fetchAcademyMembers(selectedAcademy.id);
-                        } catch (err) {
-                          alert('Failed to add user: ' + (err.message || 'Unknown error'));
+                        } else {
+                          const err = await res.json();
+                          alert('Failed to add user: ' + (err.error || 'Unknown error'));
                         }
                       }}
                       className="bg-[#0ea5e9] hover:bg-sky-500 text-white px-6 py-2 rounded-lg font-bold transition-colors"
@@ -364,7 +380,6 @@ export default function SuperadminDashboard() {
                             >
                               <option value="student">Student</option>
                               <option value="instructor">Instructor</option>
-                              <option value="academy_owner">Academy Owner</option>
                             </select>
                             
                             <button 

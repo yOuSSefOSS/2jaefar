@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, User, Wind, Gem, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Settings, User, Gem, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppContext } from '@/store';
-import logoUrl from '@/assets/images/logo.png';
+import { useAppContext } from '../../../store';
+// @ts-ignore
+import logoUrl from '../../../assets/logo.png';
 
-const LabLayout = ({ children, isBackendConnected }) => {
+interface LabLayoutProps {
+  children: ReactNode;
+}
+
+const LabLayout = ({ children }: LabLayoutProps) => {
   const location = useLocation();
   const { subscriptionTier } = useAppContext();
 
@@ -45,12 +50,6 @@ const LabLayout = ({ children, isBackendConnected }) => {
         
         {/* Right Side Controls & Status */}
         <div className="flex items-center gap-6">
-          <div className="hidden sm:flex items-center gap-3 bg-black/40 px-4 py-1.5 rounded-full border border-white/5">
-            <div className={`w-2 h-2 rounded-full ${isBackendConnected ? 'bg-[var(--color-accent-neon)] shadow-[0_0_10px_var(--color-accent-neon)]' : 'bg-[var(--color-accent-pink)] shadow-[0_0_10px_var(--color-accent-pink)]'} animate-pulse`}></div>
-            <span className="text-brand-300 font-mono text-xs tracking-wider">
-              {isBackendConnected ? 'API_LINK_UP' : 'API_LINK_DOWN'}
-            </span>
-          </div>
 
           <div className="flex items-center gap-3">
              <Link to="/pricing" className="hidden sm:flex items-center gap-2 p-1.5 px-3 border border-[var(--color-accent-blue)]/50 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-neon)] rounded-full hover:bg-[var(--color-accent-blue)]/20 transition-all text-xs font-bold uppercase tracking-widest">
@@ -92,7 +91,13 @@ const LabLayout = ({ children, isBackendConnected }) => {
   );
 };
 
-const TopNavItem = ({ to, label, currentPath }) => {
+interface TopNavItemProps {
+  to: string;
+  label: string;
+  currentPath: string;
+}
+
+const TopNavItem = ({ to, label, currentPath }: TopNavItemProps) => {
   const isActive = currentPath.startsWith(to) || (currentPath === '/' && to === '/dashboard');
   
   return (

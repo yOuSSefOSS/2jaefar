@@ -964,13 +964,7 @@ const Home = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowSettings(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[var(--color-accent-blue)]/30 text-brand-400 hover:text-white transition-all group"
-          >
-            <Settings size={16} className="group-hover:rotate-90 transition-transform duration-500" />
-            <span className="text-xs font-semibold tracking-wide">Lab Settings</span>
-          </button>
+
           <button 
             onClick={() => setShowLabManual(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[var(--color-edu-sky)]/30 text-white transition-all group"

@@ -4,7 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import { Loader2 } from 'lucide-react';
 
 const AuthGuard = ({ children }) => {
-  const { user, isAuthLoading, accountType } = useAppContext();
+  const { user, isAuthLoading } = useAppContext();
   const location = useLocation();
 
   if (isAuthLoading) {
@@ -23,23 +23,6 @@ const AuthGuard = ({ children }) => {
   // Actually, we can just return children since we rely on `user` object in context elsewhere, we might need a fake user.
   // Wait, if we just pass them through, they might hit issues if `user` is null. Let's provide a mock user if bypass happens?
   // Let's check how user is used in context and layouts.
-
-  if (user && accountType === 'pending' && location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  return children;
-};
-
-export const GlobalOnboardingGuard = ({ children }) => {
-  const { user, isAuthLoading, accountType } = useAppContext();
-  const location = useLocation();
-
-  const allowedRoutes = ['/onboarding', '/profile'];
-
-  if (!isAuthLoading && user && accountType === 'pending' && !allowedRoutes.includes(location.pathname)) {
-    return <Navigate to="/onboarding" replace />;
-  }
 
   return children;
 };
