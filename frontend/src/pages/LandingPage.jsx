@@ -5,6 +5,7 @@ import { Plane, FlaskConical, BookOpen, Layers, ArrowRight, Wind, GraduationCap,
 import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/logo.png';
 import aircraftImg from '../assets/aircraft-topview.png';
+import SEO from '../components/SEO';
 
 const FEATURES = [
   {
@@ -49,8 +50,30 @@ const fadeUp = (delay = 0) => ({
 const LandingPage = () => {
   const { user, displayName } = useAppContext();
   const navigate = useNavigate();
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Vortex Gen",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Any",
+    "description": "Interactive aviation education platform. Explore every component of an airplane, then test the physics in a real wind tunnel simulation.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  };
+
   return (
     <div className="h-screen overflow-y-auto bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] overflow-x-hidden">
+      <SEO 
+        title="Vortex Gen | Interactive Aviation Education & Wind Tunnel Lab" 
+        description="Learn how aircraft really work. An interactive learning platform that bridges aviation theory and aerodynamic practice with real ML-powered wind tunnel simulations."
+      />
+      <script type="application/ld+json">
+        {JSON.stringify(structuredData)}
+      </script>
       
       {/* ── Navbar ── */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 lg:px-10 bg-[var(--color-edu-navy)]/80 backdrop-blur-xl border-b border-white/5">

@@ -42,6 +42,8 @@ import AuthGuard from './components/AuthGuard';
 import { AppProvider } from './context/AppContext';
 import LoadingScreen from './components/LoadingScreen';
 
+import { HelmetProvider } from 'react-helmet-async';
+
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
@@ -56,8 +58,9 @@ function App() {
   }, []);
 
   return (
-    <AppProvider>
-      <TenantProvider>
+    <HelmetProvider>
+      <AppProvider>
+        <TenantProvider>
       {showLoadingScreen && (
         <LoadingScreen 
           isInitializing={isInitializing} 
@@ -151,7 +154,8 @@ function App() {
         </Routes>
       </BrowserRouter>
       </TenantProvider>
-    </AppProvider>
+      </AppProvider>
+    </HelmetProvider>
   );
 }
 
