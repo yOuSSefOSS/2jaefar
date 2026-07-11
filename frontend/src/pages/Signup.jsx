@@ -3,6 +3,7 @@ import { supabase } from '../services/supabaseClient';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
+import SEO from '../components/SEO';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -62,6 +63,10 @@ const Signup = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #020817 0%, #0a0f1e 50%, #020817 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: "'Inter', 'Segoe UI', sans-serif", position: 'relative', overflow: 'hidden' }}>
+      <SEO 
+        title="Sign Up | Vortex Gen" 
+        description="Create your Vortex Gen account to unlock wind tunnel simulations, explore aerodynamic shapes, and save your progress."
+      />
       <div style={{ position: 'absolute', inset: 0, opacity: 0.12, backgroundImage: 'linear-gradient(rgba(56,189,248,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.3) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
       <div style={{ position: 'absolute', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', top: '-200px', right: '-200px', pointerEvents: 'none' }} />
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plane, ChevronRight, ArrowRight, Fuel, SlidersHorizontal, Ruler, Wind } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 const SECTIONS = [
   {
@@ -151,6 +152,10 @@ const WingsSection = () => {
 
   return (
     <div className="min-h-full px-6 lg:px-10 py-8 max-w-4xl mx-auto">
+      <SEO 
+        title="Wing Anatomy & Theory | Vortex Gen Explorer" 
+        description="Learn about wing anatomy, control surfaces, fuel storage, and how wings generate lift. Switch between beginner and advanced theory."
+      />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-2 text-[11px] font-mono tracking-widest text-[var(--color-edu-sky)] uppercase mb-3">

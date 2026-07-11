@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Check, X, Zap, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { supabase } from '../services/supabaseClient';
+import SEO from '../components/SEO';
 
 const tiers = [
   {
@@ -92,6 +93,10 @@ const Pricing = () => {
 
   return (
     <div className="w-full h-full premium-glass overflow-y-auto custom-scrollbar p-8">
+      <SEO 
+        title="Pricing & Plans | Vortex Gen" 
+        description="Choose the right plan for your aerodynamics simulation needs. Free, Pro, and Ultra tiers available."
+      />
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <motion.h1 

@@ -5,6 +5,7 @@ import { apiFetch } from '../services/apiService';
 import { useAppContext } from '../context/AppContext';
 import { supabase } from '../services/supabaseClient';
 import { LogOut } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Onboarding = () => {
   const [mode, setMode] = useState(null); // 'academy' or 'workspace'
@@ -87,7 +88,7 @@ const Onboarding = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: '#020817', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
-      
+      <SEO title="Onboarding | Vortex Gen" description="Complete your onboarding by joining an academy or creating a workspace." />
       {/* Top Right Actions */}
       <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '1rem' }}>
         <button 

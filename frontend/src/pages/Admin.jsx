@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Loader2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
+import SEO from '../components/SEO';
 
 const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -97,6 +98,7 @@ const Admin = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
+      <SEO title="Admin Dashboard | Vortex Gen" description="Manage workspaces and users." />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">

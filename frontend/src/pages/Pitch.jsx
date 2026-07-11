@@ -6,6 +6,7 @@ import { useGLTF, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { ArrowRight, Wind, Globe, BookOpen, Lightbulb, ChevronDown } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
+import SEO from '../components/SEO';
 
 // ─────────────────────────────────────────────
 //  SHARED MOUSE STORE – updated via DOM events
@@ -620,6 +621,10 @@ export default function Pitch() {
 
   return (
     <div className="bg-[#0b101e] h-screen overflow-y-auto overflow-x-hidden text-white relative">
+      <SEO 
+        title="Pitch Deck — Vortex-Gen" 
+        description="Interactive aerodynamics platform that bridges theory and simulation. Explore aircraft anatomy, real-time AI wind tunnels, and dynamic stability labs."
+      />
       {/* CSS cursor glow */}
       <CursorGlow />
 

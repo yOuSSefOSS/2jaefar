@@ -13,6 +13,7 @@ import PdfReportTemplate from '../components/PdfReportTemplate';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import SEO from '../components/SEO';
 
 // ─── Generic NACA 4-digit coordinate generator ───────────────────────────────
 const computeNACA = (m, p, t, N = 60) => {
@@ -950,6 +951,10 @@ const Home = () => {
        variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
        className="flex flex-col gap-6 max-w-[1800px] mx-auto w-full pb-8 px-4 sm:px-6"
     >
+      <SEO 
+        title="Interactive Wind Tunnel & Aerodynamics Simulator | Vortex Gen" 
+        description="Simulate real-world aerodynamics, test airfoils, adjust wind speed and angle of attack, and visualize lift/drag data instantly."
+      />
       {/* ── Lab Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 edu-animate-in">
         <div>

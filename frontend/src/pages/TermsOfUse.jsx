@@ -7,6 +7,7 @@ import {
   User, Mail, Cpu
 } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
+import SEO from '../components/SEO';
 
 // ── Animation helpers ──────────────────────────────────────────────────────────
 const fadeUp = (delay = 0) => ({
@@ -80,7 +81,10 @@ const TermsOfUse = () => {
 
   return (
     <div className="h-screen overflow-y-auto bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] overflow-x-hidden">
-
+      <SEO 
+        title="Terms of Use | Vortex Gen" 
+        description="Read the Terms of Use for Vortex Gen. By accessing the Service, you agree to be bound by these Terms."
+      />
       {/* ── Top Nav ── */}
       <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-6 lg:px-10 bg-[var(--color-edu-navy)]/90 backdrop-blur-xl border-b border-white/5">
         <Link to="/" className="flex items-center gap-2.5">

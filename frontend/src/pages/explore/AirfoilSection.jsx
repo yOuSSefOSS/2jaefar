@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wind, ChevronRight, ArrowRight, FlaskConical, Ruler, RotateCcw, TrendingUp, AlertTriangle } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 // Simple NACA 4-digit generator for the interactive preview
 const computePreviewNACA = (m, p, t, N = 40) => {
@@ -100,6 +101,10 @@ const AirfoilSection = () => {
 
   return (
     <div className="min-h-full px-6 lg:px-10 py-8 max-w-4xl mx-auto">
+      <SEO 
+        title="Airfoil Theory & Simulation | Vortex Gen Explorer" 
+        description="Understand what an airfoil is, how lift works, angle of attack, and stalls. Try the interactive NACA airfoil generator."
+      />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-2 text-[11px] font-mono tracking-widest text-[var(--color-edu-sky)] uppercase mb-3">

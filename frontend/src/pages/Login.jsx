@@ -3,6 +3,7 @@ import { supabase } from '../services/supabaseClient';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Loader2, AlertCircle, KeyRound, ArrowLeft } from 'lucide-react';
 import logoUrl from '../assets/logo.png';
+import SEO from '../components/SEO';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -234,6 +235,10 @@ const Login = () => {
       background: '#020817',
       fontFamily: "'Inter', sans-serif"
     }}>
+      <SEO 
+        title="Log In | Vortex Gen" 
+        description="Log in to Vortex Gen to access advanced aerospace design tools, wind tunnel labs, and your saved airfoil data."
+      />
       {/* LEFT SIDE - DECORATIVE */}
       <div style={{
         flex: 1,

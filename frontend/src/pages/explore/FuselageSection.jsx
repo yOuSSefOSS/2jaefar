@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Box, ChevronRight, Users, Shield, Layers, ArrowRight, CircleDot } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 const SECTIONS = [
   {
@@ -67,6 +68,10 @@ const FuselageSection = () => {
 
   return (
     <div className="min-h-full px-6 lg:px-10 py-8 max-w-4xl mx-auto">
+      <SEO 
+        title="Fuselage Anatomy & Theory | Vortex Gen Explorer" 
+        description="Learn about the fuselage structure, pressurization, materials, landing gear, and different aircraft configurations."
+      />
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

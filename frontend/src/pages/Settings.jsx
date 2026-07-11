@@ -4,6 +4,7 @@ import { Lock, Users, UserPlus, Crown, Trash2, SlidersHorizontal } from 'lucide-
 import SimulationView from '../components/SimulationView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
+import SEO from '../components/SEO';
 
 const PREVIEW_AIRFOIL = {
   name: "Preview Profile",
@@ -294,7 +295,7 @@ const Settings = () => {
 
   return (
     <div className="w-full h-full premium-glass flex overflow-hidden">
-      
+      <SEO title="Settings | Vortex Gen" description="Manage your system preferences and workspace settings." />
       {/* Left side: Settings Container */}
       <div className="flex-[0_0_100%] xl:flex-[0_0_55%] flex flex-col p-8 overflow-y-auto custom-scrollbar pb-16">
          {/* Tab switcher */}

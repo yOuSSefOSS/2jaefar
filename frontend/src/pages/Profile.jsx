@@ -4,6 +4,7 @@ import { Download, Trash2, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../services/supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 const Profile = () => {
   const { customAirfoils, setCustomAirfoils, lastSimulationData, activeShapeIdGlobal, user, subscriptionTier, displayName } = useAppContext();
@@ -35,6 +36,7 @@ const Profile = () => {
 
   return (
     <div className="w-full h-full premium-glass flex flex-col p-8 overflow-y-auto custom-scrollbar">
+       <SEO title="Profile | Vortex Gen" description="View your profile, manage your custom airfoils, and export telemetry data." />
        <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

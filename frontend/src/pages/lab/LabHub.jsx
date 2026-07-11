@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wind, Plane, Navigation, Box, ArrowRight, FlaskConical, Lock, Zap, Star } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import SEO from '../../components/SEO';
 
 // Inline mini airfoil SVG for the hero card
 const MiniAirfoilSVG = () => (
@@ -51,6 +52,10 @@ const LabHub = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-edu-navy)] text-[var(--color-edu-text)] font-sans">
+      <SEO 
+        title="Aviation Labs Hub | Vortex Gen" 
+        description="Interactive aircraft component simulators. Access the Wind Tunnel, Wing Configurator, Stability Lab, Pressurization Sim, and Turbofan Simulator."
+      />
       {/* Header */}
       <div className="pt-16 pb-0">
         <div className="max-w-5xl mx-auto px-6 lg:px-10 pt-14 pb-8">

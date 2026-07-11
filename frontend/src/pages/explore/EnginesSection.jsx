@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Zap, ChevronRight, ArrowRight, FlaskConical, TrendingUp, Wind, Thermometer, AlertTriangle } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 // ── Interactive BPR (Bypass Ratio) Visualizer ─────────────────────────────────
 const BPRVisualizer = ({ bpr, mach }) => {
@@ -139,6 +140,10 @@ const EnginesSection = () => {
 
   return (
     <div className="min-h-full px-6 lg:px-10 py-8 max-w-4xl mx-auto">
+      <SEO 
+        title="Turbofan Engines & Propulsion | Vortex Gen Explorer" 
+        description="Learn how turbofan engines work, the Brayton cycle, bypass ratio, and compressor stall. Interactive propulsion visualizer."
+      />
 
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">

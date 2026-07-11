@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Info, Plane, Box, Wind, Triangle, FlaskConical, Zap } from 'lucide-react';
 import AircraftViewer3D from '../components/AircraftViewer3D';
 import { SkeletonCard } from '../components/Skeleton';
+import SEO from '../components/SEO';
 
 const AIRCRAFT_ZONES = [
   {
@@ -68,6 +69,10 @@ const Explorer = () => {
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col justify-between">
+      <SEO 
+        title="Interactive 3D Aircraft Explorer | Vortex Gen" 
+        description="Interact with a 3D model of an aircraft. Click any component like wings, fuselage, or airfoil to learn how it works and explore the physics of flight."
+      />
 
       {/* ── Header ── */}
       <div className="relative z-20 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 p-8 pointer-events-none edu-animate-in">
